@@ -308,12 +308,7 @@
                             <span class="menu-title">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ URL::to('adminProducts') }}">
-                            <i class="icon-layout menu-icon"></i>
-                            <span class="menu-title">Products</span>
-                        </a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{{ URL::to('adminCustomer') }}">
                             <i class="icon-columns menu-icon"></i>
@@ -321,12 +316,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ URL::to('adminOrder') }}">
-                            <i class="icon-bar-graph menu-icon"></i>
-                            <span class="menu-title">Orders</span>
+                        <a class="nav-link" href="{{ URL::to('adminProducts') }}">
+                            <i class="icon-layout menu-icon"></i>
+                            <span class="menu-title">Products</span>
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('invoices.index') }}">
+                            <i class="icon-bar-graph menu-icon"></i>
+                            <span class="menu-title">Invoices</span>
+                        </a>
+                    </li>
+                    {{-- <li class="nav-item">
                         <a class="nav-link" href="#" onclick="confirmLogout()">
                             <i class="icon-bar-graph menu-icon"></i>
                             <span class="menu-title">Log Out</span>
@@ -339,7 +340,7 @@
                                 window.location.href = "{{ route('logout') }}";
                             }
                         }
-                    </script>
+                    </script> --}}
 
                 </ul>
             </nav>

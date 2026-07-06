@@ -14,12 +14,12 @@
                 <div class="card">
                     <div class="card-body">
                         <!-- Button to Open the Modal -->
-                        {{-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
                             Add New User
-                        </button> --}}
+                        </button>
 
                         <!-- The Modal -->
-                        {{-- <div class="modal" id="addNewModal">
+                        <div class="modal" id="addNewModal">
                             <div class="modal-dialog">
                                 <div class="modal-content">
 
@@ -64,7 +64,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div> --}}
+                        </div>
 
                         <p class="card-title mb-0">Customer List</p>
                         <br>

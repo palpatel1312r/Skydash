@@ -56,6 +56,28 @@ class AdminController extends Controller
     }
     ////////////////////////////////////////////////////////////////////////
 
+    public function AddNewCustomer(Request $request)
+    {
+        $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email|unique:customer,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'status' => 'required|string|in:Active,Inactive',
+        ]);
+
+        $customer = new Customer();
+        $customer->fullname = $request->input('fullname');
+        $customer->email = $request->input('email');
+        $customer->status = $request->input('status');
+        $customer->password = bcrypt('password123'); // Default password
+        $customer->role = 'customer'; // Default role
+
+        $customer->save();
+
+        return redirect()->back()->with('success', 'Customer added successfully!');
+    }
+
     public function AddNewProduct(Request $request)
     {
 
