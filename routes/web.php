@@ -1,54 +1,123 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
 
-// ============================================
-// PUBLIC ROUTES (No Authentication Required)
-// ============================================
-Route::middleware(['prevent.back.history'])->group(function () {
-  Route::get('/getLogin', [AuthController::class, 'getLogin'])->name('getLogin');
-  Route::post('/PostLogin', [AuthController::class, 'PostLogin'])->name('PostLogin');
-  Route::get('/getRegister', [AuthController::class, 'getRegister'])->name('getRegister');
-  Route::post('/PostRegister', [AuthController::class, 'PostRegister'])->name('PostRegister');
-  Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+/*
+|--------------------------------------------------------------------------
+| Root Route
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', function () {
+  if (auth()->guard('admin')->check()) {
+    return redirect()->route('admin.dashboard');
+  }
+  if (auth()->guard('customer')->check()) {
+    return redirect()->route('customer.dashboard');
+  }
+  return redirect()->route('login');
 });
 
-// ============================================
-// PROTECTED ADMIN ROUTES
-// ============================================
-Route::middleware(['auth:customer', 'prevent.back.history'])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 
-  // Dashboard
-  Route::get('/', [AdminController::class, 'index'])->name('admin');
-  Route::get('/adminProfile', [AdminController::class, 'Profile'])->name('Profile');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'autoLogin'])->name('login.auto');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/register', [CustomerController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [CustomerController::class, 'register'])->name('register.post');
 
-  // Product Routes
-  Route::get('/adminProducts', [AdminController::class, 'products'])->name('products');
-  Route::get('/deleteProduct/{id}', [AdminController::class, 'deleteProduct'])->name('deleteProduct');
-  Route::post('/AddNewProduct', [AdminController::class, 'AddNewProduct'])->name('AddNewProduct');
-  Route::post('/UpdateProduct', [AdminController::class, 'UpdateProduct'])->name('UpdateProduct');
+/*
+|--------------------------------------------------------------------------
+| Admin Routes (Protected with auth:admin)
+|--------------------------------------------------------------------------
+*/
 
-  // Customer Routes
-  Route::get('/adminCustomer', [AdminController::class, 'Customer'])->name('Customer');
-  Route::post('/AddNewCustomer', [AdminController::class, 'AddNewCustomer'])->name('AddNewCustomer');
-  Route::post('/UpdateCustomer', [AdminController::class, 'UpdateCustomer'])->name('UpdateCustomer');
-  Route::get('/changeCustomerStatus/{status}/{id}', [AdminController::class, 'changeCustomerStatus'])->name('changeCustomerStatus');
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+  // Dashboard - ✅ Changed name to 'dashboard' (full name will be admin.dashboard)
+  Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+  Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
+  Route::post('/profile/update', [AdminController::class, 'updateProfile'])->name('profile.update');
 
-  // Order Routes
-  Route::get('/adminOrder', [AdminController::class, 'Order'])->name('Order');
-  Route::post('/OurOrder', [AdminController::class, 'OurOrder'])->name('OurOrder');
-  Route::get('/Orders', [AdminController::class, 'ShowOrders'])->name('ShowOrders');
-  Route::post('/AddNewOrder', [AdminController::class, 'AddNewOrder'])->name('AddNewOrder');
-  Route::get('/changeOrderStatus/{status}/{id}', [AdminController::class, 'changeOrderStatus'])->name('changeOrderStatus');
+  // Customer Management (Admin Only)
+  Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+  Route::post('/customers/add', [CustomerController::class, 'store'])->name('customers.add');
+  Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
+  Route::get('/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('customers.status');
+  Route::delete('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.delete');
 
-  // ============================================
-  // INVOICE ROUTES
-  // ============================================
+  // Admin Product Routes
+  Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+  Route::post('/products/add', [ProductController::class, 'store'])->name('products.add');
+  Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
+  Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
+
+  // Admin Invoice Routes
   Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+  Route::post('/invoices/add', [InvoiceController::class, 'store'])->name('invoices.add');
+  Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
+  Route::delete('/invoices/delete/{id}', [InvoiceController::class, 'destroy'])->name('invoices.delete');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Customer Routes (Protected with auth:customer)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:customer'])->prefix('customer')->name('customer.')->group(function () {
+  // Dashboard - ✅ Changed name to 'dashboard' (full name will be customer.dashboard)
+  Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+  Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
+  Route::post('/profile/update', [CustomerController::class, 'updateProfile'])->name('profile.update');
+  Route::get('/products', [ProductController::class, 'customerProducts'])->name('products');
+  Route::get('/invoices', [InvoiceController::class, 'customerInvoices'])->name('invoices');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Shared Routes (Accessible by both Admin and Customer)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:admin'])->group(function () {
+  // Products - Admin only
+  Route::get('/products', [ProductController::class, 'index'])->name('products');
+  // Invoices - Admin only
+  Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
   Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
   Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
   Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+  // Backward compatibility
+  Route::get('/Customer', [CustomerController::class, 'index'])->name('Customer');
+  Route::get('/adminProducts', [ProductController::class, 'index'])->name('adminProducts');
 });
+
+// Customer shared routes
+Route::middleware(['auth:customer'])->group(function () {
+  Route::get('/customer/products', [ProductController::class, 'customerProducts'])->name('customer.products');
+  Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])->name('customer.invoices');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/about', function () {
+  return view('about');
+})->name('about');
+
+Route::get('/contact', function () {
+  return view('contact');
+})->name('contact');

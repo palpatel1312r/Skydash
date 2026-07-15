@@ -3,213 +3,53 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;
-use App\Models\Order;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Customer; // Don't forget to import the Customer model
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Admin;
 
 class AdminController extends Controller
 {
-    //
     public function index()
     {
         return view('index');
     }
-    public function Profile()
-    {
-        return view('Dashboard.Profile');
-    }
-    public function Customer()
-    {
-        $customers = Customer::all();
-        return view('Dashboard.Customer', compact('customers'));
-    }
-    public function Order()
-    {
-        $Order = Order::all();
-        return view('Dashboard.Orders', compact('Order'));
-    }
-    /////////////////////////////////////////////////////////////////////////
-    public function changeCustomerStatus($status, $id)
-    {
 
-        $customers = Customer::find($id);
-
-        $customers->status = $status;
-        $customers->save();
-
-        return redirect()->route('Customer')->with('success', 'User status updated successfully');
+    // ✅ ONLY ONE profile method for Admin
+    public function profile()
+    {
+        $admin = Auth::guard('admin')->user();
+        return view('Dashboard.Profile', compact('admin'));
     }
 
-    public function products()
+    // ✅ Update Profile method
+    public function updateProfile(Request $request)
     {
-        $products = Product::all();
-        return view('Dashboard.products', compact('products'));
-    }
-    public function deleteProduct($id)
-    {
-        $product = Product::find($id);
-        $product->delete();
-        return redirect()->back()->with('success', 'Product Deleted successfully!');
-    }
-    ////////////////////////////////////////////////////////////////////////
+        $admin = Auth::guard('admin')->user();
 
-    public function AddNewCustomer(Request $request)
-    {
         $request->validate([
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:admins,email,' . $admin->id,
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'status' => 'required|string|in:Active,Inactive',
+            'address' => 'nullable|string|max:500',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $customer = new Customer();
-        $customer->fullname = $request->input('fullname');
-        $customer->email = $request->input('email');
-        $customer->status = $request->input('status');
-        $customer->password = bcrypt('password123'); // Default password
-        $customer->role = 'customer'; // Default role
+        $data = $request->only(['name', 'email', 'phone', 'address']);
 
-        $customer->save();
+        // Handle Profile Image Upload
+        if ($request->hasFile('profile_image')) {
+            // Delete old image if exists
+            if ($admin->profile_image && file_exists(storage_path('app/public/' . $admin->profile_image))) {
+                unlink(storage_path('app/public/' . $admin->profile_image));
+            }
 
-        return redirect()->back()->with('success', 'Customer added successfully!');
-    }
-
-    public function AddNewProduct(Request $request)
-    {
-
-        $product = new Product();
-        $product->title = $request->input('title');
-
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-
-            // Save the file into /public/uploads/products
-            $file->move(public_path('uploads/products'), $filename);
-
-            // Save the path to database
-            $product->image = 'uploads/products/' . $filename;
-        } else {
-            // Set default image if none uploaded
-            $product->image = 'uploads/products/default.png';
+            // Store new image
+            $path = $request->file('profile_image')->store('profile_images', 'public');
+            $data['profile_image'] = $path;
         }
 
-        $product->description = $request->input('description');
-        $product->price = $request->input('price');
-        $product->quantity = $request->input('quantity');
-        $product->category = $request->input('category');
-        $product->type = $request->input('type');
+        $admin->update($data);
 
-        $product->save(); // Save the product to the database
-
-        return redirect()->back()->with('success', 'Product added successfully!');
-    }
-
-    ////////////////////////////////////////////////////////////////////////
-
-    public function UpdateProduct(Request $request)
-    {
-        $product = Product::find($request->id);
-        $product->title = $request->title;
-
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-
-            // Save the file into /public/uploads/products
-            $file->move(public_path('uploads/products'), $filename);
-
-            // Save the new image path
-            $product->image = 'uploads/products/' . $filename;
-        }
-
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->quantity = $request->quantity;
-        $product->category = $request->category;
-        $product->type = $request->type;
-
-        $product->save(); // Save the product to the database
-
-        return redirect()->back()->with('success', 'Product updated successfully!');
-    }
-
-    ////////////////////////////////////////////////////////////////////////
-
-    public function UpdateCustomer(Request $request)
-    {
-        $customer = Customer::find($request->id);
-
-        $customer->fullname = $request->fullname;
-        $customer->email = $request->email;
-        $customer->role = $request->role;
-        $customer->status = $request->status;
-
-        $customer->save(); // Save the product to the database
-
-        return redirect()->back()->with('success', 'Customer updated successfully!');
-    }
-
-    ////////////////////////////////////////////////////////////////////////
-    public function Orders(Request $request)
-    {
-        $orderItems = DB::table('orders')
-            ->join('products', 'orders.product_id', '=', 'products.id')
-            ->select('products.title', 'products.picture', 'products.price', 'products.*', 'orders.*')
-            ->get();
-        return view('Dashboard.Orders', compact('orderItems'));
-    }
-
-    ///////////////////////////////////////////////////////////////////
-
-    public function AddNewOrder(Request $request)
-    {
-        $request->validate([
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|email',
-            'bill' => 'required|numeric|min:0',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'customer_status' => 'required|string',
-            'status' => 'required|string|in:Pending,Accepted,Rejected,Delivered',
-        ]);
-
-        $order = new Order();
-        $order->fullname = $request->input('fullname');
-        $order->email = $request->input('email');
-        $order->bill = $request->input('bill');
-        $order->phone = $request->input('phone');
-        $order->address = $request->input('address');
-        $order->customer_status = $request->input('customer_status');
-        $order->status = $request->input('status');
-        $order->status = $request->input('status'); // Set orderstatus as well
-
-        $order->save();
-
-        return redirect()->back()->with('success', 'Order added successfully!');
-    }
-
-    //////////////////////////////////////////////////////////////////
-
-    public function changeOrderStatus($status, $id)
-    {
-        $validStatuses = ['Pending', 'Accepted', 'Rejected', 'Delivered'];
-
-        if (!in_array($status, $validStatuses)) {
-            return redirect()->back()->with('error', 'Invalid status value.');
-        }
-
-        $order = Order::find($id);
-        if ($order) {
-            $order->status = $status;
-            $order->save();
-            return redirect()->back()->with('success', 'Order status updated to ' . $status);
-        }
-        return redirect()->back()->with('error', 'Order not found.');
+        return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
     }
 }

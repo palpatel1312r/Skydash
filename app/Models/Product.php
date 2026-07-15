@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    use HasFactory;
 
+    // ✅ Specify the correct table name
     protected $table = 'product';
+
     protected $fillable = [
         'title',
         'image',
@@ -16,19 +19,11 @@ class Product extends Model
         'price',
         'quantity',
         'category',
-        'type'
+        'type',
     ];
 
-    public function orders()
-    {
-        return $this->belongsToMany(Order::class, 'order_items')
-            ->withPivot('quantity', 'price')
-            ->withTimestamps();
-    }
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    use HasFactory;
+    protected $casts = [
+        'price' => 'decimal:2',
+        'quantity' => 'integer',
+    ];
 }

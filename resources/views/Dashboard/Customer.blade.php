@@ -1,195 +1,276 @@
-<x-adminheader />
+@extends('components.adminheader')
 
+@section('content')
+    <h1>helo</h1>
 
-<!-- partial -->
-<div class="main-panel">
-    <div class="content-wrapper">
-        <div class="row">
-            <div class="col-md-12 grid-margin">
+    <!-- partial -->
+    <div class="main-panel">
+        <div class="content-wrapper">
+            <div class="row">
+                <div class="col-md-12 grid-margin">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
 
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12 grid-margin stretch-card">
-                <div class="card">
-                    <div class="card-body">
-                        <!-- Button to Open the Modal -->
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
-                            Add New User
-                        </button>
 
-                        <!-- The Modal -->
-                        <div class="modal" id="addNewModal">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
+            <div class="row">
+                <div class="col-md-12 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Button to Open the Modal -->
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
+                                <i class="mdi mdi-plus"></i> Add New User
+                            </button>
 
-                                
-                                    <div class="modal-header">
-                                        <h4 class="modal-title">Add New User</h4>
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                    </div>
+                            <!-- Add Customer Modal -->
+                            <div class="modal fade" id="addNewModal" tabindex="-1" role="dialog">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Add New User</h4>
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        </div>
 
-                           
-                                    <div class="modal-body">
-                                        <form action="{{ URL::to('AddNewCustomer') }}" method="POST">
-                                            @csrf
+                                        <div class="modal-body">
+                                            <form action="{{ route('admin.customers.add') }}" method="POST">
+                                                @csrf
 
-                                            <label>Full Name :</label>
-                                            <input type="text" name="fullname" placeholder="Enter Full Name"
-                                                class="form-control mb-2" required>
+                                                <div class="form-group">
+                                                    <label>Full Name :</label>
+                                                    <input type="text" name="fullname" placeholder="Enter Full Name"
+                                                        class="form-control" required>
+                                                </div>
 
-                                            <label>Email :</label>
-                                            <input type="email" name="email" placeholder="Enter Email Address"
-                                                class="form-control mb-2" required>
+                                                <div class="form-group">
+                                                    <label>Email :</label>
+                                                    <input type="email" name="email" placeholder="Enter Email Address"
+                                                        class="form-control" required>
+                                                </div>
 
-                                            <label>Role :</label>
-                                            <select name="role" class="form-control mb-2" required>
-                                                <option value="">Select role</option>
-                                                <option value="Admin">Admin</option>
-                                                <option value="Customer">Customer</option>
+                                                <div class="form-group">
+                                                    <label>Role :</label>
+                                                    <select name="role" class="form-control" required>
+                                                        <option value="">Select role</option>
+                                                        <option value="Admin">Admin</option>
+                                                        <option value="Customer">Customer</option>
+                                                    </select>
+                                                </div>
 
-                                            </select>
+                                                <div class="form-group">
+                                                    <label>Status :</label>
+                                                    <select name="status" class="form-control" required>
+                                                        <option value="">Select Status</option>
+                                                        <option value="Active">Active</option>
+                                                        <option value="Blocked">Blocked</option>
+                                                    </select>
+                                                </div>
 
-                                            <label>Status :</label>
-                                            <select name="status" class="form-control mb-2" required>
-                                                <option value="">Select Status</option>
-                                                <option value="Active">Active</option>
-                                                <option value="Blocked">Blocked</option>
-
-                                            </select>
-
-                                            <input type="submit" value="Save Customer" class="btn btn-primary mt-3">
-                                        </form>
-
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-dismiss="modal">Close</button>
+                                                    <input type="submit" value="Save Customer" class="btn btn-primary">
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <p class="card-title mb-0">Customer List</p>
-                        <br>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-borderless">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Name</th>
-                                        <th>E-mail</th>
-                                        <th>Role</th>
-                                        <th>Created At</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                        <th>Update</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($customers as $item)
+                            <br><br>
+                            <p class="card-title mb-0">Customer List</p>
+                            <br>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-borderless" id="customerTable">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $item->fullname }}</td>
-                                            <td>{{ $item->email }}</td>
-                                            <td>{{ $item->role }}</td>
-                                            <td>{{ $item->created_at }}</td>
-                                            <td>
-                                                @if ($item->status == 'Active')
-                                                    <label class="badge badge-success">Active</label>
-                                                @else
-                                                    <label class="badge badge-danger">Blocked</label>
-                                                @endif
-
-                                            <td>
-                                                <div class="d-flex flex-column flex-md-row gap-2">
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>E-mail</th>
+                                            <th>Role</th>
+                                            <th>Created At</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                            <th>Update</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($customers as $item)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $item->fullname }}</td>
+                                                <td>{{ $item->email }}</td>
+                                                <td>
+                                                    @if ($item->role == 'Admin')
+                                                        <span class="badge badge-primary">{{ $item->role }}</span>
+                                                    @else
+                                                        <span class="badge badge-info">{{ $item->role }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $item->created_at->format('M d, Y') }}</td>
+                                                <td>
+                                                    @if ($item->status == 'Active')
+                                                        <label class="badge badge-success">Active</label>
+                                                    @elseif ($item->status == 'Blocked')
+                                                        <label class="badge badge-danger">Blocked</label>
+                                                    @else
+                                                        <label class="badge badge-warning">{{ $item->status }}</label>
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     @if ($item->status == 'Active')
                                                         <a class="btn btn-sm btn-danger"
-                                                            href="{{ URL::to('changeCustomerStatus/Blocked/' . $item->id) }}">
-                                                            Block
+                                                            href="{{ route('admin.customers.status', ['status' => 'Blocked', 'id' => $item->id]) }}"
+                                                            onclick="return confirm('Are you sure you want to block this user?')">
+                                                            <i class="mdi mdi-block"></i> Block
                                                         </a>
                                                     @else
-                                                        <a class="btn btn-sm btn-info"
-                                                            href="{{ URL::to('changeCustomerStatus/Active/' . $item->id) }}">
-                                                            Unblock
+                                                        <a class="btn btn-sm btn-success"
+                                                            href="{{ route('admin.customers.status', ['status' => 'Active', 'id' => $item->id]) }}"
+                                                            onclick="return confirm('Are you sure you want to unblock this user?')">
+                                                            <i class="mdi mdi-check"></i> Unblock
                                                         </a>
                                                     @endif
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <!-- Button to open modal -->
-                                                <button type="button"
-                                                    class="btn {{ $item->status == 'Block' ? 'btn-primary' : 'btn-primary' }}"
-                                                    data-toggle="modal" data-target="#updateModal{{ $item->id }}">
-                                                    Update
-                                                </button>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                        data-toggle="modal" data-target="#updateModal{{ $item->id }}">
+                                                        <i class="mdi mdi-pencil"></i> Update
+                                                    </button>
 
-                                                <!-- Modal -->
-                                                <div class="modal" id="updateModal{{ $item->id }}">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h4 class="modal-title">Update Customer</h4>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal">&times;</button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <form action="{{ url('UpdateCustomer') }}"
-                                                                    method="POST">
-                                                                    @csrf
-                                                                    <input type="hidden" name="id"
-                                                                        value="{{ $item->id }}">
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                        onclick="confirmDelete('{{ $item->id }}')">
+                                                        <i class="mdi mdi-delete"></i> Delete
+                                                    </button>
 
-                                                                    <label>Name:</label>
-                                                                    <input type="text" name="fullname"
-                                                                        value="{{ $item->fullname }}"
-                                                                        class="form-control mb-2">
+                                                    <form id="delete-form-{{ $item->id }}"
+                                                        action="{{ route('admin.customers.delete', $item->id) }}" method="POST"
+                                                        style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
 
-                                                                    <label>Email:</label>
-                                                                    <input type="text" name="email"
-                                                                        value="{{ $item->email }}"
-                                                                        class="form-control mb-2">
+                                                    <div class="modal fade" id="updateModal{{ $item->id }}"
+                                                        tabindex="-1" role="dialog">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h4 class="modal-title">Update Customer</h4>
+                                                                    <button type="button" class="close"
+                                                                        data-dismiss="modal">&times;</button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form action="{{ route('admin.customers.update') }}"
+                                                                        method="POST">
+                                                                        @csrf
+                                                                        <input type="hidden" name="id"
+                                                                            value="{{ $item->id }}">
 
-                                                                    <label>Role:</label>
-                                                                    <select name="role" class="form-control mb-2">
-                                                                        <option value="Admin"
-                                                                            {{ $item->role == 'Admin' ? 'selected' : '' }}>
-                                                                            Admin</option>
-                                                                        <option value="Customer"
-                                                                            {{ $item->role == 'Customer' ? 'selected' : '' }}>
-                                                                            Customer</option>
-                                                                    </select>
+                                                                        <div class="form-group">
+                                                                            <label>Name:</label>
+                                                                            <input type="text" name="fullname"
+                                                                                value="{{ $item->fullname }}"
+                                                                                class="form-control" required>
+                                                                        </div>
 
-                                                                    <label>Status:</label>
-                                                                    <select name="status" class="form-control mb-2">
-                                                                        <option value="Active"
-                                                                            {{ $item->status == 'Active' ? 'selected' : '' }}>
-                                                                            Active</option>
-                                                                        <option value="Block"
-                                                                            {{ $item->status == 'Block' ? 'selected' : '' }}>
-                                                                            Block</option>
-                                                                    </select>
+                                                                        <div class="form-group">
+                                                                            <label>Email:</label>
+                                                                            <input type="email" name="email"
+                                                                                value="{{ $item->email }}"
+                                                                                class="form-control" required>
+                                                                        </div>
 
-                                                                    <button type="submit"
-                                                                        class="btn btn-success mt-2">Save
-                                                                        Changes</button>
-                                                                </form>
+                                                                        <div class="form-group">
+                                                                            <label>Role:</label>
+                                                                            <select name="role" class="form-control"
+                                                                                required>
+                                                                                <option value="Admin"
+                                                                                    {{ $item->role == 'Admin' ? 'selected' : '' }}>
+                                                                                    Admin</option>
+                                                                                <option value="Customer"
+                                                                                    {{ $item->role == 'Customer' ? 'selected' : '' }}>
+                                                                                    Customer</option>
+                                                                            </select>
+                                                                        </div>
+
+                                                                        <div class="form-group">
+                                                                            <label>Status:</label>
+                                                                            <select name="status" class="form-control"
+                                                                                required>
+                                                                                <option value="Active"
+                                                                                    {{ $item->status == 'Active' ? 'selected' : '' }}>
+                                                                                    Active</option>
+                                                                                <option value="Blocked"
+                                                                                    {{ $item->status == 'Blocked' ? 'selected' : '' }}>
+                                                                                    Blocked</option>
+                                                                            </select>
+                                                                        </div>
+
+                                                                        <div class="modal-footer">
+                                                                            <button type="button"
+                                                                                class="btn btn-secondary"
+                                                                                data-dismiss="modal">Close</button>
+                                                                            <button type="submit"
+                                                                                class="btn btn-success">Save
+                                                                                Changes</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </td>
-
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-
-                            </table>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center">No customers found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
+        <!-- content-wrapper ends -->
+        <x-adminfooter />
     </div>
-    <!-- content-wrapper ends -->
-    <!-- partial:partials/_footer.html -->
-    <x-adminfooter />
+
+    <script>
+        function confirmDelete(customerId) {
+            if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+                document.getElementById('delete-form-' + customerId).submit();
+            }
+            return false;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.style.display = 'none';
+                    }, 500);
+                });
+            }, 5000);
+        });
+    </script>
+@endsection  <!-- ✅ ADD THIS AT THE VERY END -->

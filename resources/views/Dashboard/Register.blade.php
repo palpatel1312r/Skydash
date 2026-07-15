@@ -29,7 +29,7 @@
                             <h6 class="font-weight-light mb-4">It only takes a few steps</h6>
 
                             <!-- ✅ Register Form -->
-                            <form class="pt-3" method="POST" action="{{ route('PostRegister') }}">
+                           <form class="pt-3" method="POST" action="{{ route('register.post') }}">
                                 @csrf
 
                                 <!-- fullname -->
@@ -76,7 +76,7 @@
 
                                 <div class="text-center mt-4 font-weight-light">
                                     Already have an account?
-                                    <a href="{{ route('getLogin') }}" class="text-primary">Login</a>
+                                    <a href="{{ route('login') }}" class="text-primary">Login</a>
                                 </div>
                             </form>
 

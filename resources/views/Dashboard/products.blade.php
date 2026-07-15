@@ -1,264 +1,378 @@
-<x-adminheader />
+@extends('components.adminheader')
 
-
-<!-- partial -->
-<div class="main-panel">
-    <div class="content-wrapper">
-        <div class="row">
-            <div class="col-md-12 grid-margin">
-
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12 grid-margin stretch-card">
-                <div class="card">
-                    <div class="card-body">
-                        <!-- Button to Open the Modal -->
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
-                            Add New Products
-                        </button>
-
-                        <!-- The Modal -->
-                        <div class="modal" id="addNewModal">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-
-                                    <!-- Modal Header -->
-                                    <div class="modal-header">
-                                        <h4 class="modal-title">Add New Product</h4>
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                    </div>
-
-                                    <!-- Modal body -->
-                                    {{-- Insert Form --}}
-                                    <div class="modal-body">
-                                        <form action="{{ URL::to('AddNewProduct') }}" method="POST"
-                                            enctype="multipart/form-data">
-                                            @csrf
-
-                                            <label>Title :</label>
-                                            <input type="text" name="title" placeholder="Enter The Title"
-                                                class="form-control mb-2" required>
-
-                                            <label>Image :</label>
-                                            <input type="file" name="image"
-                                                class="form-control mb-2"id="input-file" accept="image/*" required>
-
-                                            <label>Description : </label>
-                                            <input type="text" name="description" placeholder="Enter The description"
-                                                class="form-control mb-2" required>
-
-
-                                            <label>Price :</label>
-                                            <input type="text" name="price" placeholder="Enter The Price ($)"
-                                                class="form-control mb-2" required>
-
-                                            <label>Quantity :</label>
-                                            <input type="number" name="quantity" placeholder="Enter The Quantity"
-                                                class="form-control mb-2" required>
-
-                                            <label>Category :</label>
-                                            <select name="category" class="form-control" id="">
-                                                <option value="">Select Category</option>
-                                                <option value="Accessories">Accessories</option>
-                                                <option value="Shoes">Shoes</option>
-                                                <option value="Clothes">Clothes</option>
-
-                                            </select>
-
-                                            <label>Type :</label>
-                                            <select name="type" class="form-control" id="">
-                                                <option value="">Select Type</option>
-                                                <option value="Best Sellers">Best Sellers</option>
-                                                <option value="new-arrivals">New Arrivals</option>
-                                                <option value="sale">Sale</option>
-
-                                            </select>
-
-                                            <input type="submit" value="Save Now" class="btn btn-primary mt-3"
-                                                id="">
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
+@section('content')
+    <!-- partial -->
+    <div class="main-panel">
+        <div class="content-wrapper">
+            <div class="row">
+                <div class="col-md-12 grid-margin">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
-                        <br>
-                        <br>
-                        <p class="card-title mb-0">Top Products</p>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-borderless">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Image</th>
-                                        <th>Price</th>
-                                        <th>Quantity</th>
-                                        <th>Category</th>
-                                        <th>Type</th>
-                                        <th>Update</th>
-                                        <th>Delete</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $i = 0;
-                                    @endphp
-                                    @foreach ($products as $item)
-                                        @php
-                                            $i++;
-                                        @endphp
-                                        <tr>
-                                            <td>{{ $i }}</td>
-                                            <td>{{ $item->title }}</td>
-                                            <td>
-                                                @if (Str::startsWith($item->image, ['http://', 'https://']))
-                                                    <img src="{{ $item->image }}" alt="Product Image"
-                                                        class="img-thumbnail" style="width: 80px; height: auto;">
-                                                @else
-                                                    <img src="{{ asset($item->image) }}" alt="Product Image"
-                                                        class="img-thumbnail" style="width: 80px; height: auto;">
-                                                @endif
-                                            </td>
-                                            <td>{{ $item->price }}</td>
-                                            <td>{{ $item->quantity }}</td>
-                                            <td>
-                                                <div class="btn btn-sm btn-success">
-                                                    {{ $item->category }}
-                                                </div>
+                    @endif
 
-                                            </td>
-                                            <td>
-                                                <div class="btn btn-sm btn-info">
-                                                    {{ $item->type }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <!-- Button to Open the Modal -->
-                                                <button type="button" class="btn btn-primary" data-toggle="modal"
-                                                    data-target="#updateModal{{ $i }}">
-                                                    Update
-                                                </button>
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
 
-                                                <!-- The Modal -->
-                                                <div class="modal" id="updateModal{{ $i }}">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
+            <div class="row">
+                <div class="col-md-12 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Button to Open the Modal -->
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
+                                <i class="mdi mdi-plus"></i> Add New Product
+                            </button>
 
-                                                            <!-- Modal Header -->
-                                                            <div class="modal-header">
-                                                                <h4 class="modal-title">Update Product</h4>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal">&times;</button>
-                                                            </div>
+                            <!-- Add Product Modal -->
+                            <div class="modal fade" id="addNewModal" tabindex="-1" role="dialog">
+                                <div class="modal-dialog modal-lg" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Add New Product</h4>
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        </div>
 
-                                                            <!-- Modal body -->
-                                                            <div class="modal-body">
+                                        <!-- Modal body -->
+                                        <div class="modal-body">
+                                            <form action="{{ route('admin.products.add') }}" method="POST"
+                                                enctype="multipart/form-data">
+                                                @csrf
 
-                                                                {{-- Update Form --}}
-                                                                <form action="{{ url('UpdateProduct') }}"
-                                                                    method="POST" enctype="multipart/form-data">
-                                                                    @csrf
-
-                                                                    <label>Title :</label>
-                                                                    <input type="text" name="title"
-                                                                        value="{{ $item->title }}"
-                                                                        placeholder="Enter The Title"
-                                                                        class="form-control mb-2" required>
-
-                                                                    <label>Image :</label>
-                                                                    @if ($item->image)
-                                                                        <img src="{{ asset($item->image) }}"
-                                                                            alt="Product Image" width="100"
-                                                                            class="mb-2">
-                                                                    @endif
-
-                                                                    <input type="file" name="image"
-                                                                        class="form-control mb-2" accept="image/*">
-
-                                                                    <label>Description : </label>
-                                                                    <input type="text" name="description"
-                                                                        value="{{ $item->description }}"
-                                                                        placeholder="Enter The Description"
-                                                                        class="form-control mb-2" required>
-
-                                                                    <label>Price :</label>
-                                                                    <input type="text" name="price"
-                                                                        value="{{ $item->price }}"
-                                                                        placeholder="Enter The Price ($)"
-                                                                        class="form-control mb-2" required>
-
-                                                                    <label>Quantity :</label>
-                                                                    <input type="number" name="quantity"
-                                                                        value="{{ $item->quantity }}"
-                                                                        placeholder="Enter The Quantity"
-                                                                        class="form-control mb-2" required>
-
-                                                                    <label>Category :</label>
-                                                                    <select name="category" class="form-control"
-                                                                        required>
-                                                                        <option value="{{ $item->category }}">
-                                                                            {{ $item->category }}</option>
-                                                                        <option value="Accessories">Accessories
-                                                                        </option>
-                                                                        <option value="Shoes">Shoes</option>
-                                                                        <option value="Clothes">Clothes</option>
-                                                                    </select>
-
-                                                                    <label>Type :</label>
-                                                                    <select name="type" class="form-control"
-                                                                        required>
-                                                                        <option value="{{ $item->type }}">
-                                                                            {{ $item->type }}</option>
-                                                                        <option value="Best Sellers">Best Sellers
-                                                                        </option>
-                                                                        <option value="New Arrivals">New Arrivals
-                                                                        </option>
-                                                                        <option value="Sale">Sale</option>
-                                                                    </select>
-
-                                                                    <input type="hidden" name="id"
-                                                                        value="{{ $item->id }}">
-
-                                                                    <input type="submit" value="Save Changes"
-                                                                        class="btn btn-primary mt-3">
-                                                                </form>
-                                                            </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Title :</label>
+                                                            <input type="text" name="title"
+                                                                placeholder="Enter The Title" class="form-control" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Price :</label>
+                                                            <input type="number" name="price"
+                                                                placeholder="Enter The Price ($)" class="form-control"
+                                                                step="0.01" required>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <a href="{{ URL::to('deleteProduct/' . $item->id) }}"
-                                                    class="btn btn-danger btn-sm"
-                                                    onclick="return confirmDelete('{{ $item->id }}')">
-                                                    Delete
-                                                </a>
-                                            </td>
 
-                                            <script>
-                                                function confirmDelete(productId) {
-                                                    if (confirm('Are you sure you want to delete this product?')) {
-                                                        window.location.href = "{{ URL::to('deleteProduct/') }}" + productId;
-                                                        return true;
-                                                    } else {
-                                                        return false;
-                                                    }
-                                                }
-                                            </script>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Quantity :</label>
+                                                            <input type="number" name="quantity"
+                                                                placeholder="Enter The Quantity" class="form-control"
+                                                                required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Category :</label>
+                                                            <select name="category" class="form-control" required>
+                                                                <option value="">Select Category</option>
+                                                                <option value="Accessories">Accessories</option>
+                                                                <option value="Shoes">Shoes</option>
+                                                                <option value="Clothes">Clothes</option>
+                                                                <option value="Electronics">Electronics</option>
+                                                                <option value="Home">Home & Living</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Type :</label>
+                                                            <select name="type" class="form-control" required>
+                                                                <option value="">Select Type</option>
+                                                                <option value="Best Sellers">Best Sellers</option>
+                                                                <option value="New Arrivals">New Arrivals</option>
+                                                                <option value="Sale">Sale</option>
+                                                                <option value="Featured">Featured</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Image :</label>
+                                                            <input type="file" name="image" class="form-control"
+                                                                accept="image/*" required>
+                                                            <small class="text-muted">Max size: 2MB (JPG, PNG, GIF)</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label>Description : </label>
+                                                    <textarea name="description" placeholder="Enter The description" class="form-control" rows="3" required></textarea>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-dismiss="modal">Close</button>
+                                                    <input type="submit" value="Save Product" class="btn btn-primary">
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br><br>
+                            <p class="card-title mb-0">Product List</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-borderless" id="productTable">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Title</th>
+                                            <th>Image</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Category</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @php $i = 0; @endphp
+                                        @foreach ($products as $item)
+                                            @php $i++; @endphp
+                                            <tr>
+                                                <td>{{ $i }}</td>
+                                                <td>{{ $item->title }}</td>
+                                                <td>
+                                                    @if ($item->image)
+                                                        @if (Str::startsWith($item->image, ['http://', 'https://']))
+                                                            <img src="{{ $item->image }}" alt="Product Image"
+                                                                class="img-thumbnail"
+                                                                style="width: 80px; height: 80px; object-fit: cover;">
+                                                        @else
+                                                            <img src="{{ asset($item->image) }}" alt="Product Image"
+                                                                class="img-thumbnail"
+                                                                style="width: 80px; height: 80px; object-fit: cover;">
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">No image</span>
+                                                    @endif
+                                                </td>
+                                                <td>${{ number_format($item->price, 2) }}</td>
+                                                <td>{{ $item->quantity }}</td>
+                                                <td>
+                                                    <span class="badge badge-success">{{ $item->category }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-info">{{ $item->type }}</span>
+                                                </td>
+                                                <td>
+                                                    <!-- Update Button -->
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                        data-toggle="modal"
+                                                        data-target="#updateModal{{ $item->id }}">
+                                                        <i class="mdi mdi-pencil"></i> Edit
+                                                    </button>
+
+                                                    <!-- Delete Button -->
+                                                    <a href="#" class="btn btn-danger btn-sm"
+                                                        onclick="confirmDelete({{ $item->id }})">
+                                                        <i class="mdi mdi-delete"></i> Delete
+                                                    </a>
+
+                                                    <!-- Delete Form -->
+                                                    <form id="delete-form-{{ $item->id }}"
+                                                        action="{{ route('admin.products.delete', $item->id) }}"
+                                                        method="GET" style="display: none;">
+                                                        @csrf
+                                                    </form>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Update Modal -->
+                                            <div class="modal fade" id="updateModal{{ $item->id }}" tabindex="-1"
+                                                role="dialog">
+                                                <div class="modal-dialog modal-lg" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h4 class="modal-title">Update Product - {{ $item->title }}
+                                                            </h4>
+                                                            <button type="button" class="close"
+                                                                data-dismiss="modal">&times;</button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <form action="{{ route('admin.products.update') }}"
+                                                                method="POST" enctype="multipart/form-data">
+                                                                @csrf
+
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Title :</label>
+                                                                            <input type="text" name="title"
+                                                                                value="{{ $item->title }}"
+                                                                                placeholder="Enter The Title"
+                                                                                class="form-control" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Price :</label>
+                                                                            <input type="number" name="price"
+                                                                                value="{{ $item->price }}"
+                                                                                placeholder="Enter The Price ($)"
+                                                                                class="form-control" step="0.01"
+                                                                                required>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Quantity :</label>
+                                                                            <input type="number" name="quantity"
+                                                                                value="{{ $item->quantity }}"
+                                                                                placeholder="Enter The Quantity"
+                                                                                class="form-control" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Category :</label>
+                                                                            <select name="category" class="form-control"
+                                                                                required>
+                                                                                <option value="{{ $item->category }}">
+                                                                                    {{ $item->category }}
+                                                                                </option>
+                                                                                <option value="Accessories">Accessories
+                                                                                </option>
+                                                                                <option value="Shoes">Shoes</option>
+                                                                                <option value="Clothes">Clothes</option>
+                                                                                <option value="Electronics">Electronics
+                                                                                </option>
+                                                                                <option value="Home">Home & Living
+                                                                                </option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Type :</label>
+                                                                            <select name="type" class="form-control"
+                                                                                required>
+                                                                                <option value="{{ $item->type }}">
+                                                                                    {{ $item->type }}
+                                                                                </option>
+                                                                                <option value="Best Sellers">Best Sellers
+                                                                                </option>
+                                                                                <option value="New Arrivals">New Arrivals
+                                                                                </option>
+                                                                                <option value="Sale">Sale</option>
+                                                                                <option value="Featured">Featured</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label>Image :</label>
+                                                                            @if ($item->image)
+                                                                                <div class="mb-2">
+                                                                                    <img src="{{ asset($item->image) }}"
+                                                                                        alt="Current Image" width="100"
+                                                                                        class="img-thumbnail">
+                                                                                </div>
+                                                                            @endif
+                                                                            <input type="file" name="image"
+                                                                                class="form-control" accept="image/*">
+                                                                            <small class="text-muted">Leave empty to keep
+                                                                                current image</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Description : </label>
+                                                                    <textarea name="description" placeholder="Enter The Description" class="form-control" rows="3" required>{{ $item->description }}</textarea>
+                                                                </div>
+
+                                                                <input type="hidden" name="id"
+                                                                    value="{{ $item->id }}">
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-dismiss="modal">Close</button>
+                                                                    <input type="submit" value="Update Product"
+                                                                        class="btn btn-primary">
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if ($products->isEmpty())
+                                <div class="text-center py-5">
+                                    <p class="text-muted">No products found. Click "Add New Product" to create one.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- content-wrapper ends -->
 
-
+        <footer class="footer">
+            <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a
+                        href="#" target="_blank">Skydash</a>. All rights reserved.</span>
+                <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i
+                        class="ti-heart text-danger ml-1"></i></span>
+            </div>
+        </footer>
     </div>
-    <!-- content-wrapper ends -->
-    <!-- partial:partials/_footer.html -->
-    <x-adminfooter />
+
+    <script>
+        // Confirm Delete
+        function confirmDelete(productId) {
+            if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+                document.getElementById('delete-form-' + productId).submit();
+            }
+            return false;
+        }
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.style.display = 'none';
+                    }, 500);
+                });
+            }, 5000);
+        });
+    </script>
+@endsection

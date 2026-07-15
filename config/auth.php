@@ -3,8 +3,8 @@
 return [
 
     'defaults' => [
-        'guard' => 'customer', // or 'web' if you want default
-        'passwords' => 'customers',
+        'guard' => 'web',
+        'passwords' => 'users',
     ],
 
     'guards' => [
@@ -16,6 +16,11 @@ return [
         'customer' => [
             'driver' => 'session',
             'provider' => 'customers',
+        ],
+
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
         ],
     ],
 
@@ -29,21 +34,34 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Customer::class,
         ],
+
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
     ],
 
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
 
         'customers' => [
             'provider' => 'customers',
-            'table' => 'password_resets',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'admins' => [
+            'provider' => 'admins',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
     ],
+
 ];

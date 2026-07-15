@@ -15,6 +15,7 @@ return [
 
     'paths' => [
         resource_path('views'),
+        base_path('vendors/views'), // Added your custom views path
     ],
 
     /*

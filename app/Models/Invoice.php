@@ -26,14 +26,13 @@ class Invoice extends Model
   ];
 
   protected $casts = [
-    'invoice_date' => 'date',
     'products' => 'array',
-    'subtotal' => 'decimal:2',
-    'tax_rate' => 'decimal:2',
-    'tax_amount' => 'decimal:2',
-    'total_amount' => 'decimal:2',
+    'invoice_date' => 'date',
   ];
 
+  /**
+   * Get the customer that owns the invoice.
+   */
   public function customer()
   {
     return $this->belongsTo(Customer::class, 'customer_id');
