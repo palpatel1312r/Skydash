@@ -6,12 +6,27 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
+// use App\Http\Controllers\Superadmin\AdminUserController;
 
-/*
-|--------------------------------------------------------------------------
-| Root Route
-|--------------------------------------------------------------------------
-*/
+Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+
+  Route::get('/dashboard', function () {
+    // 🛡️ Security check: Only Superadmin can access this (Assume Superadmin role_id = 2)
+    $user = auth()->guard('admin')->user();
+    if ($user->role_id !== 2) {
+      abort(403, 'Unauthorized access.');
+    }
+    return view('superadmin.dashboard');
+  })->name('dashboard');
+  Route::get('/assign-roles', [App\Http\Controllers\RoleAssignmentController::class, 'index'])->name('assign.roles');
+  Route::post('/assign-role', [App\Http\Controllers\RoleAssignmentController::class, 'assignRole'])->name('assign.role');
+
+  // Admin Management (CRUD)
+  // Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
+  // Route::post('/admins/add', [AdminUserController::class, 'store'])->name('admins.add');
+  // Route::post('/admins/update', [AdminUserController::class, 'update'])->name('admins.update');
+  // Route::delete('/admins/delete/{id}', [AdminUserController::class, 'destroy'])->name('admins.delete');
+});
 
 Route::get('/', function () {
   if (auth()->guard('admin')->check()) {
@@ -42,10 +57,13 @@ Route::post('/register', [CustomerController::class, 'register'])->name('registe
 */
 
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-  // Dashboard - ✅ Changed name to 'dashboard' (full name will be admin.dashboard)
+  // Dashboard
   Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
   Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
   Route::post('/profile/update', [AdminController::class, 'updateProfile'])->name('profile.update');
+
+  // ✅ Admin Password Update (Correctly placed here)
+  Route::post('/password/update', [AdminController::class, 'updatePassword'])->name('password.update');
 
   // Customer Management (Admin Only)
   Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
@@ -74,12 +92,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 */
 
 Route::middleware(['auth:customer'])->prefix('customer')->name('customer.')->group(function () {
-  // Dashboard - ✅ Changed name to 'dashboard' (full name will be customer.dashboard)
+  // Dashboard
   Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
   Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
   Route::post('/profile/update', [CustomerController::class, 'updateProfile'])->name('profile.update');
   Route::get('/products', [ProductController::class, 'customerProducts'])->name('products');
   Route::get('/invoices', [InvoiceController::class, 'customerInvoices'])->name('invoices');
+
+  // ✅ Customer Password Update (Moved here!)
+  Route::post('/password/update', [CustomerController::class, 'updatePassword'])->name('password.update');
 });
 
 /*
@@ -107,12 +128,6 @@ Route::middleware(['auth:customer'])->group(function () {
   Route::get('/customer/products', [ProductController::class, 'customerProducts'])->name('customer.products');
   Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])->name('customer.invoices');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/about', function () {
   return view('about');

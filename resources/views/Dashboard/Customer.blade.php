@@ -1,8 +1,6 @@
 @extends('components.adminheader')
 
 @section('content')
-    <h1>helo</h1>
-
     <!-- partial -->
     <div class="main-panel">
         <div class="content-wrapper">
@@ -62,12 +60,14 @@
                                                         class="form-control" required>
                                                 </div>
 
+                                                {{-- ✅ FIXED: Load roles dynamically from the database --}}
                                                 <div class="form-group">
                                                     <label>Role :</label>
-                                                    <select name="role" class="form-control" required>
+                                                    <select name="role_id" class="form-control" required>
                                                         <option value="">Select role</option>
-                                                        <option value="Admin">Admin</option>
-                                                        <option value="Customer">Customer</option>
+                                                        @foreach ($roles as $role)
+                                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                        @endforeach
                                                     </select>
                                                 </div>
 
@@ -115,10 +115,11 @@
                                                 <td>{{ $item->fullname }}</td>
                                                 <td>{{ $item->email }}</td>
                                                 <td>
-                                                    @if ($item->role == 'Admin')
-                                                        <span class="badge badge-primary">{{ $item->role }}</span>
+                                                    {{-- ✅ FIXED: Shows the role name cleanly --}}
+                                                    @if ($item->role)
+                                                        <span class="badge badge-primary">{{ $item->role->name }}</span>
                                                     @else
-                                                        <span class="badge badge-info">{{ $item->role }}</span>
+                                                        <span class="badge badge-secondary">No Role</span>
                                                     @endif
                                                 </td>
                                                 <td>{{ $item->created_at->format('M d, Y') }}</td>
@@ -158,8 +159,8 @@
                                                     </button>
 
                                                     <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('admin.customers.delete', $item->id) }}" method="POST"
-                                                        style="display: none;">
+                                                        action="{{ route('admin.customers.delete', $item->id) }}"
+                                                        method="POST" style="display: none;">
                                                         @csrf
                                                         @method('DELETE')
                                                     </form>
@@ -194,16 +195,18 @@
                                                                                 class="form-control" required>
                                                                         </div>
 
+                                                                        {{-- ✅ FIXED: Update modal now uses role_id --}}
                                                                         <div class="form-group">
                                                                             <label>Role:</label>
-                                                                            <select name="role" class="form-control"
+                                                                            <select name="role_id" class="form-control"
                                                                                 required>
-                                                                                <option value="Admin"
-                                                                                    {{ $item->role == 'Admin' ? 'selected' : '' }}>
-                                                                                    Admin</option>
-                                                                                <option value="Customer"
-                                                                                    {{ $item->role == 'Customer' ? 'selected' : '' }}>
-                                                                                    Customer</option>
+                                                                                <option value="">Select Role</option>
+                                                                                @foreach ($roles as $role)
+                                                                                    <option value="{{ $role->id }}"
+                                                                                        {{ $item->role_id == $role->id ? 'selected' : '' }}>
+                                                                                        {{ $role->name }}
+                                                                                    </option>
+                                                                                @endforeach
                                                                             </select>
                                                                         </div>
 
@@ -248,8 +251,7 @@
                 </div>
             </div>
         </div>
-        <!-- content-wrapper ends -->
-        <x-adminfooter />
+
     </div>
 
     <script>
@@ -273,4 +275,4 @@
             }, 5000);
         });
     </script>
-@endsection  <!-- ✅ ADD THIS AT THE VERY END -->
+@endsection

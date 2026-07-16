@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/ti-icons/css/themify-icons.css') }}">
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/css/vendor.bundle.base.css') }}">
     <!-- endinject -->
-
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
     <!-- Plugin css for this page -->
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/ti-icons/css/themify-icons.css') }}">
@@ -24,7 +25,7 @@
 
     <link rel="shortcut icon" href="{{ asset('Dashboard/images/favicon.png') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> --}}
 </head>
 
 <body>
@@ -32,19 +33,29 @@
         <!-- partial:partials/_navbar.html -->
         <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                @if (auth()->guard('admin')->check())
-                    <a class="navbar-brand brand-logo mr-5" href="{{ route('admin.dashboard') }}">
-                    @else
-                        <a class="navbar-brand brand-logo mr-5" href="{{ route('customer.dashboard') }}">
-                @endif
-                <img src="{{ asset('Dashboard/images/logo.svg') }}" class="mr-2" alt="logo" />
+                {{-- ✅ 1. Determine the correct dashboard URL based on the logged-in user --}}
+                @php
+                    $dashboardUrl = '#';
+                    if (auth()->guard('admin')->check()) {
+                        $user = auth()->guard('admin')->user();
+                        if ($user->role === 'Superadmin') {
+                            $dashboardUrl = route('superadmin.dashboard');
+                        } else {
+                            $dashboardUrl = route('admin.dashboard');
+                        }
+                    } elseif (auth()->guard('customer')->check()) {
+                        $dashboardUrl = route('customer.dashboard');
+                    }
+                @endphp
+
+                {{-- ✅ 2. Main Logo (Large) --}}
+                <a class="navbar-brand brand-logo mr-5" href="{{ $dashboardUrl }}">
+                    <img src="{{ asset('Dashboard/images/logo.svg') }}" class="mr-2" alt="logo" />
                 </a>
-                @if (auth()->guard('admin')->check())
-                    <a class="navbar-brand brand-logo-mini" href="{{ route('admin.dashboard') }}">
-                    @else
-                        <a class="navbar-brand brand-logo-mini" href="{{ route('customer.dashboard') }}">
-                @endif
-                <img src="{{ asset('Dashboard/images/logo-mini.svg') }}" alt="logo" />
+
+                {{-- ✅ 3. Mini Logo (Small) --}}
+                <a class="navbar-brand brand-logo-mini" href="{{ $dashboardUrl }}">
+                    <img src="{{ asset('Dashboard/images/logo-mini.svg') }}" alt="logo" />
                 </a>
             </div>
 
@@ -78,10 +89,10 @@
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
                                 // Determine which user is logged in
-                                if(auth()->guard('admin')->check()) {
+                                if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
                                     $bgColor = '#4e73df'; // Admin Blue
-                                } elseif(auth()->guard('customer')->check()) {
+                                } elseif (auth()->guard('customer')->check()) {
                                     $user = auth()->guard('customer')->user();
                                     $bgColor = '#1cc88a'; // Customer Green
                                 } else {
@@ -91,7 +102,8 @@
                                 $initial = $user ? strtoupper(substr($user->name ?? 'U', 0, 1)) : 'U';
                             @endphp
 
-                            <div style="
+                            <div
+                                style="
                                 width: 35px; 
                                 height: 35px; 
                                 border-radius: 50%; 
@@ -107,7 +119,8 @@
                                 {{ $initial }}
                             </div>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+                        <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
+                            aria-labelledby="profileDropdown">
                             @if (auth()->guard('admin')->check())
                                 <a class="dropdown-item" href="{{ route('admin.profile') }}">
                                     <i class="ti-user text-primary"></i>
@@ -119,9 +132,9 @@
                                     Profile
                                 </a>
                             @endif
-                            <a class="dropdown-item" href="#">
-                                <i class="ti-settings text-primary"></i>
-                                Settings
+                            <a class="dropdown-item" href="#" onclick="openChangePasswordModal()">
+                                <i class="ti-key text-primary"></i>
+                                Change Password
                             </a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('logout') }}" style="display: inline;">
@@ -173,14 +186,21 @@
 
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
+                    {{-- ✅ 1. ADMIN & SUPER ADMIN SHARED MENU --}}
                     @if (auth()->guard('admin')->check())
-                        <!-- Admin Sidebar -->
+                        @php
+                            $user = auth()->guard('admin')->user();
+                        @endphp
+
+                        {{-- ✅ DYNAMIC DASHBOARD LINK --}}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                            <a class="nav-link"
+                                href="{{ $user->role === 'Superadmin' ? route('superadmin.dashboard') : route('admin.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
                                 <span class="menu-title">Dashboard</span>
                             </a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.customers.index') }}">
                                 <i class="icon-columns menu-icon"></i>
@@ -188,13 +208,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('products') }}">
+                            <a class="nav-link" href="{{ route('admin.products.index') }}">
                                 <i class="icon-layout menu-icon"></i>
                                 <span class="menu-title">Products</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('invoices') }}">
+                            <a class="nav-link" href="{{ route('admin.invoices.index') }}">
                                 <i class="icon-file menu-icon"></i>
                                 <span class="menu-title">Invoices</span>
                             </a>
@@ -205,8 +225,19 @@
                                 <span class="menu-title">Profile</span>
                             </a>
                         </li>
+
+        
+                        @if ($user)
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('superadmin.assign.roles') }}">
+                                    <i class="mdi mdi-account-check menu-icon"></i>
+                                    <span class="menu-title">Assign Roles</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- ✅ 2. CUSTOMER SIDEBAR --}}
                     @elseif (auth()->guard('customer')->check())
-                        <!-- Customer Sidebar -->
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('customer.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
@@ -261,7 +292,67 @@
     <!-- Custom js for this page-->
     <script src="{{ asset('Dashboard/js/dashboard.js') }}"></script>
     <script src="{{ asset('Dashboard/js/Chart.roundedBarCharts.js') }}"></script>
+
+    <script>
+        function openChangePasswordModal() {
+            const user = @json(auth()->guard('admin')->check() ? 'admin' : (auth()->guard('customer')->check() ? 'customer' : null));
+
+            if (!user) return;
+
+            // Set the correct form action URL based on user type
+            const form = document.getElementById('changePasswordForm');
+            if (user === 'admin') {
+                form.action = "{{ route('admin.password.update') }}";
+            } else if (user === 'customer') {
+                form.action = "{{ route('customer.password.update') }}";
+            }
+
+            // Clear previous inputs
+            form.reset();
+
+            // Show the modal
+            $('#changePasswordModal').modal('show');
+        }
+    </script>
     <!-- End custom js for this page-->
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="ti-lock text-primary"></i> Change Password</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="changePasswordForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" name="current_password" id="current_password"
+                                class="form-control" required placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" name="new_password" id="new_password" class="form-control"
+                                required placeholder="Enter new password (min 4 characters)">
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password_confirmation">Confirm New Password</label>
+                            <input type="password" name="new_password_confirmation" id="new_password_confirmation"
+                                class="form-control" required placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

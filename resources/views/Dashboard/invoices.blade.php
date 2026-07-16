@@ -80,7 +80,8 @@
                                                 <hr>
                                                 <h5>Products</h5>
                                                 <div id="product-rows">
-                                                    <div class="row product-row">
+                                                    <div class="row product-row align-items-end">
+                                                        <!-- 1. Product Dropdown (Takes up remaining space) -->
                                                         <div class="col-md-5">
                                                             <label>Select Product:</label>
                                                             <select name="product_id[]" class="form-control product-select"
@@ -96,22 +97,31 @@
                                                                 @endforeach
                                                             </select>
                                                         </div>
+
+                                                        <!-- 2. Price (Takes up remaining space) -->
                                                         <div class="col-md-3">
                                                             <label>Price (₹):</label>
                                                             <input type="number" name="price[]"
                                                                 class="form-control product-price" placeholder="Price"
                                                                 step="0.01" readonly style="background: #f8f9fa;">
                                                         </div>
+
+                                                        <!-- 3. Subtotal (Takes up remaining space) -->
                                                         <div class="col-md-3">
                                                             <label>Subtotal (₹):</label>
                                                             <input type="text" name="subtotal[]"
                                                                 class="form-control product-subtotal" readonly
                                                                 style="background: #f8f9fa;">
                                                         </div>
-                                                        <div class="col-md-1" style="display: flex; align-items: flex-end;">
+
+                                                        <!-- 4. Remove Button (Pushed to the far right) -->
+                                                        <div class="col-md-1 d-flex align-items-end justify-content-end"
+                                                            style="padding-bottom: 5px;">
                                                             <button type="button" class="btn btn-danger btn-sm remove-row"
-                                                                onclick="removeProductRow(this)">
-                                                                <i class="mdi mdi-delete"></i>
+                                                                onclick="removeProductRow(this)"
+                                                                style="height: 38px; font-size: 12px; padding: 0 8px; white-space: nowrap;">
+                                                                <i class="mdi mdi-delete" style="font-size: 14px;"></i>
+                                                                Remove
                                                             </button>
                                                         </div>
                                                     </div>
@@ -220,7 +230,7 @@
                                                         <i class="mdi mdi-eye"></i> View
                                                     </button>
 
-                                                    <!-- Change Status -->
+                                                    <!-- Change Status Dropdown -->
                                                     <div class="btn-group" role="group">
                                                         <button type="button"
                                                             class="btn btn-sm btn-secondary dropdown-toggle"
@@ -243,10 +253,10 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Delete Button -->
-                                                    <button type="button" class="btn btn-danger btn-sm"
-                                                        onclick="confirmDelete('{{ $item->id }}')">
-                                                        <i class="mdi mdi-delete"></i> Delete
+                                                    <button type="button" class="btn btn-danger"
+                                                        onclick="confirmDelete('{{ $item->id }}')"
+                                                        style="padding: 6px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 5px;">
+                                                        <i class="mdi mdi-delete" style="font-size: 16px;"></i> Delete
                                                     </button>
 
                                                     <form id="delete-form-{{ $item->id }}"
@@ -479,15 +489,41 @@
         // Auto-calculate on tax rate change
         document.querySelector('input[name="tax_rate"]')?.addEventListener('input', calculateTotal);
 
-        // Initialize on page load
+        // ==========================================
+        // ✅ NEW: Disable Products until Customer is selected
+        // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
-            if (document.querySelector('#addInvoiceModal')) {
-                document.querySelector('#addInvoiceModal').addEventListener('show.bs.modal', function() {
-                    setTimeout(calculateTotal, 100);
-                });
+            const customerSelect = document.querySelector('select[name="customer_id"]');
+            const productRows = document.getElementById('product-rows');
+            const addProductBtn = document.querySelector('button[onclick="addProductRow()"]');
+
+            // Function to toggle product section
+            function toggleProductSection() {
+                const selected = customerSelect.value;
+                if (selected === '') {
+                    // If no customer selected, disable everything
+                    productRows.style.opacity = '0.5';
+                    productRows.style.pointerEvents = 'none';
+                    if (addProductBtn) addProductBtn.disabled = true;
+                } else {
+                    // If customer selected, enable everything
+                    productRows.style.opacity = '1';
+                    productRows.style.pointerEvents = 'auto';
+                    if (addProductBtn) addProductBtn.disabled = false;
+                }
             }
 
-            // Auto-hide alerts after 5 seconds
+            // Run the check on page load (in case a user is pre-selected)
+            toggleProductSection();
+
+            // Run the check whenever the Customer dropdown changes
+            customerSelect.addEventListener('change', toggleProductSection);
+        });
+
+        // ==========================================
+        // ✅ Auto-hide alerts after 5 seconds
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {

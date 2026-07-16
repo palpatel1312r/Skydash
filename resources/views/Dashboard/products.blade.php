@@ -169,7 +169,7 @@
                                                         <span class="text-muted">No image</span>
                                                     @endif
                                                 </td>
-                                                <td>${{ number_format($item->price, 2) }}</td>
+                                                <td>₹{{ number_format($item->price, 2) }}</td>
                                                 <td>{{ $item->quantity }}</td>
                                                 <td>
                                                     <span class="badge badge-success">{{ $item->category }}</span>

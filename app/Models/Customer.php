@@ -16,7 +16,7 @@ class Customer extends Authenticatable
         'fullname',
         'email',
         'password',
-        'role',
+        'role_id',   // ✅ ADD THIS
         'status',
     ];
 
@@ -25,15 +25,9 @@ class Customer extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-
-    /**
-     * Get the invoices for the customer.
-     */
-    public function invoices()
+    // ✅ ADD THIS RELATIONSHIP
+    public function role()
     {
-        return $this->hasMany(Invoice::class, 'customer_id');
+        return $this->belongsTo(Role::class);
     }
 }

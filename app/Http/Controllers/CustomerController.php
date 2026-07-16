@@ -37,21 +37,22 @@ class CustomerController extends Controller
             'status' => 'Active',
         ]);
 
-        Auth::guard('customer')->login($customer);
-        $request->session()->regenerate();
-
         if (Auth::guard('customer')->check()) {
+            // ✅ SUCCESS: Stay logged in and go to dashboard
             return redirect()->route('customer.dashboard')->with('success', 'Registration successful!');
         } else {
-            return redirect()->route('login')->with('error', 'Registration successful but login failed.');
+            // ✅ FIXED: Pass the email back to the login form
+            return redirect()->route('login')->withInput(['email' => $request->email])
+                ->with('success', 'Registration successful! Please login with your credentials.');
         }
     }
 
     public function index()
     {
-        $customers = Customer::all();
+        $customers = Customer::with('role')->get();
+        $roles = \App\Models\Role::all();
         Log::info('Customers found: ' . $customers->count());
-        return view('Dashboard.Customer', compact('customers'));
+        return view('Dashboard.Customer', compact('customers', 'roles'));
     }
 
     public function store(Request $request)
@@ -136,5 +137,26 @@ class CustomerController extends Controller
         $customer->update($data);
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
+    }
+    // Add this method to your CustomerController
+    public function updatePassword(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:4|confirmed',
+        ]);
+
+        // Check if current password matches
+        if (!Hash::check($request->current_password, $customer->password)) {
+            return back()->with('error', 'Current password is incorrect.');
+        }
+
+        // Update the password
+        $customer->password = Hash::make($request->new_password);
+        $customer->save();
+
+        return redirect()->back()->with('success', 'Password changed successfully!');
     }
 }

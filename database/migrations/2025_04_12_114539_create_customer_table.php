@@ -16,9 +16,10 @@ class CreateCustomerTable extends Migration
         Schema::create('customer', function (Blueprint $table) {
             $table->id();
             $table->string('fullname');
-            $table->string('email');
+            $table->string('email')->unique(); // ✅ Added unique()
             $table->string('password');
-            $table->string('role')->default('customer');
+            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
+
             $table->string('status')->default('Active');
             $table->timestamps();
         });

@@ -4,40 +4,38 @@ namespace Database\Seeders;
 
 use App\Models\Customer;
 use Illuminate\Database\Seeder;
-use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 
 class CustomerSeeder extends Seeder
 {
     public function run(): void
     {
-        // Combine all customers into one array
-        $customers = [
-            [
-                'fullname' => 'User 1',
-                'email' => 'user1@gmail.com',
-                'password' => Hash::make('1234'),
-                'role' => 'customer',
-                'status' => 'Active',
-            ],
-            [
-                'fullname' => 'User 2',
-                'email' => 'user2@gmail.com',
-                'password' => Hash::make('1234'),
-                'role' => 'customer',
-                'status' => 'Active',
-            ],
-            // Add more customers as needed
-        ];
+        // 🛑 Make sure you have a Role with ID 1 (e.g., "Customer") in your roles table!
 
-        foreach ($customers as $customer) {
-            Customer::updateOrCreate(
-                ['email' => $customer['email']],
-                $customer
-            );
-        }
+        Customer::create([
+            'fullname' => 'User 1',
+            'email' => 'User1@gmail.com',
+            'password' => Hash::make('1234'),
+            'role_id' => 1, 
+            'status' => 'Active',
+        ]);
 
-        $this->command->info('✅ Customers seeded successfully!');
-        $this->command->info('📊 Total customers: ' . Customer::count());
+        Customer::create([
+            'fullname' => 'User 2',
+            'email' => 'User2@gmail.com',
+            'password' => Hash::make('1234'),
+            'role_id' => 1,
+            'status' => 'Active',
+        ]);
+
+        Customer::create([
+            'fullname' => 'User 3',
+            'email' => 'User3@gmail.com',
+            'password' => Hash::make('1234'),
+            'role_id' => 1,
+            'status' => 'Active',
+        ]);
+
+        $this->command->info('✅ 3 Customers seeded successfully!');
     }
 }

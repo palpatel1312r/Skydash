@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -16,7 +17,7 @@ class ProductController extends Controller
     $products = Product::all();
 
     // ✅ Debug - Check if products exist
-    \Log::info('Products count: ' . $products->count());
+    Log::info('Products count: ' . $products->count());
 
     return view('Dashboard.products', compact('products'));
   }

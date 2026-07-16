@@ -6,28 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 class ProfileTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->string('profile_image')->nullable()->after('email');
+            if (!Schema::hasColumn('admins', 'profile_image')) {
+                $table->string('profile_image')->nullable()->after('email');
+            }
+            // Add any other columns here with similar checks
         });
     }
 
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->dropColumn('profile_image');
+            if (Schema::hasColumn('admins', 'profile_image')) {
+                $table->dropColumn('profile_image');
+            }
         });
     }
 }
