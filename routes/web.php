@@ -8,6 +8,12 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
 // use App\Http\Controllers\Superadmin\AdminUserController;
 
+/*
+|--------------------------------------------------------------------------
+| Super Admin Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
 
   Route::get('/dashboard', function () {
@@ -18,15 +24,14 @@ Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->gr
     }
     return view('superadmin.dashboard');
   })->name('dashboard');
-  Route::get('/assign-roles', [App\Http\Controllers\RoleAssignmentController::class, 'index'])->name('assign.roles');
-  Route::post('/assign-role', [App\Http\Controllers\RoleAssignmentController::class, 'assignRole'])->name('assign.role');
-
-  // Admin Management (CRUD)
-  // Route::get('/admins', [AdminUserController::class, 'index'])->name('admins.index');
-  // Route::post('/admins/add', [AdminUserController::class, 'store'])->name('admins.add');
-  // Route::post('/admins/update', [AdminUserController::class, 'update'])->name('admins.update');
-  // Route::delete('/admins/delete/{id}', [AdminUserController::class, 'destroy'])->name('admins.delete');
+  Route::resource('roles', App\Http\Controllers\RoleController::class)->except(['show']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Root Route
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
   if (auth()->guard('admin')->check()) {
@@ -49,6 +54,16 @@ Route::post('/login', [AuthController::class, 'autoLogin'])->name('login.auto');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [CustomerController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [CustomerController::class, 'register'])->name('register.post');
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (No middleware)
+|--------------------------------------------------------------------------
+*/
+
+// ✅ These routes are exposed globally so the views can generate links
+Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 
 /*
 |--------------------------------------------------------------------------
@@ -78,11 +93,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
   Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
 
-  // Admin Invoice Routes
-  Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-  Route::post('/invoices/add', [InvoiceController::class, 'store'])->name('invoices.add');
+  // Admin Invoice Routes (These perform actions, so they stay inside the guard)
+  Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
   Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
-  Route::delete('/invoices/delete/{id}', [InvoiceController::class, 'destroy'])->name('invoices.delete');
+  Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 });
 
 /*
@@ -113,7 +127,7 @@ Route::middleware(['auth:admin'])->group(function () {
   // Products - Admin only
   Route::get('/products', [ProductController::class, 'index'])->name('products');
   // Invoices - Admin only
-  Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
+  Route::get('/invoice-list', [InvoiceController::class, 'index'])->name('invoices');
   Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
   Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
   Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');

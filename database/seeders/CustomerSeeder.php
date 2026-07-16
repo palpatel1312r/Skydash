@@ -10,13 +10,11 @@ class CustomerSeeder extends Seeder
 {
     public function run(): void
     {
-        // 🛑 Make sure you have a Role with ID 1 (e.g., "Customer") in your roles table!
-
         Customer::create([
             'fullname' => 'User 1',
             'email' => 'User1@gmail.com',
             'password' => Hash::make('1234'),
-            'role_id' => 1, 
+            'role_id' => 3, // ✅ Customer
             'status' => 'Active',
         ]);
 
@@ -24,7 +22,7 @@ class CustomerSeeder extends Seeder
             'fullname' => 'User 2',
             'email' => 'User2@gmail.com',
             'password' => Hash::make('1234'),
-            'role_id' => 1,
+            'role_id' => 3, // ✅ Customer
             'status' => 'Active',
         ]);
 
@@ -32,7 +30,7 @@ class CustomerSeeder extends Seeder
             'fullname' => 'User 3',
             'email' => 'User3@gmail.com',
             'password' => Hash::make('1234'),
-            'role_id' => 1,
+            'role_id' => 3, // ✅ Customer
             'status' => 'Active',
         ]);
 

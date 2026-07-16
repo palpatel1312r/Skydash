@@ -29,11 +29,12 @@ class CustomerController extends Controller
             'password' => 'required|min:4|confirmed',
         ]);
 
+        // ✅ FIXED: Properly closed the array and added the missing brackets
         $customer = Customer::create([
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'Customer',
+            'role_id' => 1, // Default Customer role ID
             'status' => 'Active',
         ]);
 
@@ -60,7 +61,7 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email',
-            'role' => 'required|string',
+            'role_id' => 'required|exists:roles,id', // ✅ Changed from 'role' to 'role_id'
             'status' => 'required|string',
         ]);
 
@@ -68,7 +69,7 @@ class CustomerController extends Controller
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make('password123'),
-            'role' => $request->role,
+            'role_id' => $request->role_id,
             'status' => $request->status,
         ]);
 
@@ -82,9 +83,17 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email,' . $request->id,
+            'role_id' => 'required|exists:roles,id', // ✅ Changed from 'role' to 'role_id'
+            'status' => 'required|string',
         ]);
 
-        $customer->update($request->only(['fullname', 'email', 'role', 'status']));
+        // ✅ FIXED: Use role_id instead of role
+        $customer->update([
+            'fullname' => $request->fullname,
+            'email' => $request->email,
+            'role_id' => $request->role_id,
+            'status' => $request->status,
+        ]);
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully!');
     }
@@ -138,6 +147,7 @@ class CustomerController extends Controller
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
+
     // Add this method to your CustomerController
     public function updatePassword(Request $request)
     {

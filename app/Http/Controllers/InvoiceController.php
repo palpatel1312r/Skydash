@@ -7,7 +7,7 @@ use App\Models\Invoice;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+// use Illuminate\Support\Facades\Mail;
 
 class InvoiceController extends Controller
 {
@@ -19,7 +19,12 @@ class InvoiceController extends Controller
 
         return view('Dashboard.invoices', compact('invoices', 'customers', 'products'));
     }
-
+    public function create()
+    {
+        $customers = Customer::all();
+        $products = Product::all();
+        return view('Dashboard.invoices_create', compact('customers', 'products'));
+    }
     public function store(Request $request)
     {
         $request->validate([
@@ -27,6 +32,7 @@ class InvoiceController extends Controller
             'invoice_date' => 'required|date',
             'customer_id' => 'required|exists:customer,id',
             'product_id.*' => 'required|exists:product,id',
+            'quantity.*' => 'required|integer|min:1',
             'price.*' => 'required|numeric|min:0',
             'subtotal.*' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0',
@@ -44,14 +50,29 @@ class InvoiceController extends Controller
         foreach ($request->product_id as $key => $productId) {
             $product = Product::find($productId);
             $price = floatval($request->price[$key]);
-            $productSubtotal = floatval($request->subtotal[$key]);
 
+            // ✅ Get quantity from the form
+            $quantitySold = $request->quantity[$key] ?? 1;
+
+            // ✅ Calculate subtotal locally (Price × Quantity)
+            $productSubtotal = $price * $quantitySold;
+
+            // ✅ Check Stock Availability
+            if (!$product->hasStock($quantitySold)) {
+                return redirect()->back()->with('error', 'Not enough stock for product: ' . $product->title . ' (Available: ' . $product->quantity . ', Requested: ' . $quantitySold . ')');
+            }
+
+            // ✅ Save product data including quantity
             $products[] = [
                 'product_id' => $productId,
                 'product_name' => $product->title ?? 'Unknown Product',
                 'price' => $price,
+                'quantity' => $quantitySold,   // ✅ SAVE THIS
                 'subtotal' => $productSubtotal,
             ];
+
+            // ✅ Decrease the stock by the actual quantity sold
+            $product->decreaseStock($quantitySold);
 
             $subtotal += $productSubtotal;
         }
@@ -76,19 +97,7 @@ class InvoiceController extends Controller
             'status' => 'Unpaid',
         ]);
 
-        // ✅ Send invoice notification to customer
-        $this->sendInvoiceNotification($invoice, $customer);
-
-        // ✅ Log invoice creation
-        \Log::info('New invoice created for customer', [
-            'customer_id' => $customer->id,
-            'customer_email' => $customer->email,
-            'invoice_number' => $invoice->invoice_number,
-            'total_amount' => $totalAmount
-        ]);
-
-        // ✅ Single return statement
-        return redirect()->route('invoices')->with('success', 'Invoice created successfully! Invoice #' . $invoice->invoice_number . ' and notification sent to customer.');
+        return redirect()->route('invoices.index')->with('success', 'Invoice created successfully! Invoice #' . $invoice->invoice_number);
     }
     public function updateStatus($id, $status)
     {
@@ -109,7 +118,7 @@ class InvoiceController extends Controller
             $this->sendInvoiceStatusNotification($invoice, $customer, $oldStatus);
         }
 
-        return redirect()->route('invoices')->with('success', 'Invoice status updated to ' . $status);
+        return redirect()->route('invoices.index')->with('success', 'Invoice status updated to ' . $status);
     }
 
     public function destroy($id)

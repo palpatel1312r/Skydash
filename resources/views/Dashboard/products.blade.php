@@ -170,7 +170,17 @@
                                                     @endif
                                                 </td>
                                                 <td>₹{{ number_format($item->price, 2) }}</td>
-                                                <td>{{ $item->quantity }}</td>
+                                                <td>
+                                                    @if ($item->quantity > 10)
+                                                        <span class="badge badge-success">{{ $item->quantity }} in
+                                                            stock</span>
+                                                    @elseif($item->quantity > 0 && $item->quantity <= 10)
+                                                        <span class="badge badge-warning">{{ $item->quantity }} in stock
+                                                            (Low)</span>
+                                                    @else
+                                                        <span class="badge badge-danger">Out of Stock</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     <span class="badge badge-success">{{ $item->category }}</span>
                                                 </td>

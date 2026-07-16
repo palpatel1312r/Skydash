@@ -195,7 +195,7 @@
                         {{-- ✅ DYNAMIC DASHBOARD LINK --}}
                         <li class="nav-item">
                             <a class="nav-link"
-                                href="{{ $user->role === 'Superadmin' ? route('superadmin.dashboard') : route('admin.dashboard') }}">
+                                href="{{ $user->role_id === 1 ? route('superadmin.dashboard') : route('admin.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
                                 <span class="menu-title">Dashboard</span>
                             </a>
@@ -214,7 +214,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.invoices.index') }}">
+                            <a class="nav-link" href="{{ route('invoices.index') }}">
                                 <i class="icon-file menu-icon"></i>
                                 <span class="menu-title">Invoices</span>
                             </a>
@@ -226,12 +226,12 @@
                             </a>
                         </li>
 
-        
+
                         @if ($user)
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('superadmin.assign.roles') }}">
-                                    <i class="mdi mdi-account-check menu-icon"></i>
-                                    <span class="menu-title">Assign Roles</span>
+                                <a class="nav-link" href="{{ route('superadmin.roles.index') }}">
+                                    <i class="mdi mdi-account-multiple menu-icon"></i>
+                                    <span class="menu-title">Manage Roles</span>
                                 </a>
                             </li>
                         @endif

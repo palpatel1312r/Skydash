@@ -9,7 +9,6 @@ class Product extends Model
 {
     use HasFactory;
 
-    // ✅ Specify the correct table name
     protected $table = 'product';
 
     protected $fillable = [
@@ -26,4 +25,18 @@ class Product extends Model
         'price' => 'decimal:2',
         'quantity' => 'integer',
     ];
+
+    public function hasStock($requestedQuantity)
+    {
+        return $this->quantity >= $requestedQuantity;
+    }
+
+    public function decreaseStock($quantity)
+    {
+        if ($this->quantity < $quantity) {
+            throw new \Exception('Not enough stock!');
+        }
+        $this->quantity -= $quantity;
+        $this->save();
+    }
 }
