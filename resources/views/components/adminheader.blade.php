@@ -29,6 +29,7 @@
 </head>
 
 <body>
+
     <div class="container-scroller">
         <!-- partial:partials/_navbar.html -->
         <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
@@ -53,7 +54,6 @@
                     <img src="{{ asset('Dashboard/images/logo.svg') }}" class="mr-2" alt="logo" />
                 </a>
 
-                {{-- ✅ 3. Mini Logo (Small) --}}
                 <a class="navbar-brand brand-logo-mini" href="{{ $dashboardUrl }}">
                     <img src="{{ asset('Dashboard/images/logo-mini.svg') }}" alt="logo" />
                 </a>
@@ -371,13 +371,27 @@
             </div>
         </div>
     </div>
+
     <script>
-        $(document).ready(function() {
-            // Check if there are any validation errors for the Change Password form fields
-            @if ($errors->has('current_password') || $errors->has('new_password') || $errors->has('new_password_confirmation'))
-                $('#changePasswordModal').modal('show');
-            @endif
-        });
+        function openChangePasswordModal() {
+            const user = @json(auth()->guard('admin')->check() ? 'admin' : (auth()->guard('customer')->check() ? 'customer' : null));
+
+            if (!user) return;
+
+            // Set the correct form action URL based on user type
+            const form = document.getElementById('changePasswordForm');
+            if (user === 'admin') {
+                form.action = "{{ route('admin.password.update') }}";
+            } else if (user === 'customer') {
+                form.action = "{{ route('customer.password.update') }}";
+            }
+
+            // Clear previous inputs so old errors don't linger
+            form.reset();
+
+            // Show the modal using jQuery (which your template loads)
+            $('#changePasswordModal').modal('show');
+        }
     </script>
 </body>
 

@@ -298,9 +298,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const customerSelect = document.getElementById('customerSelect');
 
-            // ✅ REMOVED: The code that disabled the button is completely gone from here.
 
-            // ✅ Clear Customer error on change
             customerSelect.addEventListener('change', function() {
                 this.classList.remove('is-invalid');
                 const errorDiv = this.closest('.form-group').querySelector(
@@ -311,7 +309,6 @@
                 }
             });
 
-            // ✅ FIX: Clear Product error on change for initial rows
             document.querySelectorAll('.product-select').forEach(select => {
                 select.addEventListener('change', function() {
                     this.classList.remove('is-invalid');

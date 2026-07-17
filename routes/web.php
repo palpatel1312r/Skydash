@@ -87,6 +87,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
   Route::get('/customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
 
+
   // Admin Product Routes
   Route::get('/products', [ProductController::class, 'index'])->name('products.index');
   Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
@@ -114,8 +115,6 @@ Route::middleware(['auth:customer'])->prefix('customer')->name('customer.')->gro
   Route::post('/profile/update', [CustomerController::class, 'updateProfile'])->name('profile.update');
   Route::get('/products', [ProductController::class, 'customerProducts'])->name('products');
   Route::get('/invoices', [InvoiceController::class, 'customerInvoices'])->name('invoices');
-
-  // ✅ Customer Password Update (Moved here!)
   Route::post('/password/update', [CustomerController::class, 'updatePassword'])->name('password.update');
 });
 

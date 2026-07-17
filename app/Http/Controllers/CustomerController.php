@@ -154,20 +154,16 @@ class CustomerController extends Controller
             'email' => 'required|email|unique:customer,email,' . $customer->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // ✅ Removed 'profile_image' validation
         ]);
 
-        $data = $request->only(['name', 'email', 'phone', 'address']);
+        // ✅ Simply update ONLY the text fields
+        $customer->name = $request->name;
+        $customer->email = $request->email;
+        $customer->phone = $request->phone;
+        $customer->address = $request->address;
 
-        if ($request->hasFile('profile_image')) {
-            if ($customer->profile_image && file_exists(storage_path('app/public/' . $customer->profile_image))) {
-                unlink(storage_path('app/public/' . $customer->profile_image));
-            }
-            $path = $request->file('profile_image')->store('profile_images', 'public');
-            $data['profile_image'] = $path;
-        }
-
-        $customer->update($data);
+        $customer->save();
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
@@ -195,5 +191,26 @@ class CustomerController extends Controller
         $customer->save();
 
         return redirect()->back()->with('success', 'Password changed successfully!');
+    }
+
+    public function validateCurrentPassword(Request $request)
+    {
+        // ✅ Detect if Admin or Customer is logged in
+        if (Auth::guard('admin')->check()) {
+            $user = Auth::guard('admin')->user();
+        } elseif (Auth::guard('customer')->check()) {
+            $user = Auth::guard('customer')->user();
+        } else {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Check the password
+        if (Hash::check($request->current_password, $user->password)) {
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json([
+                'errors' => ['current_password' => ['The current password is incorrect.']]
+            ], 422);
+        }
     }
 }
