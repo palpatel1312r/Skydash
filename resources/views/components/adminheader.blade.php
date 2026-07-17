@@ -270,6 +270,7 @@
             @yield('content')
 
         </div> <!-- ✅ Close page-body-wrapper -->
+
     </div> <!-- ✅ Close container-scroller -->
 
     <!-- plugins:js -->

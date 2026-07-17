@@ -48,7 +48,7 @@
                                 <div class="col-md-3">
                                     <div class="card bg-primary text-white p-3">
                                         <h3>Admins</h3>
-                                        <h1>{{ \App\Models\Admin::where('role', 'Admin')->count() }}</h1>
+                                        <h1>{{ \App\Models\Admin::where('role_id', 2)->count() }}</h1>
                                     </div>
                                 </div>
                                 <div class="col-md-3">

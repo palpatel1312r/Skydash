@@ -48,10 +48,11 @@
                                     </div>
                                 </div>
 
-                                {{-- Customer Selection --}}
                                 <div class="form-group">
                                     <label>Select Customer</label>
-                                    <select name="customer_id" id="customerSelect" class="form-control" required>
+                                    <select name="customer_id" id="customerSelect"
+                                        class="form-control @error('customer_id') is-invalid @enderror"
+                                        style="color: #333; background-color: #ffffff !important;">
                                         <option value="">-- Select Customer --</option>
                                         @foreach ($customers as $customer)
                                             <option value="{{ $customer->id }}">{{ $customer->fullname }}
@@ -59,21 +60,23 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('customer_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <hr>
 
-                                {{-- Products Section --}}
                                 <h5>Products</h5>
 
-                                {{-- ✅ ADDED: The missing wrapper with id="product-rows" --}}
                                 <div id="product-rows">
                                     <div class="row product-row align-items-end pr-0" data-row-id="1">
-                                        {{-- Select Product: 4 columns --}}
-                                        <div class="col-md-4">
+                                        {{-- Product Dropdown (Wider) --}}
+                                        <div class="col-md-5">
                                             <label>Select Product</label>
                                             <select name="product_id[]" class="form-control product-select"
-                                                onchange="updateProductDetails(this)" required>
+                                                onchange="updateProductDetails(this)"
+                                                style="color: #333; background-color: #ffffff !important;">
                                                 <option value="">-- Select Product --</option>
                                                 @foreach ($products as $product)
                                                     <option value="{{ $product->id }}" data-price="{{ $product->price }}"
@@ -84,34 +87,31 @@
                                             </select>
                                         </div>
 
-                                        {{-- Qty: 1 column (small) --}}
+                                        {{-- Qty (Tiny) --}}
                                         <div class="col-md-1">
                                             <label>Qty</label>
                                             <input type="number" name="quantity[]" class="form-control product-quantity"
                                                 value="1" min="1" required>
                                         </div>
 
-                                        {{-- Price: 2 columns --}}
+                                        {{-- Price (Small) --}}
                                         <div class="col-md-2">
                                             <label>Price (₹)</label>
                                             <input type="number" name="price[]" class="form-control product-price"
-                                                placeholder="Price" step="0.01" readonly style="background: #f8f9fa;">
+                                                placeholder="Price" step="0.01" readonly
+                                                style="background-color: #ffffff !important;">
                                         </div>
 
-                                        {{-- Subtotal: 3 columns --}}
-                                        <div class="col-md-3">
+                                        {{-- Subtotal (Standard) --}}
+                                        <div class="col-md-2">
                                             <label>Subtotal (₹)</label>
                                             <input type="text" name="subtotal[]" class="form-control product-subtotal"
-                                                readonly style="background: #f8f9fa;">
+                                                readonly style="background-color: #ffffff !important;">
                                         </div>
 
-                                        {{-- Buttons: col-md-2 --}}
+                                        {{-- Remove Button (Width = 2) --}}
                                         <div class="col-md-2 d-flex flex-row align-items-end justify-content-end"
                                             style="padding-bottom: 5px; gap: 5px;">
-                                            <button type="button" class="btn btn-success btn-sm" onclick="addProductRow()"
-                                                style="height: 38px; font-size: 12px; padding: 0 8px; white-space: nowrap;">
-                                                <i class="mdi mdi-plus" style="font-size: 14px;"></i> Add
-                                            </button>
                                             <button type="button" class="btn btn-danger btn-sm remove-row"
                                                 onclick="removeProductRow(this)"
                                                 style="height: 38px; font-size: 12px; padding: 0 8px; white-space: nowrap;">
@@ -120,6 +120,16 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                {{-- Error message outside the row so it stays visible --}}
+                                @error('product_id.0')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+
+                                {{-- SINGLE ADD BUTTON AT THE BOTTOM --}}
+                                <button type="button" class="btn btn-success btn-sm mt-2" onclick="addProductRow()">
+                                    <i class="mdi mdi-plus"></i> Add More Product
+                                </button>
 
                                 <hr>
 
@@ -166,6 +176,36 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* ✅ FORCE WHITE BACKGROUND ON ALL READONLY INPUTS AND SELECTS */
+        input[readonly].form-control,
+        input[readonly],
+        .form-control[readonly],
+        .form-control[readonly]:focus,
+        .form-control[readonly]:active {
+            background-color: #ffffff !important;
+            border-color: #ced4da !important;
+            color: #212529 !important;
+            opacity: 1 !important;
+            cursor: default !important;
+        }
+
+        /* ✅ Fix disabled/faded buttons */
+        .btn-danger.remove-row:disabled,
+        .btn-danger.remove-row.disabled {
+            opacity: 1 !important;
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #fff !important;
+        }
+
+        /* ✅ Fix invalid selects (keep white background) */
+        .form-control.is-invalid {
+            background-color: #ffffff !important;
+            background-image: none !important;
+        }
+    </style>
 
     <script>
         // Add Product Row
@@ -251,13 +291,14 @@
 
             function toggleProductSection() {
                 const selected = customerSelect.value;
+
                 if (selected === '') {
-                    productRows.style.opacity = '0.5';
-                    productRows.style.pointerEvents = 'none';
+                    // ✅ Only disable the Add button, NOT the whole product section
                     if (addProductBtn) addProductBtn.disabled = true;
                 } else {
-                    productRows.style.opacity = '1';
+                    // ✅ Enable the Add button
                     productRows.style.pointerEvents = 'auto';
+                    productRows.style.opacity = '1';
                     if (addProductBtn) addProductBtn.disabled = false;
                 }
             }

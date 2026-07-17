@@ -31,65 +31,9 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- Button to Open the Modal -->
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
+                            <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">
                                 <i class="mdi mdi-plus"></i> Add New User
-                            </button>
-
-                            <!-- Add Customer Modal -->
-                            <div class="modal fade" id="addNewModal" tabindex="-1" role="dialog">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title">Add New User</h4>
-                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        </div>
-
-                                        <div class="modal-body">
-                                            <form action="{{ route('admin.customers.add') }}" method="POST">
-                                                @csrf
-
-                                                <div class="form-group">
-                                                    <label>Full Name :</label>
-                                                    <input type="text" name="fullname" placeholder="Enter Full Name"
-                                                        class="form-control" required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label>Email :</label>
-                                                    <input type="email" name="email" placeholder="Enter Email Address"
-                                                        class="form-control" required>
-                                                </div>
-
-                                                {{-- ✅ FIXED: Load roles dynamically from the database --}}
-                                                <div class="form-group">
-                                                    <label>Role :</label>
-                                                    <select name="role_id" class="form-control" required>
-                                                        <option value="">Select role</option>
-                                                        @foreach ($roles as $role)
-                                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label>Status :</label>
-                                                    <select name="status" class="form-control" required>
-                                                        <option value="">Select Status</option>
-                                                        <option value="Active">Active</option>
-                                                        <option value="Blocked">Blocked</option>
-                                                    </select>
-                                                </div>
-
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-dismiss="modal">Close</button>
-                                                    <input type="submit" value="Save Customer" class="btn btn-primary">
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </a>
 
                             <br><br>
                             <p class="card-title mb-0">Customer List</p>
@@ -148,10 +92,10 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <button type="button" class="btn btn-primary btn-sm"
-                                                        data-toggle="modal" data-target="#updateModal{{ $item->id }}">
+                                                    <a href="{{ route('admin.customers.edit', $item->id) }}"
+                                                        class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-pencil"></i> Update
-                                                    </button>
+                                                    </a>
 
                                                     <button type="button" class="btn btn-danger btn-sm"
                                                         onclick="confirmDelete('{{ $item->id }}')">
@@ -195,7 +139,7 @@
                                                                                 class="form-control" required>
                                                                         </div>
 
-                                                                        {{-- ✅ FIXED: Update modal now uses role_id --}}
+                                                                
                                                                         <div class="form-group">
                                                                             <label>Role:</label>
                                                                             <select name="role_id" class="form-control"
@@ -224,8 +168,7 @@
                                                                         </div>
 
                                                                         <div class="modal-footer">
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
+                                                                            <button type="button" class="btn btn-secondary"
                                                                                 data-dismiss="modal">Close</button>
                                                                             <button type="submit"
                                                                                 class="btn btn-success">Save
@@ -266,8 +209,8 @@
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
-                    alert.style.transition = 'opacity 0.5s ease';
-                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 1s ease';
+                    alert.style.opacity = '1';
                     setTimeout(function() {
                         alert.style.display = 'none';
                     }, 500);

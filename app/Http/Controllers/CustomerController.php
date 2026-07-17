@@ -14,6 +14,17 @@ class CustomerController extends Controller
     {
         return view('Dashboard.Register');
     }
+    public function create()
+    {
+        $roles = \App\Models\Role::all();
+        return view('Dashboard.customers_create', compact('roles'));
+    }
+    public function edit($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $roles = \App\Models\Role::all();
+        return view('Dashboard.customers_update', compact('customer', 'roles'));
+    }
 
     public function dashboard()
     {
@@ -61,8 +72,16 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email',
-            'role_id' => 'required|exists:roles,id', // ✅ Changed from 'role' to 'role_id'
+            'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
+        ], [
+            // ✅ Custom error messages go here
+            'fullname.required' => 'Please enter the full name of the customer.',
+            'email.required' => 'The email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already registered.',
+            'role_id.required' => 'Please select a valid role from the dropdown.',
+            'status.required' => 'Please select a valid status.',
         ]);
 
         Customer::create([
@@ -75,7 +94,6 @@ class CustomerController extends Controller
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer created successfully!');
     }
-
     public function update(Request $request)
     {
         $customer = Customer::findOrFail($request->id);

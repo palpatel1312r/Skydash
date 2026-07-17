@@ -36,8 +36,19 @@ class InvoiceController extends Controller
             'price.*' => 'required|numeric|min:0',
             'subtotal.*' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0',
+        ], [
+            'customer_id.required' => 'Please select a valid Customer from the dropdown.',
+            // ✅ Add both keys to guarantee the error shows
+            'product_id.0.required' => 'Please select a valid Product from the dropdown.',
+            'product_id.*.required' => 'Please select a valid Product from the dropdown.',
+            'product_id.*.exists' => 'The selected product does not exist.',
         ]);
 
+        $customer = Customer::find($request->customer_id);
+
+        // ✅ Find customer AFTER validation
+        $customer = Customer::find($request->customer_id);
+        // ✅ Find the customer safely after validation
         $customer = Customer::find($request->customer_id);
 
         if (!$customer) {
@@ -51,27 +62,25 @@ class InvoiceController extends Controller
             $product = Product::find($productId);
             $price = floatval($request->price[$key]);
 
-            // ✅ Get quantity from the form
             $quantitySold = $request->quantity[$key] ?? 1;
 
-            // ✅ Calculate subtotal locally (Price × Quantity)
+            // Calculate subtotal locally (Price × Quantity)
             $productSubtotal = $price * $quantitySold;
 
-            // ✅ Check Stock Availability
+            // Check Stock Availability
             if (!$product->hasStock($quantitySold)) {
                 return redirect()->back()->with('error', 'Not enough stock for product: ' . $product->title . ' (Available: ' . $product->quantity . ', Requested: ' . $quantitySold . ')');
             }
 
-            // ✅ Save product data including quantity
             $products[] = [
                 'product_id' => $productId,
                 'product_name' => $product->title ?? 'Unknown Product',
                 'price' => $price,
-                'quantity' => $quantitySold,   // ✅ SAVE THIS
+                'quantity' => $quantitySold,
                 'subtotal' => $productSubtotal,
             ];
 
-            // ✅ Decrease the stock by the actual quantity sold
+            // Decrease the stock by the actual quantity sold
             $product->decreaseStock($quantitySold);
 
             $subtotal += $productSubtotal;

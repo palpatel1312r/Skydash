@@ -21,7 +21,7 @@ class CreateProductTable extends Migration
             $table->decimal('price', 10, 2); // ✅ Correct: decimal
             $table->integer('quantity');      // ✅ Correct: integer
             $table->string('category');
-            $table->string('type');
+            $table->string('type')->nullable();
             $table->timestamps();
         });
     }

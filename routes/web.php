@@ -17,9 +17,8 @@ use App\Http\Controllers\InvoiceController;
 Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
 
   Route::get('/dashboard', function () {
-    // 🛡️ Security check: Only Superadmin can access this (Assume Superadmin role_id = 2)
     $user = auth()->guard('admin')->user();
-    if ($user->role_id !== 2) {
+    if ($user->role_id !== 1) {
       abort(403, 'Unauthorized access.');
     }
     return view('superadmin.dashboard');
@@ -55,6 +54,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [CustomerController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [CustomerController::class, 'register'])->name('register.post');
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes (No middleware)
@@ -76,8 +76,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
   Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
   Route::post('/profile/update', [AdminController::class, 'updateProfile'])->name('profile.update');
-
-  // ✅ Admin Password Update (Correctly placed here)
   Route::post('/password/update', [AdminController::class, 'updatePassword'])->name('password.update');
 
   // Customer Management (Admin Only)
@@ -86,11 +84,11 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
   Route::get('/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('customers.status');
   Route::delete('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.delete');
+  Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+  Route::get('/customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
 
   // Admin Product Routes
   Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-  Route::post('/products/add', [ProductController::class, 'store'])->name('products.add');
-  Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
   Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
 
   // Admin Invoice Routes (These perform actions, so they stay inside the guard)
@@ -99,6 +97,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 });
 
+Route::post('/products/add', [ProductController::class, 'store'])->name('products.add');
+Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
 /*
 |--------------------------------------------------------------------------
 | Customer Routes (Protected with auth:customer)

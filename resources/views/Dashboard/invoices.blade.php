@@ -43,12 +43,13 @@
                                             <th>Invoice No</th>
                                             <th>Customer</th>
                                             <th>Products</th>
-                                            <th>Quntity</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
                                             <th>Subtotal</th>
                                             <th>Tax</th>
                                             <th>Grand Total</th>
                                             <th>Date</th>
-                                            <th>Status</th>
+                                            {{-- <th>Status</th> --}}
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -72,14 +73,20 @@
                                                         {{ collect($item->products)->sum('quantity') }}
                                                     </strong>
                                                 </td>
-                                                <td>₹{{ number_format($item->subtotal, 2) }}</td>
+                                                <td>
+                                                    @if (isset($item->products[0]))
+                                                        ₹{{ number_format($item->products[0]['price'], 2) }}
+                                                    @else
+                                                        ₹0.00
+                                                    @endif
+                                                </td>
                                                 <td>₹{{ number_format($item->subtotal, 2) }}</td>
                                                 <td>₹{{ number_format($item->tax_amount, 2) }}</td>
                                                 <td>
                                                     <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
-                                                <td>
+                                                {{-- <td>
                                                     @if ($item->status == 'Paid')
                                                         <label class="badge badge-success">Paid</label>
                                                     @elseif ($item->status == 'Unpaid')
@@ -89,7 +96,7 @@
                                                     @else
                                                         <label class="badge badge-info">{{ $item->status }}</label>
                                                     @endif
-                                                </td>
+                                                </td> --}}
                                                 <td>
                                                     <!-- View Invoice Button -->
                                                     <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
@@ -98,7 +105,7 @@
                                                     </button>
 
                                                     <!-- Change Status Dropdown -->
-                                                    <div class="btn-group" role="group">
+                                                    {{-- <div class="btn-group" role="group">
                                                         <button type="button"
                                                             class="btn btn-sm btn-secondary dropdown-toggle"
                                                             data-toggle="dropdown">
@@ -118,7 +125,7 @@
                                                                 <span class="badge badge-danger">Cancelled</span>
                                                             </a>
                                                         </div>
-                                                    </div>
+                                                    </div> --}}
 
                                                     <button type="button" class="btn btn-danger"
                                                         onclick="confirmDelete('{{ $item->id }}')"
@@ -136,7 +143,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="10" class="text-center">No invoices found.</td>
+                                                <td colspan="11" class="text-center">No invoices found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

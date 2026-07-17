@@ -30,106 +30,10 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
-                            <!-- Button to Open the Modal -->
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNewModal">
+                            {{-- ✅ New Add Button --}}
+                            <a href="{{ route('products.create') }}" class="btn btn-primary">
                                 <i class="mdi mdi-plus"></i> Add New Product
-                            </button>
-
-                            <!-- Add Product Modal -->
-                            <div class="modal fade" id="addNewModal" tabindex="-1" role="dialog">
-                                <div class="modal-dialog modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title">Add New Product</h4>
-                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        </div>
-
-                                        <!-- Modal body -->
-                                        <div class="modal-body">
-                                            <form action="{{ route('admin.products.add') }}" method="POST"
-                                                enctype="multipart/form-data">
-                                                @csrf
-
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Title :</label>
-                                                            <input type="text" name="title"
-                                                                placeholder="Enter The Title" class="form-control" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Price :</label>
-                                                            <input type="number" name="price"
-                                                                placeholder="Enter The Price ($)" class="form-control"
-                                                                step="0.01" required>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Quantity :</label>
-                                                            <input type="number" name="quantity"
-                                                                placeholder="Enter The Quantity" class="form-control"
-                                                                required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Category :</label>
-                                                            <select name="category" class="form-control" required>
-                                                                <option value="">Select Category</option>
-                                                                <option value="Accessories">Accessories</option>
-                                                                <option value="Shoes">Shoes</option>
-                                                                <option value="Clothes">Clothes</option>
-                                                                <option value="Electronics">Electronics</option>
-                                                                <option value="Home">Home & Living</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Type :</label>
-                                                            <select name="type" class="form-control" required>
-                                                                <option value="">Select Type</option>
-                                                                <option value="Best Sellers">Best Sellers</option>
-                                                                <option value="New Arrivals">New Arrivals</option>
-                                                                <option value="Sale">Sale</option>
-                                                                <option value="Featured">Featured</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label>Image :</label>
-                                                            <input type="file" name="image" class="form-control"
-                                                                accept="image/*" required>
-                                                            <small class="text-muted">Max size: 2MB (JPG, PNG, GIF)</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label>Description : </label>
-                                                    <textarea name="description" placeholder="Enter The description" class="form-control" rows="3" required></textarea>
-                                                </div>
-
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-dismiss="modal">Close</button>
-                                                    <input type="submit" value="Save Product" class="btn btn-primary">
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </a>
 
                             <br><br>
                             <p class="card-title mb-0">Product List</p>
@@ -188,20 +92,18 @@
                                                     <span class="badge badge-info">{{ $item->type }}</span>
                                                 </td>
                                                 <td>
-                                                    <!-- Update Button -->
-                                                    <button type="button" class="btn btn-primary btn-sm"
-                                                        data-toggle="modal"
-                                                        data-target="#updateModal{{ $item->id }}">
+                                                    {{-- ✅ Update Link --}}
+                                                    <a href="{{ route('products.edit', $item->id) }}"
+                                                        class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-pencil"></i> Edit
-                                                    </button>
+                                                    </a>
 
-                                                    <!-- Delete Button -->
+                                                    {{-- Delete Button --}}
                                                     <a href="#" class="btn btn-danger btn-sm"
                                                         onclick="confirmDelete({{ $item->id }})">
                                                         <i class="mdi mdi-delete"></i> Delete
                                                     </a>
 
-                                                    <!-- Delete Form -->
                                                     <form id="delete-form-{{ $item->id }}"
                                                         action="{{ route('admin.products.delete', $item->id) }}"
                                                         method="GET" style="display: none;">
@@ -209,132 +111,6 @@
                                                     </form>
                                                 </td>
                                             </tr>
-
-                                            <!-- Update Modal -->
-                                            <div class="modal fade" id="updateModal{{ $item->id }}" tabindex="-1"
-                                                role="dialog">
-                                                <div class="modal-dialog modal-lg" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h4 class="modal-title">Update Product - {{ $item->title }}
-                                                            </h4>
-                                                            <button type="button" class="close"
-                                                                data-dismiss="modal">&times;</button>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            <form action="{{ route('admin.products.update') }}"
-                                                                method="POST" enctype="multipart/form-data">
-                                                                @csrf
-
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Title :</label>
-                                                                            <input type="text" name="title"
-                                                                                value="{{ $item->title }}"
-                                                                                placeholder="Enter The Title"
-                                                                                class="form-control" required>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Price :</label>
-                                                                            <input type="number" name="price"
-                                                                                value="{{ $item->price }}"
-                                                                                placeholder="Enter The Price ($)"
-                                                                                class="form-control" step="0.01"
-                                                                                required>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Quantity :</label>
-                                                                            <input type="number" name="quantity"
-                                                                                value="{{ $item->quantity }}"
-                                                                                placeholder="Enter The Quantity"
-                                                                                class="form-control" required>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Category :</label>
-                                                                            <select name="category" class="form-control"
-                                                                                required>
-                                                                                <option value="{{ $item->category }}">
-                                                                                    {{ $item->category }}
-                                                                                </option>
-                                                                                <option value="Accessories">Accessories
-                                                                                </option>
-                                                                                <option value="Shoes">Shoes</option>
-                                                                                <option value="Clothes">Clothes</option>
-                                                                                <option value="Electronics">Electronics
-                                                                                </option>
-                                                                                <option value="Home">Home & Living
-                                                                                </option>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Type :</label>
-                                                                            <select name="type" class="form-control"
-                                                                                required>
-                                                                                <option value="{{ $item->type }}">
-                                                                                    {{ $item->type }}
-                                                                                </option>
-                                                                                <option value="Best Sellers">Best Sellers
-                                                                                </option>
-                                                                                <option value="New Arrivals">New Arrivals
-                                                                                </option>
-                                                                                <option value="Sale">Sale</option>
-                                                                                <option value="Featured">Featured</option>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-group">
-                                                                            <label>Image :</label>
-                                                                            @if ($item->image)
-                                                                                <div class="mb-2">
-                                                                                    <img src="{{ asset($item->image) }}"
-                                                                                        alt="Current Image" width="100"
-                                                                                        class="img-thumbnail">
-                                                                                </div>
-                                                                            @endif
-                                                                            <input type="file" name="image"
-                                                                                class="form-control" accept="image/*">
-                                                                            <small class="text-muted">Leave empty to keep
-                                                                                current image</small>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="form-group">
-                                                                    <label>Description : </label>
-                                                                    <textarea name="description" placeholder="Enter The Description" class="form-control" rows="3" required>{{ $item->description }}</textarea>
-                                                                </div>
-
-                                                                <input type="hidden" name="id"
-                                                                    value="{{ $item->id }}">
-
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary"
-                                                                        data-dismiss="modal">Close</button>
-                                                                    <input type="submit" value="Update Product"
-                                                                        class="btn btn-primary">
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         @endforeach
                                     </tbody>
                                 </table>

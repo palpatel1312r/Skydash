@@ -9,9 +9,16 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-  /**
-   * Display list of products
-   */
+  public function create()
+  {
+    return view('Dashboard.products_create');
+  }
+
+  public function edit($id)
+  {
+    $product = Product::findOrFail($id);
+    return view('Dashboard.products_update', compact('product'));
+  }
   public function index()
   {
     $products = Product::all();
@@ -22,9 +29,6 @@ class ProductController extends Controller
     return view('Dashboard.products', compact('products'));
   }
 
-  /**
-   * Store a new product
-   */
   public function store(Request $request)
   {
     $request->validate([
@@ -35,6 +39,18 @@ class ProductController extends Controller
       'category' => 'required|string',
       'type' => 'nullable|string',
       'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ], [
+      // ✅ Custom error messages go here
+      'title.required' => 'Please enter the product title.',
+      'price.required' => 'Please enter the product price.',
+      'price.numeric' => 'Price must be a valid number.',
+      'price.min' => 'Price cannot be less than 0.',
+      'quantity.required' => 'Please enter the product quantity.',
+      'quantity.integer' => 'Quantity must be a whole number.',
+      'quantity.min' => 'Quantity cannot be less than 0.',
+      'category.required' => 'Please select a category for the product.',
+      'image.image' => 'The file must be a valid image (JPEG, PNG, JPG, GIF).',
+      'image.max' => 'The image size must not exceed 2MB.',
     ]);
 
     $product = new Product();
@@ -57,9 +73,6 @@ class ProductController extends Controller
     return redirect()->route('products')->with('success', 'Product added successfully!');
   }
 
-  /**
-   * Update product
-   */
   public function update(Request $request)
   {
     $product = Product::findOrFail($request->id);
@@ -72,6 +85,18 @@ class ProductController extends Controller
       'category' => 'required|string',
       'type' => 'nullable|string',
       'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ], [
+      // ✅ Custom error messages go here
+      'title.required' => 'Please enter the product title.',
+      'price.required' => 'Please enter the product price.',
+      'price.numeric' => 'Price must be a valid number.',
+      'price.min' => 'Price cannot be less than 0.',
+      'quantity.required' => 'Please enter the product quantity.',
+      'quantity.integer' => 'Quantity must be a whole number.',
+      'quantity.min' => 'Quantity cannot be less than 0.',
+      'category.required' => 'Please select a category for the product.',
+      'image.image' => 'The file must be a valid image (JPEG, PNG, JPG, GIF).',
+      'image.max' => 'The image size must not exceed 2MB.',
     ]);
 
     $product->title = $request->title;
@@ -95,7 +120,6 @@ class ProductController extends Controller
 
     return redirect()->route('products')->with('success', 'Product updated successfully!');
   }
-
   /**
    * Delete product
    */
