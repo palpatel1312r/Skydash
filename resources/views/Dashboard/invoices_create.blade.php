@@ -36,14 +36,14 @@
                                         <div class="form-group">
                                             <label>Invoice Number</label>
                                             <input type="text" name="invoice_number" class="form-control"
-                                                value="INV-{{ date('Ymd') }}-{{ rand(100, 999) }}" readonly required>
+                                                value="INV-{{ date('Ymd') }}-{{ rand(100, 999) }}" readonly>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Invoice Date</label>
                                             <input type="date" name="invoice_date" class="form-control"
-                                                value="{{ date('Y-m-d') }}" required>
+                                                value="{{ date('Y-m-d') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -55,8 +55,9 @@
                                         style="color: #333; background-color: #ffffff !important;">
                                         <option value="">-- Select Customer --</option>
                                         @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->fullname }}
-                                                ({{ $customer->email }})
+                                            <option value="{{ $customer->id }}"
+                                                {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->fullname }} ({{ $customer->email }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -80,7 +81,8 @@
                                                 <option value="">-- Select Product --</option>
                                                 @foreach ($products as $product)
                                                     <option value="{{ $product->id }}" data-price="{{ $product->price }}"
-                                                        data-name="{{ $product->title }}">
+                                                        data-name="{{ $product->title }}"
+                                                        {{ is_array(old('product_id')) && in_array($product->id, old('product_id')) ? 'selected' : '' }}>
                                                         {{ $product->title }} - ₹{{ number_format($product->price, 2) }}
                                                     </option>
                                                 @endforeach
@@ -91,7 +93,7 @@
                                         <div class="col-md-1">
                                             <label>Qty</label>
                                             <input type="number" name="quantity[]" class="form-control product-quantity"
-                                                value="1" min="1" required>
+                                                value="1" min="1">
                                         </div>
 
                                         {{-- Price (Small) --}}
@@ -123,7 +125,7 @@
 
                                 {{-- Error message outside the row so it stays visible --}}
                                 @error('product_id.0')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                    <div class="text-danger small mt-1" id="product-error-msg">{{ $message }}</div>
                                 @enderror
 
                                 {{-- SINGLE ADD BUTTON AT THE BOTTOM --}}
@@ -212,18 +214,34 @@
         function addProductRow() {
             const row = document.querySelector('.product-row').cloneNode(true);
             const container = document.getElementById('product-rows');
+
+            // Clear inputs
             row.querySelectorAll('input').forEach(input => input.value = '');
             row.querySelector('.product-subtotal').value = '';
             row.querySelector('.product-quantity').value = 1;
+
+            // Reset select
             const select = row.querySelector('.product-select');
             if (select) select.selectedIndex = 0;
+
+            // Add event listener to the new select
+            select.addEventListener('change', function() {
+                this.classList.remove('is-invalid');
+
+                // ✅ FIX: Find the global error div by ID and remove it completely
+                const errorMsg = document.getElementById('product-error-msg');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+            });
+
             const qtyInput = row.querySelector('.product-quantity');
             qtyInput.addEventListener('input', function() {
                 const productSelect = this.closest('.product-row').querySelector('.product-select');
                 if (productSelect.value) updateProductDetails(productSelect);
             });
+
             container.appendChild(row);
-            updateRowNumbers();
             calculateTotal();
         }
 
@@ -231,20 +249,8 @@
             const rows = document.querySelectorAll('.product-row');
             if (rows.length > 1) {
                 button.closest('.product-row').remove();
-                updateRowNumbers();
                 calculateTotal();
             }
-        }
-
-        function updateRowNumbers() {
-            const rows = document.querySelectorAll('.product-row');
-            rows.forEach((row, index) => {
-                const labels = row.querySelectorAll('label');
-                labels.forEach(label => {
-                    const text = label.textContent.replace(/\d+/, index + 1);
-                    label.textContent = text;
-                });
-            });
         }
 
         function updateProductDetails(select) {
@@ -254,11 +260,11 @@
             const quantityInput = row.querySelector('.product-quantity');
             const selectedOption = select.options[select.selectedIndex];
 
-            if (selectedOption && selectedOption.value) {
-                const price = selectedOption.getAttribute('data-price');
-                priceInput.value = price || 0;
+            // Check if a valid product is selected
+            if (selectedOption && selectedOption.value && selectedOption.getAttribute('data-price')) {
+                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                priceInput.value = price.toFixed(2);
 
-                // ✅ NEW: Recalculate subtotal using Price × Quantity
                 const quantity = parseInt(quantityInput.value) || 1;
                 subtotalInput.value = (price * quantity).toFixed(2);
             } else {
@@ -266,19 +272,24 @@
                 subtotalInput.value = '';
             }
 
-            calculateTotal(); // ✅ Update the Grand Total
+            calculateTotal();
         }
 
         function calculateTotal() {
             const rows = document.querySelectorAll('.product-row');
             let subtotal = 0;
+
             rows.forEach(row => {
                 const subtotalInput = row.querySelector('.product-subtotal');
-                if (subtotalInput) subtotal += parseFloat(subtotalInput.value) || 0;
+                if (subtotalInput && subtotalInput.value !== '') {
+                    subtotal += parseFloat(subtotalInput.value) || 0;
+                }
             });
+
             const taxRate = parseFloat(document.querySelector('input[name="tax_rate"]').value) || 0;
             const taxAmount = subtotal * (taxRate / 100);
             const total = subtotal + taxAmount;
+
             document.getElementById('subtotal_amount').value = subtotal.toFixed(2);
             document.getElementById('tax_amount').value = taxAmount.toFixed(2);
             document.getElementById('total_amount').value = total.toFixed(2);
@@ -286,24 +297,32 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const customerSelect = document.getElementById('customerSelect');
-            const productRows = document.getElementById('product-rows');
-            const addProductBtn = document.querySelector('button[onclick="addProductRow()"]');
 
-            function toggleProductSection() {
-                const selected = customerSelect.value;
+            // ✅ REMOVED: The code that disabled the button is completely gone from here.
 
-                if (selected === '') {
-                    // ✅ Only disable the Add button, NOT the whole product section
-                    if (addProductBtn) addProductBtn.disabled = true;
-                } else {
-                    // ✅ Enable the Add button
-                    productRows.style.pointerEvents = 'auto';
-                    productRows.style.opacity = '1';
-                    if (addProductBtn) addProductBtn.disabled = false;
+            // ✅ Clear Customer error on change
+            customerSelect.addEventListener('change', function() {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.closest('.form-group').querySelector(
+                    '.invalid-feedback, .text-danger');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                    errorDiv.textContent = '';
                 }
-            }
-            toggleProductSection();
-            customerSelect.addEventListener('change', toggleProductSection);
+            });
+
+            // ✅ FIX: Clear Product error on change for initial rows
+            document.querySelectorAll('.product-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    this.classList.remove('is-invalid');
+
+                    // ✅ Find the error by ID and remove it completely
+                    const errorMsg = document.getElementById('product-error-msg');
+                    if (errorMsg) {
+                        errorMsg.remove();
+                    }
+                });
+            });
 
             document.querySelectorAll('.product-quantity').forEach(input => {
                 input.addEventListener('input', function() {

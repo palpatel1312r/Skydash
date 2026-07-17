@@ -29,13 +29,13 @@
                             <h6 class="font-weight-light mb-4">It only takes a few steps</h6>
 
                             <!-- ✅ Register Form -->
-                           <form class="pt-3" method="POST" action="{{ route('register.post') }}">
+                            <form class="pt-3" method="POST" action="{{ route('register.post') }}">
                                 @csrf
 
                                 <!-- fullname -->
                                 <div class="form-group">
                                     <input type="text" name="fullname" class="form-control form-control-lg"
-                                        placeholder="Enter your fullname" value="{{ old('fullname') }}" required>
+                                        placeholder="Enter your fullname" value="{{ old('fullname') }}">
                                     @error('fullname')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -44,7 +44,7 @@
                                 <!-- Email -->
                                 <div class="form-group">
                                     <input type="email" name="email" class="form-control form-control-lg"
-                                        placeholder="Enter your email" value="{{ old('email') }}" required>
+                                        placeholder="Enter your email" value="{{ old('email') }}">
                                     @error('email')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -53,7 +53,7 @@
                                 <!-- Password -->
                                 <div class="form-group">
                                     <input type="password" name="password" class="form-control form-control-lg"
-                                        placeholder="Enter your password" required>
+                                        placeholder="Enter your password">
                                     @error('password')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -62,8 +62,10 @@
                                 <!-- Confirm Password -->
                                 <div class="form-group">
                                     <input type="password" name="password_confirmation"
-                                        class="form-control form-control-lg" placeholder="Confirm your password"
-                                        required>
+                                        class="form-control form-control-lg" placeholder="Confirm your password">
+                                    @error('password')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
 
                                 <!-- ✅ Submit Button -->
@@ -94,6 +96,35 @@
     <script src="{{ asset('Dashboard/js/template.js') }}"></script>
     <script src="{{ asset('Dashboard/js/settings.js') }}"></script>
     <script src="{{ asset('Dashboard/js/todolist.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Clear errors when typing in text inputs (text, email, password)
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(
+                input => {
+                    input.addEventListener('input', function() {
+                        // Remove the red border class
+                        this.classList.remove('is-invalid');
+
+                        // Hide the error message (small tag)
+                        const errorMessage = this.parentElement.querySelector('small.text-danger');
+                        if (errorMessage) {
+                            errorMessage.style.display = 'none';
+                        }
+                    });
+                });
+
+            // 2. Clear errors when changing dropdowns (Selects)
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', function() {
+                    this.classList.remove('is-invalid');
+                    const errorMessage = this.parentElement.querySelector('small.text-danger');
+                    if (errorMessage) {
+                        errorMessage.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

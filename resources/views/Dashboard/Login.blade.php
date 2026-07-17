@@ -28,7 +28,7 @@
                             <h4 class="text-center">Hello! let's get started</h4>
                             <br>
 
-                            @if ($errors->any())
+                            {{-- @if ($errors->any())
                                 <div class="alert alert-danger">
                                     <ul class="mb-0">
                                         @foreach ($errors->all() as $error)
@@ -48,23 +48,26 @@
                                 <div class="alert alert-success">
                                     {{ session('success') }}
                                 </div>
-                            @endif
+                            @endif --}}
 
                             <!-- Single Login Form -->
                             <form method="POST" action="{{ route('login.auto') }}">
                                 @csrf
 
                                 <div class="form-group">
-                                    <input type="email" name="email" class="form-control form-control-lg"
-                                        placeholder="Email" value="{{ old('email') }}" required>
+                                    {{-- Added: @error('email') is-invalid @enderror inside the class --}}
+                                    <input type="email" name="email"
+                                        class="form-control form-control-lg @error('email') is-invalid @enderror"
+                                        placeholder="Email" value="{{ old('email') }}">
                                     @error('email')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
-
                                 <div class="form-group">
-                                    <input type="password" name="password" class="form-control form-control-lg"
-                                        placeholder="Password" required>
+                                    {{-- Added: @error('password') is-invalid @enderror inside the class --}}
+                                    <input type="password" name="password"
+                                        class="form-control form-control-lg @error('password') is-invalid @enderror"
+                                        placeholder="Password">
                                     @error('password')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -92,13 +95,27 @@
             </div>
         </div>
     </div>
-
     <script src="{{ asset('Dashboard/vendors/js/vendor.bundle.base.js') }}"></script>
     <script src="{{ asset('Dashboard/js/off-canvas.js') }}"></script>
     <script src="{{ asset('Dashboard/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('Dashboard/js/template.js') }}"></script>
     <script src="{{ asset('Dashboard/js/settings.js') }}"></script>
     <script src="{{ asset('Dashboard/js/todolist.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(
+                input => {
+                    input.addEventListener('input', function() {
+                        this.classList.remove('is-invalid');
+                        const errorMessage = this.parentElement.querySelector('span.text-danger');
+                        if (errorMessage) {
+                            errorMessage.style.display = 'none';
+                        }
+                    });
+                });
+        });
+    </script>
 </body>
 
 </html>

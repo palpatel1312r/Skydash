@@ -17,13 +17,13 @@ class CustomerController extends Controller
     public function create()
     {
         $roles = \App\Models\Role::all();
-        return view('Dashboard.customers_create', compact('roles'));
+        return view('Dashboard.customer pages.customers_create', compact('roles'));
     }
     public function edit($id)
     {
         $customer = Customer::findOrFail($id);
         $roles = \App\Models\Role::all();
-        return view('Dashboard.customers_update', compact('customer', 'roles'));
+        return view('Dashboard.customer pages.customers_update', compact('customer', 'roles'));
     }
 
     public function dashboard()
@@ -87,7 +87,7 @@ class CustomerController extends Controller
         Customer::create([
             'fullname' => $request->fullname,
             'email' => $request->email,
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('1234'),
             'role_id' => $request->role_id,
             'status' => $request->status,
         ]);
@@ -101,21 +101,27 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email,' . $request->id,
-            'role_id' => 'required|exists:roles,id', // ✅ Changed from 'role' to 'role_id'
+            'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
+        ], [
+            'fullname.required' => 'Please enter the full name.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Enter a valid email address.',
+            'email.unique' => 'This email is already taken.',
+            'role_id.required' => 'Please select a valid role.',
+            'status.required' => 'Please select a valid status.',
         ]);
 
-        // ✅ FIXED: Use role_id instead of role
-        $customer->update([
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'role_id' => $request->role_id,
-            'status' => $request->status,
-        ]);
+        // 👇 FIXED: Update individual properties instead of using mass assignment
+        $customer->fullname = $request->fullname;
+        $customer->email = $request->email;
+        $customer->role_id = $request->role_id; // This will now force the update
+        $customer->status = $request->status;
+
+        $customer->save(); // Save to database
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully!');
     }
-
     public function destroy($id)
     {
         $customer = Customer::findOrFail($id);
@@ -165,8 +171,6 @@ class CustomerController extends Controller
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
-
-    // Add this method to your CustomerController
     public function updatePassword(Request $request)
     {
         $customer = Auth::guard('customer')->user();
@@ -174,6 +178,11 @@ class CustomerController extends Controller
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:4|confirmed',
+        ], [
+            'current_password.required' => 'Please enter your current password.',
+            'new_password.required' => 'Please enter a new password.',
+            'new_password.min' => 'The new password must be at least 4 characters.',
+            'new_password.confirmed' => 'The password confirmation does not match.',
         ]);
 
         // Check if current password matches

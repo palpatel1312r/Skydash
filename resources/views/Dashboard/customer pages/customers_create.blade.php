@@ -20,24 +20,24 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="card-title">
-                                    <i class="mdi mdi-account-edit-outline text-primary"></i> Update Customer
+                                    <i class="mdi mdi-account-plus-outline text-primary"></i> Add New Customer
                                 </h4>
                                 <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="mdi mdi-arrow-left"></i> Back to Customers
                                 </a>
                             </div>
 
-                            <form action="{{ route('admin.customers.update') }}" method="POST">
+                            <form action="{{ route('admin.customers.store') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="id" value="{{ $customer->id }}">
 
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Full Name</label>
-                                            <input type="text" name="fullname" 
+                                            {{-- ✅ Added value="{{ old('fullname') }}" to retain input --}}
+                                            <input type="text" name="fullname"
                                                 class="form-control @error('fullname') is-invalid @enderror"
-                                                value="{{ old('fullname', $customer->fullname) }}">
+                                                value="{{ old('fullname') }}">
                                             @error('fullname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -46,9 +46,10 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input type="email" name="email" 
+                                            {{-- ✅ Added value="{{ old('email') }}" to retain input --}}
+                                            <input type="email" name="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                value="{{ old('email', $customer->email) }}">
+                                                value="{{ old('email') }}">
                                             @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -60,12 +61,12 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Role</label>
-                                            <select name="role_id" 
-                                                class="form-control @error('role_id') is-invalid @enderror">
+                                            <select name="role_id"
+                                                class="form-select @error('role_id') is-invalid @enderror">
                                                 <option value="">Select role</option>
                                                 @foreach ($roles as $role)
-                                                    <option value="{{ $role->id }}" 
-                                                        {{ old('role_id', $customer->role_id) == $role->id ? 'selected' : '' }}>
+                                                    <option value="{{ $role->id }}"
+                                                        {{ old('role_id') == $role->id ? 'selected' : '' }}>
                                                         {{ $role->name }}
                                                     </option>
                                                 @endforeach
@@ -78,11 +79,13 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Status</label>
-                                            <select name="status" 
-                                                class="form-control @error('status') is-invalid @enderror">
+                                            <select name="status"
+                                                class="form-select @error('status') is-invalid @enderror">
                                                 <option value="">Select Status</option>
-                                                <option value="Active" {{ old('status', $customer->status) == 'Active' ? 'selected' : '' }}>Active</option>
-                                                <option value="Blocked" {{ old('status', $customer->status) == 'Blocked' ? 'selected' : '' }}>Blocked</option>
+                                                <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>
+                                                    Active</option>
+                                                <option value="Blocked" {{ old('status') == 'Blocked' ? 'selected' : '' }}>
+                                                    Blocked</option>
                                             </select>
                                             @error('status')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -92,8 +95,8 @@
                                 </div>
 
                                 <div class="mt-4">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="mdi mdi-content-save"></i> Update Customer
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="mdi mdi-content-save"></i> Save Customer
                                     </button>
                                     <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">
                                         <i class="mdi mdi-arrow-left"></i> Cancel
@@ -106,4 +109,30 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Clear errors when typing in text inputs (text, email)
+            document.querySelectorAll('input[type="text"], input[type="email"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.closest('.form-group').querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                });
+            });
+
+            // 2. Clear errors when changing dropdown selections
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', function() {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.closest('.form-group').querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

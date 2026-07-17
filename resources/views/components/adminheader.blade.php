@@ -330,20 +330,37 @@
                 <form id="changePasswordForm" method="POST">
                     @csrf
                     <div class="modal-body">
+                        {{-- Current Password --}}
                         <div class="form-group">
                             <label for="current_password">Current Password</label>
                             <input type="password" name="current_password" id="current_password"
-                                class="form-control" required placeholder="Enter current password">
+                                class="form-control @error('current_password') is-invalid @enderror"
+                                placeholder="Enter current password">
+                            @error('current_password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
+
+                        {{-- New Password --}}
                         <div class="form-group">
                             <label for="new_password">New Password</label>
-                            <input type="password" name="new_password" id="new_password" class="form-control"
-                                required placeholder="Enter new password (min 4 characters)">
+                            <input type="password" name="new_password" id="new_password"
+                                class="form-control @error('new_password') is-invalid @enderror"
+                                placeholder="Enter new password (min 4 characters)">
+                            @error('new_password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
+
+                        {{-- Confirm New Password --}}
                         <div class="form-group">
                             <label for="new_password_confirmation">Confirm New Password</label>
                             <input type="password" name="new_password_confirmation" id="new_password_confirmation"
-                                class="form-control" required placeholder="Confirm new password">
+                                class="form-control @error('new_password_confirmation') is-invalid @enderror"
+                                placeholder="Confirm new password">
+                            @error('new_password_confirmation')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -354,6 +371,14 @@
             </div>
         </div>
     </div>
+    <script>
+        $(document).ready(function() {
+            // Check if there are any validation errors for the Change Password form fields
+            @if ($errors->has('current_password') || $errors->has('new_password') || $errors->has('new_password_confirmation'))
+                $('#changePasswordModal').modal('show');
+            @endif
+        });
+    </script>
 </body>
 
 </html>

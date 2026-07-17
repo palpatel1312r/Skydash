@@ -20,7 +20,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="card-title">
-                                    <i class="mdi mdi-package-edit text-primary"></i> Update Product
+                                    <i class="mdi mdi-package-plus text-primary"></i> Update Product
                                 </h4>
                                 <a href="{{ route('products') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="mdi mdi-arrow-left"></i> Back to Products
@@ -37,7 +37,7 @@
                                             <label>Title</label>
                                             <input type="text" name="title"
                                                 class="form-control @error('title') is-invalid @enderror"
-                                                value="{{ old('title', $product->title) }}" >
+                                                value="{{ old('title', $product->title) }}">
                                             @error('title')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -48,7 +48,7 @@
                                             <label>Price (₹)</label>
                                             <input type="number" name="price"
                                                 class="form-control @error('price') is-invalid @enderror"
-                                                value="{{ old('price', $product->price) }}" step="0.01" >
+                                                value="{{ old('price', $product->price) }}" step="0.01">
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -62,7 +62,7 @@
                                             <label>Quantity</label>
                                             <input type="number" name="quantity"
                                                 class="form-control @error('quantity') is-invalid @enderror"
-                                                value="{{ old('quantity', $product->quantity) }}" >
+                                                value="{{ old('quantity', $product->quantity) }}">
                                             @error('quantity')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -72,7 +72,7 @@
                                         <div class="form-group">
                                             <label>Category</label>
                                             <select name="category"
-                                                class="form-control @error('category') is-invalid @enderror" >
+                                                class="form-control @error('category') is-invalid @enderror">
                                                 <option value="">Select Category</option>
                                                 <option value="Accessories"
                                                     {{ old('category', $product->category) == 'Accessories' ? 'selected' : '' }}>
@@ -101,8 +101,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Type</label>
-                                            <select name="type" class="form-control @error('type') is-invalid @enderror"
-                                                >
+                                            <select name="type" class="form-control @error('type') is-invalid @enderror">
                                                 <option value="">Select Type</option>
                                                 <option value="Best Sellers"
                                                     {{ old('type', $product->type) == 'Best Sellers' ? 'selected' : '' }}>

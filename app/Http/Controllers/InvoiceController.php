@@ -154,7 +154,7 @@ class InvoiceController extends Controller
             'invoice_count' => $invoices->count()
         ]);
 
-        return view('Dashboard.customer_invoices', compact('invoices', 'customer'));
+        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer'));
     }
 
     /**

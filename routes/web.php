@@ -80,7 +80,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 
   // Customer Management (Admin Only)
   Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-  Route::post('/customers/add', [CustomerController::class, 'store'])->name('customers.add');
+  Route::post('/customers/store', [CustomerController::class, 'store'])->name('customers.store');
   Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
   Route::get('/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('customers.status');
   Route::delete('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.delete');

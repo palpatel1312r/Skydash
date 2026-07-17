@@ -131,7 +131,7 @@
                                                         class="form-control @error('name') is-invalid @enderror"
                                                         id="name" name="name"
                                                         value="{{ old('name', $user->name ?? '') }}"
-                                                        placeholder="Enter your full name" required>
+                                                        placeholder="Enter your full name">
                                                     @error('name')
                                                         <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror
@@ -145,7 +145,7 @@
                                                         class="form-control @error('email') is-invalid @enderror"
                                                         id="email" name="email"
                                                         value="{{ old('email', $user->email ?? '') }}"
-                                                        placeholder="Enter your email" required>
+                                                        placeholder="Enter your email">
                                                     @error('email')
                                                         <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror

@@ -16,7 +16,7 @@ class Customer extends Authenticatable
         'fullname',
         'email',
         'password',
-        'role_id' => 1,
+        'role_id',
         'status',
     ];
 

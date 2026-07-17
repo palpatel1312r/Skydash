@@ -129,21 +129,21 @@
                                                                             <label>Name:</label>
                                                                             <input type="text" name="fullname"
                                                                                 value="{{ $item->fullname }}"
-                                                                                class="form-control" required>
+                                                                                class="form-control" >
                                                                         </div>
 
                                                                         <div class="form-group">
                                                                             <label>Email:</label>
                                                                             <input type="email" name="email"
                                                                                 value="{{ $item->email }}"
-                                                                                class="form-control" required>
+                                                                                class="form-control" >
                                                                         </div>
 
                                                                 
                                                                         <div class="form-group">
                                                                             <label>Role:</label>
                                                                             <select name="role_id" class="form-control"
-                                                                                required>
+                                                                                >
                                                                                 <option value="">Select Role</option>
                                                                                 @foreach ($roles as $role)
                                                                                     <option value="{{ $role->id }}"
@@ -157,7 +157,7 @@
                                                                         <div class="form-group">
                                                                             <label>Status:</label>
                                                                             <select name="status" class="form-control"
-                                                                                required>
+                                                                                >
                                                                                 <option value="Active"
                                                                                     {{ $item->status == 'Active' ? 'selected' : '' }}>
                                                                                     Active</option>

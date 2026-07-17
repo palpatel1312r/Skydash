@@ -87,35 +87,31 @@
                 {{-- Add Role Modal --}}
                 <div class="modal fade" id="addRoleModal" tabindex="-1" role="dialog">
                     <div class="modal-dialog modal-dialog-centered">
-                      <div class="modal-content border-0 shadow-lg">
-    <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="mdi mdi-plus-circle-outline"></i> Add Role</h5>
-        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-    </div>
-    <form action="{{ route('superadmin.roles.store') }}" method="POST">
-        @csrf
-        <div class="modal-body p-4">
-            <div class="form-group">
-                <label class="font-weight-bold">Role Name</label>
-                
-                {{-- ✅ Removed "required", added @error and old() --}}
-                <input type="text" name="name" 
-                    class="form-control form-control-lg @error('name') is-invalid @enderror"
-                    placeholder="e.g. Manager, Editor, Support"
-                    value="{{ old('name') }}">
-                
-                {{-- ✅ Custom error message appears here --}}
-                @error('name')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-        <div class="modal-footer bg-light">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Role</button>
-        </div>
-    </form>
-</div>
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title"><i class="mdi mdi-plus-circle-outline"></i> Add Role</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                            </div>
+                            <form action="{{ route('superadmin.roles.store') }}" method="POST">
+                                @csrf
+                                <div class="modal-body p-4">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Role Name</label>
+
+                                        <input type="text" name="name"
+                                            class="form-control form-control-lg @error('name') is-invalid @enderror"
+                                            placeholder="e.g. Manager, Editor, Support" value="{{ old('name') }}">
+                                        @error('name')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Role</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -134,7 +130,7 @@
                                         <div class="form-group">
                                             <label class="font-weight-bold">Role Name</label>
                                             <input type="text" name="name" value="{{ $role->name }}"
-                                                class="form-control form-control-lg" required>
+                                                class="form-control form-control-lg">
                                         </div>
                                     </div>
                                     <div class="modal-footer bg-light">
@@ -159,6 +155,7 @@
         </div>
     </div>
 
+
     <script>
         function confirmDelete(id) {
             if (confirm('Are you sure you want to delete this role?')) {
@@ -166,5 +163,5 @@
             }
         }
     </script>
-    
+
 @endsection
