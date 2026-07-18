@@ -32,13 +32,13 @@
                         <div class="card-body">
                             @php
                                 // ✅ DYNAMIC USER DETECTION
-                                if(auth()->guard('admin')->check()) {
+                                if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
                                     $role = 'Admin';
                                     $updateRoute = route('admin.profile.update');
                                     $dashboardRoute = route('admin.dashboard');
                                     $profileRoute = route('admin.profile');
-                                } elseif(auth()->guard('customer')->check()) {
+                                } elseif (auth()->guard('customer')->check()) {
                                     $user = auth()->guard('customer')->user();
                                     $role = 'Customer';
                                     $updateRoute = route('customer.profile.update');
@@ -64,64 +64,66 @@
                                 <span class="badge badge-info">{{ $role }}</span>
                             </div>
 
-                            <div class="row">
-                                <!-- Profile Picture Section -->
-                                <div class="col-md-4 border-right text-center">
-                                    <div class="profile-img-container mb-3">
-                                        @if ($user && $user->profile_image)
-                                            {{-- If they have a real image, show it --}}
-                                            <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Picture"
-                                                id="profilePreview" class="img-fluid rounded-circle shadow-sm"
-                                                style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
-                                        @else
-                                            {{-- If no image, show the Large First Letter Icon --}}
-                                            <div
-                                                style="
-                                                width: 150px; 
-                                                height: 150px; 
-                                                border-radius: 50%; 
-                                                background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-                                                color: white; 
-                                                display: flex; 
-                                                align-items: center; 
-                                                justify-content: center; 
-                                                font-weight: bold; 
-                                                font-size: 70px;
-                                                text-transform: uppercase;
-                                                border: 4px solid #f0f0f0;
-                                                margin: 0 auto;
-                                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                            ">
-                                                {{ $initial }}
-                                            </div>
-                                        @endif
+                            {{-- ✅ WRAP THE ENTIRE ROW IN THE FORM AND ADD enctype="multipart/form-data" --}}
+                            <form action="{{ $updateRoute }}" method="POST" enctype="multipart/form-data">
+                                @csrf
 
-                                        <div class="mt-3">
-                                            <h5 class="font-weight-bold mb-0">{{ $user->name ?? 'User' }}</h5>
-                                            <p class="text-muted small mb-2">{{ $user->email ?? 'user@example.com' }}</p>
-                                            <span class="badge badge-primary px-3 py-2">{{ $role }}</span>
+                                <div class="row">
+                                    <!-- Profile Picture Section -->
+                                    <div class="col-md-4 border-right text-center">
+                                        <div class="profile-img-container mb-3">
+                                            @if ($user && $user->profile_image)
+                                                {{-- If they have a real image, show it --}}
+                                                <img src="{{ asset('storage/' . $user->profile_image) }}"
+                                                    alt="Profile Picture" id="profilePreview"
+                                                    class="img-fluid rounded-circle shadow-sm"
+                                                    style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
+                                            @else
+                                                {{-- If no image, show the Large First Letter Icon --}}
+                                                <div
+                                                    style="
+                                                    width: 150px; 
+                                                    height: 150px; 
+                                                    border-radius: 50%; 
+                                                    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+                                                    color: white; 
+                                                    display: flex; 
+                                                    align-items: center; 
+                                                    justify-content: center; 
+                                                    font-weight: bold; 
+                                                    font-size: 70px;
+                                                    text-transform: uppercase;
+                                                    border: 4px solid #f0f0f0;
+                                                    margin: 0 auto;
+                                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                                ">
+                                                    {{ $initial }}
+                                                </div>
+                                            @endif
+
+                                            <div class="mt-3">
+                                                <h5 class="font-weight-bold mb-0">{{ $user->name ?? 'User' }}</h5>
+                                                <p class="text-muted small mb-2">{{ $user->email ?? 'user@example.com' }}
+                                                </p>
+                                                <span class="badge badge-primary px-3 py-2">{{ $role }}</span>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            {{-- ✅ MOVE THE FILE INPUT INSIDE THE FORM --}}
+                                            <input type="file" id="profileImageInput" name="profile_image"
+                                                accept="image/*" style="display: none;">
+
+                                            <!-- Change Photo Button -->
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                onclick="document.getElementById('profileImageInput').click();">
+                                                <i class="mdi mdi-camera"></i> Change Photo
+                                            </button>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- Hidden File Input -->
-                                        <input type="file" id="profileImageInput" accept="image/*"
-                                            style="display: none;">
 
-                                        <!-- Change Photo Button -->
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            onclick="document.getElementById('profileImageInput').click();">
-                                            <i class="mdi mdi-camera"></i> Change Photo
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Profile Details Form -->
-                                <div class="col-md-8">
-                                    <form action="{{ $updateRoute }}" method="POST"
-                                        enctype="multipart/form-data">
-                                        @csrf
-
+                                    <!-- Profile Details Form -->
+                                    <div class="col-md-8">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -166,7 +168,8 @@
                                                 <div class="form-group">
                                                     <label for="role">Role</label>
                                                     <input type="text" class="form-control" id="role"
-                                                        value="{{ $role }}" disabled style="background-color: #f8f9fa;">
+                                                        value="{{ $role }}" disabled
+                                                        style="background-color: #f8f9fa;">
                                                 </div>
                                             </div>
                                         </div>
@@ -184,9 +187,9 @@
                                                 <i class="mdi mdi-arrow-left"></i> Back to Dashboard
                                             </a>
                                         </div>
-                                    </form>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>

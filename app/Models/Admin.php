@@ -14,10 +14,9 @@ class Admin extends Authenticatable
         'name',
         'email',
         'password',
-        'profile_image',
         'phone',
         'address',
-        'role_id',   // ✅ Changed from 'role' to 'role_id'
+        'role_id',   
         'status',
     ];
 

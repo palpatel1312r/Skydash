@@ -19,7 +19,7 @@ class CustomerController extends Controller
         // ✅ CHANGE THIS LINE TO MATCH YOUR NEW FOLDER:
         return view('Dashboard.customer pages.Customer', compact('customers', 'roles'));
     }
-    
+
     public function create()
     {
         $roles = \App\Models\Role::all();
@@ -115,7 +115,6 @@ class CustomerController extends Controller
         $customer = Auth::guard('customer')->user();
         return view('Dashboard.Profile', compact('customer'));
     }
-
     public function updateProfile(Request $request)
     {
         $customer = Auth::guard('customer')->user();
@@ -125,16 +124,22 @@ class CustomerController extends Controller
             'email' => 'required|email|unique:customer,email,' . $customer->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            // ✅ Removed 'profile_image' validation
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // ✅ Ensure validation
         ]);
 
-        // ✅ Simply update ONLY the text fields
-        $customer->name = $request->name;
-        $customer->email = $request->email;
-        $customer->phone = $request->phone;
-        $customer->address = $request->address;
+        $data = $request->only(['name', 'email', 'phone', 'address']);
 
-        $customer->save();
+        // ✅ Handle Profile Image Upload
+        if ($request->hasFile('profile_image')) {
+            if ($customer->profile_image && file_exists(storage_path('app/public/' . $customer->profile_image))) {
+                unlink(storage_path('app/public/' . $customer->profile_image));
+            }
+
+            $path = $request->file('profile_image')->store('profile_images', 'public');
+            $data['profile_image'] = $path;
+        }
+
+        $customer->update($data);
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }

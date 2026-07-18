@@ -12,16 +12,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email', 191)->unique();
-
-            // ✅ Added columns from superadmins table
-            $table->string('profile_image')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-
-            // ✅ Unified role and status
-            $table->string('role')->default('Admin'); // Admin or Superadmin
+            $table->string('role')->default('Admin'); 
             $table->string('status')->default('Active');
-
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

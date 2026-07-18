@@ -19,7 +19,6 @@ class CreateCustomerTable extends Migration
             $table->string('email')->unique(); // ✅ Added unique()
             $table->string('password');
             $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
-
             $table->string('status')->default('Active');
             $table->timestamps();
         });
