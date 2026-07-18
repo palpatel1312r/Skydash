@@ -92,8 +92,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::get('/products', [ProductController::class, 'index'])->name('products.index');
   Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
 
-  // Admin Invoice Routes (These perform actions, so they stay inside the guard)
+  // ✅ Admin Invoice Routes (These perform actions, so they stay inside the guard)
   Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+  Route::put('/invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update');
   Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
   Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 });
@@ -125,15 +126,14 @@ Route::middleware(['auth:customer'])->prefix('customer')->name('customer.')->gro
 */
 
 Route::middleware(['auth:admin'])->group(function () {
-  // Products - Admin only
   Route::get('/products', [ProductController::class, 'index'])->name('products');
-  // Invoices - Admin only
   Route::get('/invoice-list', [InvoiceController::class, 'index'])->name('invoices');
   Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
   Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
   Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 
-  // Backward compatibility
+  Route::get('/invoices/edit/{id}', [InvoiceController::class, 'edit'])->name('invoices.edit');
+
   Route::get('/Customer', [CustomerController::class, 'index'])->name('Customer');
   Route::get('/adminProducts', [ProductController::class, 'index'])->name('adminProducts');
 });

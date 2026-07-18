@@ -49,7 +49,6 @@
                                             <th>Tax</th>
                                             <th>Grand Total</th>
                                             <th>Date</th>
-                                            {{-- <th>Status</th> --}}
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -86,17 +85,6 @@
                                                     <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
-                                                {{-- <td>
-                                                    @if ($item->status == 'Paid')
-                                                        <label class="badge badge-success">Paid</label>
-                                                    @elseif ($item->status == 'Unpaid')
-                                                        <label class="badge badge-warning">Unpaid</label>
-                                                    @elseif ($item->status == 'Cancelled')
-                                                        <label class="badge badge-danger">Cancelled</label>
-                                                    @else
-                                                        <label class="badge badge-info">{{ $item->status }}</label>
-                                                    @endif
-                                                </td> --}}
                                                 <td>
                                                     <!-- View Invoice Button -->
                                                     <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
@@ -104,29 +92,13 @@
                                                         <i class="mdi mdi-eye"></i> View
                                                     </button>
 
-                                                    <!-- Change Status Dropdown -->
-                                                    {{-- <div class="btn-group" role="group">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-secondary dropdown-toggle"
-                                                            data-toggle="dropdown">
-                                                            Status
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('invoices.status', ['id' => $item->id, 'status' => 'Paid']) }}">
-                                                                <span class="badge badge-success">Paid</span>
-                                                            </a>
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('invoices.status', ['id' => $item->id, 'status' => 'Unpaid']) }}">
-                                                                <span class="badge badge-warning">Unpaid</span>
-                                                            </a>
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('invoices.status', ['id' => $item->id, 'status' => 'Cancelled']) }}">
-                                                                <span class="badge badge-danger">Cancelled</span>
-                                                            </a>
-                                                        </div>
-                                                    </div> --}}
+                                                    {{-- ✅ FIXED: This opens the Edit page (invoices_edit.blade.php) --}}
+                                                    <a href="{{ route('invoices.edit', $item->id) }}"
+                                                        class="btn btn-warning btn-sm">
+                                                        <i class="mdi mdi-pencil"></i> Update
+                                                    </a>
 
+                                                    <!-- Delete Button -->
                                                     <button type="button" class="btn btn-danger"
                                                         onclick="confirmDelete('{{ $item->id }}')"
                                                         style="padding: 6px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 5px;">
@@ -218,7 +190,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Product Name</th>
-                                            <th>Quantity</th> <!-- ✅ Fixed typo -->
+                                            <th>Quantity</th>
                                             <th class="text-right">Price</th>
                                             <th class="text-right">Subtotal</th>
                                         </tr>
@@ -262,139 +234,15 @@
                 </div>
             </div>
         @endforeach
-
-        {{-- <footer class="footer">
-            <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a
-                        href="#" target="_blank">Skydash</a>. All rights reserved.</span>
-                <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i
-                        class="ti-heart text-danger ml-1"></i></span>
-            </div>
-        </footer> --}}
     </div>
 
     <script>
-        // Add Product Row
-        function addProductRow() {
-            const row = document.querySelector('.product-row').cloneNode(true);
-            const container = document.getElementById('product-rows');
-
-            // Clear input values
-            row.querySelectorAll('input').forEach(input => input.value = '');
-            row.querySelector('.product-subtotal').value = '';
-
-            // Reset select dropdown
-            const select = row.querySelector('.product-select');
-            if (select) {
-                select.selectedIndex = 0;
-            }
-
-            container.appendChild(row);
-            updateRowNumbers();
-        }
-
-        // Remove Product Row
-        function removeProductRow(button) {
-            const rows = document.querySelectorAll('.product-row');
-            if (rows.length > 1) {
-                button.closest('.product-row').remove();
-                updateRowNumbers();
-                calculateTotal();
-            }
-        }
-
-        // Update Row Numbers
-        function updateRowNumbers() {
-            const rows = document.querySelectorAll('.product-row');
-            rows.forEach((row, index) => {
-                const labels = row.querySelectorAll('label');
-                labels.forEach(label => {
-                    const text = label.textContent.replace(/\d+/, index + 1);
-                    label.textContent = text;
-                });
-            });
-        }
-
-        // Update Product Details when dropdown changes
-        function updateProductDetails(select) {
-            const row = select.closest('.product-row');
-            const priceInput = row.querySelector('.product-price');
-            const subtotalInput = row.querySelector('.product-subtotal');
-            const selectedOption = select.options[select.selectedIndex];
-
-            if (selectedOption && selectedOption.value) {
-                const price = selectedOption.getAttribute('data-price');
-                priceInput.value = price || 0;
-                subtotalInput.value = price || 0;
-            } else {
-                priceInput.value = '';
-                subtotalInput.value = '';
-            }
-
-            calculateTotal();
-        }
-
-        // Calculate Overall Total
-        function calculateTotal() {
-            const rows = document.querySelectorAll('.product-row');
-            let subtotal = 0;
-
-            rows.forEach(row => {
-                const subtotalInput = row.querySelector('.product-subtotal');
-                if (subtotalInput) {
-                    subtotal += parseFloat(subtotalInput.value) || 0;
-                }
-            });
-
-            const taxRate = parseFloat(document.querySelector('input[name="tax_rate"]').value) || 0;
-            const taxAmount = subtotal * (taxRate / 100);
-            const total = subtotal + taxAmount;
-
-            document.getElementById('subtotal_amount').value = subtotal.toFixed(2);
-            document.getElementById('tax_amount').value = taxAmount.toFixed(2);
-            document.getElementById('total_amount').value = total.toFixed(2);
-        }
-
         // Confirm Delete
         function confirmDelete(id) {
             if (confirm('Are you sure you want to delete this invoice?')) {
                 document.getElementById('delete-form-' + id).submit();
             }
         }
-
-        // Auto-calculate on tax rate change
-        document.querySelector('input[name="tax_rate"]')?.addEventListener('input', calculateTotal);
-
-        // ==========================================
-        // ✅ NEW: Disable Products until Customer is selected
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', function() {
-            const customerSelect = document.querySelector('select[name="customer_id"]');
-            const productRows = document.getElementById('product-rows');
-            const addProductBtn = document.querySelector('button[onclick="addProductRow()"]');
-
-            // Function to toggle product section
-            function toggleProductSection() {
-                const selected = customerSelect.value;
-                if (selected === '') {
-                    // If no customer selected, disable everything
-                    productRows.style.opacity = '0.5';
-                    productRows.style.pointerEvents = 'none';
-                    if (addProductBtn) addProductBtn.disabled = true;
-                } else {
-                    // If customer selected, enable everything
-                    productRows.style.opacity = '1';
-                    productRows.style.pointerEvents = 'auto';
-                    if (addProductBtn) addProductBtn.disabled = false;
-                }
-            }
-
-            // Run the check on page load (in case a user is pre-selected)
-            toggleProductSection();
-
-            // Run the check whenever the Customer dropdown changes
-            customerSelect.addEventListener('change', toggleProductSection);
-        });
 
         // ==========================================
         // ✅ Auto-hide alerts after 5 seconds

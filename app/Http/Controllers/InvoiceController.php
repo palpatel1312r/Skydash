@@ -23,7 +23,15 @@ class InvoiceController extends Controller
     {
         $customers = Customer::all();
         $products = Product::all();
-        return view('Dashboard.invoices_create', compact('customers', 'products'));
+        return view('Dashboard.invoice pages.invoices_create', compact('customers', 'products'));
+    }
+    public function edit($id)
+    {
+        $invoice = Invoice::with('customer')->findOrFail($id);
+        $customers = Customer::all();
+        $products = Product::all();
+
+        return view('Dashboard.invoice pages.invoices_edit', compact('invoice', 'customers', 'products'));
     }
     public function store(Request $request)
     {
@@ -103,7 +111,7 @@ class InvoiceController extends Controller
             'tax_rate' => $taxRate,
             'tax_amount' => $taxAmount,
             'total_amount' => $totalAmount,
-            'status' => 'Unpaid',
+            // 'status' => 'Unpaid',
         ]);
 
         return redirect()->route('invoices.index')->with('success', 'Invoice created successfully! Invoice #' . $invoice->invoice_number);
@@ -163,16 +171,7 @@ class InvoiceController extends Controller
     private function sendInvoiceNotification($invoice, $customer)
     {
         try {
-            // Option 1: Send Email
-            // Mail::send('emails.invoice', ['invoice' => $invoice, 'customer' => $customer], function ($message) use ($customer, $invoice) {
-            //     $message->to($customer->email, $customer->fullname)
-            //             ->subject('Invoice #' . $invoice->invoice_number . ' - New Invoice Created');
-            // });
 
-            // Option 2: Create notification in database
-            // You can create a Notification model and save notification here
-
-            // Option 3: Log for debugging
             Log::info('Invoice notification sent to customer', [
                 'customer_id' => $customer->id,
                 'customer_email' => $customer->email,
@@ -220,5 +219,97 @@ class InvoiceController extends Controller
         }
 
         return view('Dashboard.invoice_view', compact('invoice'));
+    }
+    public function update(Request $request, $id)
+    {
+        $invoice = Invoice::findOrFail($id);
+
+        // 1. FIX THE DATE: If it's null or invalid, format it properly to Y-m-d.
+        // The browser sends 'null' if it can't parse the input value.
+        if (empty($request->invoice_date)) {
+            // If the date is missing, force it to today's date in Y-m-d format
+            $request->merge(['invoice_date' => now()->format('Y-m-d')]);
+        } else {
+            try {
+                // If a date string was sent, make sure it's a valid Y-m-d format
+                $request->merge([
+                    'invoice_date' => \Carbon\Carbon::parse($request->invoice_date)->format('Y-m-d')
+                ]);
+            } catch (\Exception $e) {
+                // If parsing fails, fall back to today
+                $request->merge(['invoice_date' => now()->format('Y-m-d')]);
+            }
+        }
+
+        // 2. VALIDATE
+        $request->validate([
+            'invoice_date' => 'required|date',
+            'customer_id' => 'required|exists:customer,id',
+            'product_id.*' => 'required|exists:product,id',
+            'quantity.*' => 'required|integer|min:1',
+            'tax_rate' => 'required|numeric|min:0',
+            // 'status' => 'required|string', // Optional: You can add a status dropdown later if needed
+        ]);
+
+        $customer = Customer::find($request->customer_id);
+
+        // 3. RESTORE OLD STOCK
+        if (!empty($invoice->products)) {
+            foreach ($invoice->products as $oldProductData) {
+                $oldProduct = Product::find($oldProductData['product_id']);
+                if ($oldProduct) {
+                    $oldProduct->increaseStock($oldProductData['quantity']);
+                }
+            }
+        }
+
+        $products = [];
+        $subtotal = 0;
+
+        // 4. DEDUCT NEW STOCK & CALCULATE PRICES
+        foreach ($request->product_id as $key => $productId) {
+            $product = Product::find($productId);
+            $price = $product->price;
+            $quantitySold = $request->quantity[$key] ?? 1;
+            $productSubtotal = $price * $quantitySold;
+
+            // Check stock before decreasing
+            if (!$product->hasStock($quantitySold)) {
+                return redirect()->back()->with('error', 'Not enough stock for product: ' . $product->title);
+            }
+
+            $products[] = [
+                'product_id' => $productId,
+                'product_name' => $product->title,
+                'price' => $price,
+                'quantity' => $quantitySold,
+                'subtotal' => $productSubtotal,
+            ];
+
+            $product->decreaseStock($quantitySold);
+            $subtotal += $productSubtotal;
+        }
+
+        $taxRate = floatval($request->tax_rate);
+        $taxAmount = $subtotal * ($taxRate / 100);
+        $totalAmount = $subtotal + $taxAmount;
+
+        // 5. UPDATE THE DATABASE
+        $invoice->update([
+            'invoice_date' => $request->invoice_date, // This is guaranteed to be Y-m-d now
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->fullname,
+            'customer_email' => $customer->email,
+            'customer_phone' => $customer->phone ?? 'N/A',
+            'customer_address' => $customer->address ?? 'N/A',
+            'products' => $products,
+            'subtotal' => $subtotal,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
+            'total_amount' => $totalAmount,
+            // 'status' => 'Unpaid', // Default to Unpaid if no status is being sent
+        ]);
+
+        return redirect()->route('invoices.index')->with('success', 'Invoice updated successfully!');
     }
 }

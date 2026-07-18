@@ -39,4 +39,10 @@ class Product extends Model
         $this->quantity -= $quantity;
         $this->save();
     }
+    // Add this to your Product model
+    public function increaseStock($quantity)
+    {
+        $this->quantity += $quantity;
+        $this->save();
+    }
 }
