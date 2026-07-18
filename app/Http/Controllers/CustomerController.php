@@ -19,10 +19,7 @@ class CustomerController extends Controller
         // ✅ CHANGE THIS LINE TO MATCH YOUR NEW FOLDER:
         return view('Dashboard.customer pages.Customer', compact('customers', 'roles'));
     }
-    public function showRegisterForm()
-    {
-        return view('Dashboard.Register');
-    }
+    
     public function create()
     {
         $roles = \App\Models\Role::all();
@@ -40,35 +37,6 @@ class CustomerController extends Controller
         $customer = Auth::guard('customer')->user();
         return view('Dashboard.customer pages.customer_dashboard', compact('customer')); // <-- NEW
     }
-
-    public function register(Request $request)
-    {
-        $request->validate([
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer,email',
-            'password' => 'required|min:4|confirmed',
-        ]);
-
-        // ✅ FIXED: Properly closed the array and added the missing brackets
-        $customer = Customer::create([
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => 1, // Default Customer role ID
-            'status' => 'Active',
-        ]);
-
-        if (Auth::guard('customer')->check()) {
-            // ✅ SUCCESS: Stay logged in and go to dashboard
-            return redirect()->route('customer.dashboard')->with('success', 'Registration successful!');
-        } else {
-            // ✅ FIXED: Pass the email back to the login form
-            return redirect()->route('login')->withInput(['email' => $request->email])
-                ->with('success', 'Registration successful! Please login with your credentials.');
-        }
-    }
-
-
 
     public function store(Request $request)
     {
