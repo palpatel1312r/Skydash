@@ -6,13 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
-// use App\Http\Controllers\Superadmin\AdminUserController;
 
-/*
-|--------------------------------------------------------------------------
-| Super Admin Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
 

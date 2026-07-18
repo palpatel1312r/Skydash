@@ -1,7 +1,6 @@
 @extends('components.adminheader')
 
 @section('content')
-    <!-- partial -->
     <div class="main-panel">
         <div class="content-wrapper">
             <div class="row">
@@ -65,8 +64,9 @@
                                                                 class="img-thumbnail"
                                                                 style="width: 80px; height: 80px; object-fit: cover;">
                                                         @else
-                                                            <img src="{{ asset($item->image) }}" alt="Product Image"
-                                                                class="img-thumbnail"
+                                                    
+                                                            <img src="{{ asset('storage/' . $item->image) }}"
+                                                                alt="Product Image" class="img-thumbnail"
                                                                 style="width: 80px; height: 80px; object-fit: cover;">
                                                         @endif
                                                     @else
@@ -80,7 +80,8 @@
                                                             stock</span>
                                                     @elseif($item->quantity > 0 && $item->quantity <= 10)
                                                         <span class="badge badge-warning">{{ $item->quantity }} in stock
-                                                            (Low)</span>
+                                                            (Low)
+                                                        </span>
                                                     @else
                                                         <span class="badge badge-danger">Out of Stock</span>
                                                     @endif
@@ -92,18 +93,14 @@
                                                     <span class="badge badge-info">{{ $item->type }}</span>
                                                 </td>
                                                 <td>
-                                                    {{-- ✅ Update Link --}}
                                                     <a href="{{ route('products.edit', $item->id) }}"
                                                         class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-pencil"></i> Edit
                                                     </a>
-
-                                                    {{-- Delete Button --}}
                                                     <a href="#" class="btn btn-danger btn-sm"
                                                         onclick="confirmDelete({{ $item->id }})">
                                                         <i class="mdi mdi-delete"></i> Delete
                                                     </a>
-
                                                     <form id="delete-form-{{ $item->id }}"
                                                         action="{{ route('admin.products.delete', $item->id) }}"
                                                         method="GET" style="display: none;">
@@ -115,7 +112,6 @@
                                     </tbody>
                                 </table>
                             </div>
-
                             @if ($products->isEmpty())
                                 <div class="text-center py-5">
                                     <p class="text-muted">No products found. Click "Add New Product" to create one.</p>
@@ -126,8 +122,6 @@
                 </div>
             </div>
         </div>
-        <!-- content-wrapper ends -->
-
         <footer class="footer">
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
                 <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a
@@ -137,17 +131,13 @@
             </div>
         </footer>
     </div>
-
     <script>
-        // Confirm Delete
         function confirmDelete(productId) {
             if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
                 document.getElementById('delete-form-' + productId).submit();
             }
             return false;
         }
-
-        // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');

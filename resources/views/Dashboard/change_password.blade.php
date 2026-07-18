@@ -115,9 +115,6 @@
             </div>
         </div>
     </div>
-
-    {{-- ✅ REMOVED THE CSS BLOCK ENTIRELY --}}
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const currentPasswordInput = document.getElementById('current_password');
@@ -139,7 +136,6 @@
                 }
             });
 
-            // 2. Show/Hide Password Toggle
             const togglePasswordButtons = document.querySelectorAll('.toggle-password');
             togglePasswordButtons.forEach(button => {
                 button.addEventListener('click', function() {

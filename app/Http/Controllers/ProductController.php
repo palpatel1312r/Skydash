@@ -62,6 +62,9 @@ class ProductController extends Controller
     $product->type = $request->type;
 
     if ($request->hasFile('image')) {
+      if ($product->image && file_exists(public_path($product->image))) {
+        unlink(public_path($product->image));
+      }
       $file = $request->file('image');
       $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
       $file->move(public_path('uploads/products'), $filename);
