@@ -39,7 +39,8 @@
                     $dashboardUrl = '#';
                     if (auth()->guard('admin')->check()) {
                         $user = auth()->guard('admin')->user();
-                        if ($user->role === 'Superadmin') {
+                        // ✅ FIXED: Use role_id instead of role
+                        if ($user->role_id == 1) {
                             $dashboardUrl = route('superadmin.dashboard');
                         } else {
                             $dashboardUrl = route('admin.dashboard');
@@ -88,7 +89,7 @@
                     <li class="nav-item nav-profile dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
-                                // Determine which user is logged in
+                                // ✅ FIXED: Re-added the $bgColor and $initial logic
                                 if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
                                     $bgColor = '#4e73df'; // Admin Blue
@@ -180,22 +181,17 @@
                 </div>
             </div>
 
-            <div id="right-sidebar" class="settings-panel">
-                <!-- ... sidebar content ... -->
-            </div>
 
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
-                    {{-- ✅ 1. ADMIN & SUPER ADMIN SHARED MENU --}}
                     @if (auth()->guard('admin')->check())
                         @php
                             $user = auth()->guard('admin')->user();
                         @endphp
 
-                        {{-- ✅ DYNAMIC DASHBOARD LINK --}}
                         <li class="nav-item">
                             <a class="nav-link"
-                                href="{{ $user->role_id === 1 ? route('superadmin.dashboard') : route('admin.dashboard') }}">
+                                href="{{ $user->role_id == 1 ? route('superadmin.dashboard') : route('admin.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
                                 <span class="menu-title">Dashboard</span>
                             </a>
@@ -225,7 +221,6 @@
                                 <span class="menu-title">Profile</span>
                             </a>
                         </li>
-
 
                         @if ($user)
                             <li class="nav-item">
@@ -371,7 +366,15 @@
             </div>
         </div>
     </div>
-
+    <style>
+        /* Remove the blue border outline on click for the mobile toggle button */
+        .navbar-toggler:focus,
+        .navbar-toggler:active,
+        .navbar-toggler:hover {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+    </style>
     <script>
         function openChangePasswordModal() {
             const user = @json(auth()->guard('admin')->check() ? 'admin' : (auth()->guard('customer')->check() ? 'customer' : null));

@@ -10,6 +10,15 @@ use Illuminate\Support\Facades\Log;
 
 class CustomerController extends Controller
 {
+    public function index()
+    {
+        $customers = Customer::with('role')->get();
+        $roles = \App\Models\Role::all();
+        Log::info('Customers found: ' . $customers->count());
+
+        // ✅ CHANGE THIS LINE TO MATCH YOUR NEW FOLDER:
+        return view('Dashboard.customer pages.Customer', compact('customers', 'roles'));
+    }
     public function showRegisterForm()
     {
         return view('Dashboard.Register');
@@ -29,7 +38,7 @@ class CustomerController extends Controller
     public function dashboard()
     {
         $customer = Auth::guard('customer')->user();
-        return view('Dashboard.index', compact('customer'));
+        return view('Dashboard.customer pages.customer_dashboard', compact('customer')); // <-- NEW
     }
 
     public function register(Request $request)
@@ -59,13 +68,7 @@ class CustomerController extends Controller
         }
     }
 
-    public function index()
-    {
-        $customers = Customer::with('role')->get();
-        $roles = \App\Models\Role::all();
-        Log::info('Customers found: ' . $customers->count());
-        return view('Dashboard.Customer', compact('customers', 'roles'));
-    }
+
 
     public function store(Request $request)
     {

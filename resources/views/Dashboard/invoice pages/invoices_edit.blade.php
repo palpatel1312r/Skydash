@@ -70,7 +70,7 @@
                                 <hr>
 
                                 <h5>Products</h5>
-
+                                <div id="global-alert-container" style="min-height: 10px;"></div>
                                 <div id="product-rows">
                                     @forelse ($invoice->products as $index => $productData)
                                         <div class="row product-row align-items-end pr-0"
@@ -94,7 +94,6 @@
                                                 </select>
                                             </div>
 
-                                            {{-- Qty --}}
                                             <div class="col-md-1">
                                                 <label>Qty</label>
                                                 <input type="number" name="quantity[]"
@@ -103,17 +102,15 @@
                                                     min="1">
                                             </div>
 
-                                            {{-- Price --}}
                                             <div class="col-md-2">
                                                 <label>Price (₹)</label>
-                                                {{-- ✅ FIXED: Removed 'name="price[]"' --}}
                                                 <input type="number" class="form-control product-price" placeholder="Price"
                                                     step="0.01" readonly
                                                     value="{{ old('price.' . $index, $productData['price']) }}"
                                                     style="background-color: #ffffff !important;">
                                             </div>
 
-                                            {{-- Subtotal --}}
+
                                             <div class="col-md-2">
                                                 <label>Subtotal (₹)</label>
                                                 {{-- ✅ FIXED: Removed 'name="subtotal[]"' --}}
@@ -121,7 +118,7 @@
                                                     value="{{ old('subtotal.' . $index, $productData['subtotal']) }}"
                                                     style="background-color: #ffffff !important;">
                                             </div>
-                                            {{-- Remove Button --}}
+
                                             <div class="col-md-2 d-flex flex-row align-items-end justify-content-end"
                                                 style="padding-bottom: 5px; gap: 5px;">
                                                 <button type="button" class="btn btn-danger btn-sm remove-row"
@@ -132,7 +129,7 @@
                                             </div>
                                         </div>
                                     @empty
-                                        {{-- If no products exist (fallback) --}}
+
                                         <div class="row product-row align-items-end pr-0" data-row-id="1">
                                             <div class="col-md-5">
                                                 <label>Select Product</label>
@@ -179,14 +176,12 @@
                                     @endempty
                             </div>
 
-                            {{-- SINGLE ADD BUTTON --}}
                             <button type="button" class="btn btn-success btn-sm mt-2" onclick="addProductRow()">
                                 <i class="mdi mdi-plus"></i> Add More Product
                             </button>
 
                             <hr>
 
-                            {{-- Totals Section --}}
                             <div class="row">
                                 <div class="col-md-6 offset-md-6">
                                     <div class="form-group">
@@ -214,9 +209,8 @@
                                 </div>
                             </div>
 
-                            {{-- Form Actions --}}
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-warning">
+                                <button type="submit" class="btn btn-primary">
                                     <i class="mdi mdi-content-save"></i> Update Invoice
                                 </button>
                                 <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary">
@@ -248,7 +242,6 @@
 </style>
 
 <script>
-    // Add Product Row
     function addProductRow() {
         const row = document.querySelector('.product-row').cloneNode(true);
         const container = document.getElementById('product-rows');
@@ -278,10 +271,37 @@
 
     function removeProductRow(button) {
         const rows = document.querySelectorAll('.product-row');
-        if (rows.length > 1) {
-            button.closest('.product-row').remove();
-            calculateTotal();
+
+        if (rows.length === 1) {
+
+            const alertContainer = document.getElementById('global-alert-container');
+
+            const errorHtml = `
+                <div id="last-product-error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error!</strong> You cannot remove the last product. You must have at least one product.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+
+            alertContainer.insertAdjacentHTML('beforeend', errorHtml);
+
+            setTimeout(function() {
+                const errorAlert = document.getElementById('last-product-error');
+                if (errorAlert) {
+                    errorAlert.style.transition = 'opacity 0.5s ease';
+                    errorAlert.style.opacity = '0';
+                    setTimeout(() => errorAlert.remove(), 100);
+                }
+            }, 2000);
+
+            return;
         }
+
+        // If more than 1 row, proceed with removal
+        button.closest('.product-row').remove();
+        calculateTotal();
     }
 
     function updateProductDetails(select) {

@@ -176,7 +176,8 @@
                                         </tr>
                                         <tr>
                                             <td colspan="3" class="text-right"><strong>Tax
-                                                    ({{ $item->tax_rate }}%) :</strong></td>
+                                                    ({{ $item->tax_rate }}%)
+                                                    :</strong></td>
                                             <td class="text-right">₹{{ number_format($item->tax_amount, 2) }}</td>
                                         </tr>
                                         <tr>
@@ -207,7 +208,9 @@
             $('#customerInvoiceTable').DataTable({
                 "pageLength": 10,
                 "ordering": true,
-                "order": [[0, 'desc']], // ✅ FIXED: removed extra spaces & used single quotes
+                "order": [
+                    [0, 'desc']
+                ], // ✅ FIXED: removed extra spaces & used single quotes
                 "language": {
                     "emptyTable": "No invoices found"
                 }

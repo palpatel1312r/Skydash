@@ -64,7 +64,12 @@
                                                 </td>
                                                 <td>
                                                     @foreach ($item->products as $product)
-                                                        <span class="badge badge-info">{{ $product['product_name'] }}</span>
+                                                        <span class="badge badge-info">
+                                                            {{ $product['product_name'] }}
+                                                            @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                                (x{{ $product['quantity'] }})
+                                                            @endif
+                                                        </span>
                                                     @endforeach
                                                 </td>
                                                 <td class="text-center">
@@ -94,7 +99,7 @@
 
                                                     {{-- ✅ FIXED: This opens the Edit page (invoices_edit.blade.php) --}}
                                                     <a href="{{ route('invoices.edit', $item->id) }}"
-                                                        class="btn btn-warning btn-sm">
+                                                        class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-pencil"></i> Update
                                                     </a>
 
@@ -196,10 +201,16 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {{-- ✅ Use the grouped products --}}
                                         @foreach ($item->products as $index => $product)
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
-                                                <td>{{ $product['product_name'] }}</td>
+                                                <td>
+                                                    {{ $product['product_name'] }}
+                                                    @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                        <strong>(x{{ $product['quantity'] }})</strong>
+                                                    @endif
+                                                </td>
                                                 <td class="text-right">x{{ $product['quantity'] ?? 1 }}</td>
                                                 <td class="text-right">₹{{ number_format($product['price'], 2) }}</td>
                                                 <td class="text-right">₹{{ number_format($product['subtotal'], 2) }}</td>

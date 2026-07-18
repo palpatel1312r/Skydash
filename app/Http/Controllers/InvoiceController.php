@@ -14,10 +14,32 @@ class InvoiceController extends Controller
     public function index()
     {
         $invoices = Invoice::with('customer')->orderBy('created_at', 'desc')->get();
+
+        // ✅ Loop through invoices to group duplicate products
+        foreach ($invoices as $invoice) {
+            $grouped = [];
+
+            if (is_array($invoice->products)) {
+                foreach ($invoice->products as $product) {
+                    $key = $product['product_id'];
+                    if (!isset($grouped[$key])) {
+                        // First time seeing this product, add it
+                        $grouped[$key] = $product;
+                    } else {
+                        // Product exists, add the quantity and subtotal
+                        $grouped[$key]['quantity'] += $product['quantity'];
+                        $grouped[$key]['subtotal'] += $product['subtotal'];
+                    }
+                }
+                // Re-index the array and assign it back to the object
+                $invoice->products = array_values($grouped);
+            }
+        }
+
         $customers = Customer::all();
         $products = Product::all();
 
-        return view('Dashboard.invoices', compact('invoices', 'customers', 'products'));
+        return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
     }
     public function create()
     {

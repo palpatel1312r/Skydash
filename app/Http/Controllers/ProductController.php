@@ -26,7 +26,7 @@ class ProductController extends Controller
     // ✅ Debug - Check if products exist
     Log::info('Products count: ' . $products->count());
 
-    return view('Dashboard.products', compact('products'));
+    return view('Dashboard.product pages.products', compact('products'));
   }
 
   public function store(Request $request)
@@ -140,6 +140,6 @@ class ProductController extends Controller
   public function customerProducts()
   {
     $products = Product::all();
-    return view('Dashboard.products', compact('products'));
+    return view('Dashboard.product pages.products', compact('products'));
   }
 }

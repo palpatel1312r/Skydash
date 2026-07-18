@@ -32,7 +32,7 @@
                         <div class="card-body">
                             <!-- Button to Open the Modal -->
                             <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">
-                                <i class="mdi mdi-plus"></i> Add New User
+                                <i class="mdi mdi-plus"></i> Add New Customer
                             </a>
 
                             <br><br>
@@ -129,21 +129,20 @@
                                                                             <label>Name:</label>
                                                                             <input type="text" name="fullname"
                                                                                 value="{{ $item->fullname }}"
-                                                                                class="form-control" >
+                                                                                class="form-control">
                                                                         </div>
 
                                                                         <div class="form-group">
                                                                             <label>Email:</label>
                                                                             <input type="email" name="email"
                                                                                 value="{{ $item->email }}"
-                                                                                class="form-control" >
+                                                                                class="form-control">
                                                                         </div>
 
-                                                                
+
                                                                         <div class="form-group">
                                                                             <label>Role:</label>
-                                                                            <select name="role_id" class="form-control"
-                                                                                >
+                                                                            <select name="role_id" class="form-control">
                                                                                 <option value="">Select Role</option>
                                                                                 @foreach ($roles as $role)
                                                                                     <option value="{{ $role->id }}"
@@ -156,8 +155,7 @@
 
                                                                         <div class="form-group">
                                                                             <label>Status:</label>
-                                                                            <select name="status" class="form-control"
-                                                                                >
+                                                                            <select name="status" class="form-control">
                                                                                 <option value="Active"
                                                                                     {{ $item->status == 'Active' ? 'selected' : '' }}>
                                                                                     Active</option>

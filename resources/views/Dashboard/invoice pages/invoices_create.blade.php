@@ -69,7 +69,7 @@
                                 <hr>
 
                                 <h5>Products</h5>
-
+                                <div id="global-alert-container" style="min-height: 10px;"></div>
                                 <div id="product-rows">
                                     <div class="row product-row align-items-end pr-0" data-row-id="1">
                                         {{-- Product Dropdown (Wider) --}}
@@ -247,10 +247,41 @@
 
         function removeProductRow(button) {
             const rows = document.querySelectorAll('.product-row');
-            if (rows.length > 1) {
-                button.closest('.product-row').remove();
-                calculateTotal();
+
+            // ✅ ERROR LOGIC: Check if only 1 row is left
+            if (rows.length === 1) {
+                // Find the container
+                const alertContainer = document.getElementById('global-alert-container');
+
+                // Create the error alert
+                const errorHtml = `
+                <div id="last-product-error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error!</strong> You cannot remove the last product. You must have at least one product.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+
+                // Insert the error into the container
+                alertContainer.insertAdjacentHTML('beforeend', errorHtml);
+
+                // ✅ CHANGED: Auto-fade out and remove the error after 3 seconds
+                setTimeout(function() {
+                    const errorAlert = document.getElementById('last-product-error');
+                    if (errorAlert) {
+                        errorAlert.style.transition = 'opacity 0.5s ease';
+                        errorAlert.style.opacity = '0';
+                        setTimeout(() => errorAlert.remove(), 100);
+                    }
+                }, 2000);
+
+                return; // Stop the deletion
             }
+
+            // If more than 1 row, proceed with removal
+            button.closest('.product-row').remove();
+            calculateTotal();
         }
 
         function updateProductDetails(select) {
