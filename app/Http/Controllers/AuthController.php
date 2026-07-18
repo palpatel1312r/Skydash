@@ -18,6 +18,63 @@ class AuthController extends Controller
     {
         return view('components.Register');
     }
+    public function showChangePasswordForm()
+    {
+        return view('Dashboard.change_password');
+    }
+    public function updatePassword(Request $request)
+    {
+        // ✅ 1. DETECT IF ADMIN OR CUSTOMER IS LOGGED IN
+        $user = null;
+        $guard = null;
+
+        if (Auth::guard('admin')->check()) {
+            $user = Auth::guard('admin')->user();
+            $guard = 'admin';
+        } elseif (Auth::guard('customer')->check()) {
+            $user = Auth::guard('customer')->user();
+            $guard = 'customer';
+        } else {
+            return redirect()->route('login')->with('error', 'You must be logged in to change your password.');
+        }
+
+        // ✅ 2. VALIDATE (Including the custom "Not same as current" rule)
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => [
+                'required',
+                'min:4',
+                'confirmed',
+                function ($attribute, $value, $fail) use ($user) {
+                    if (Hash::check($value, $user->password)) {
+                        $fail('The new password cannot be the same as your current password.');
+                    }
+                },
+            ],
+        ], [
+            'current_password.required' => 'Please enter your current password.',
+            'new_password.required' => 'Please enter a new password.',
+            'new_password.min' => 'The new password must be at least 4 characters.',
+            'new_password.confirmed' => 'The password confirmation does not match.',
+        ]);
+
+        // ✅ 3. CRITICAL FIX: CHECK CURRENT PASSWORD EARLY AND RETURN IF INCORRECT
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'Current password is incorrect.');
+        }
+
+        // ✅ 4. Update the password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        // ✅ 5. LOGOUT THE USER ONLY AFTER SUCCESSFUL UPDATE
+        Auth::guard($guard)->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // ✅ 6. Redirect to Login page with success message
+        return redirect()->route('login')->with('success', 'Password changed successfully! Please login with your new credentials.');
+    }
     public function register(Request $request)
     {
         $request->validate([
@@ -31,7 +88,7 @@ class AuthController extends Controller
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_id' => 3, 
+            'role_id' => 3,
             'status' => 'Active',
         ]);
 

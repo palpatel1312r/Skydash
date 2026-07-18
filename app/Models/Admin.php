@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Profile;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -24,5 +25,9 @@ class Admin extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+    public function profile()
+    {
+        return $this->morphOne(Profile::class, 'profileable');
     }
 }

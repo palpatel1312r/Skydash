@@ -13,25 +13,18 @@ class CreateInvoiceTable extends Migration
             $table->id();
             $table->string('invoice_number')->unique();
             $table->date('invoice_date');
-
-            // ✅ Customer relationship
             $table->unsignedBigInteger('customer_id');
             $table->foreign('customer_id')->references('id')->on('customer')->onDelete('cascade');
-
-            // Customer details (denormalized for invoice history)
             $table->string('customer_name');
             $table->string('customer_email');
             $table->string('customer_phone')->nullable();
             $table->text('customer_address')->nullable();
-
-            // Invoice details
             $table->json('products');
             $table->decimal('subtotal', 10, 2);
             $table->decimal('tax_rate', 5, 2);
             $table->decimal('tax_amount', 10, 2);
             $table->decimal('total_amount', 10, 2);
             $table->string('status')->default('Unpaid');
-
             $table->timestamps();
         });
     }

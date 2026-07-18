@@ -16,7 +16,6 @@ class CustomerController extends Controller
         $roles = \App\Models\Role::all();
         Log::info('Customers found: ' . $customers->count());
 
-        // ✅ CHANGE THIS LINE TO MATCH YOUR NEW FOLDER:
         return view('Dashboard.customer pages.Customer', compact('customers', 'roles'));
     }
 
@@ -35,7 +34,7 @@ class CustomerController extends Controller
     public function dashboard()
     {
         $customer = Auth::guard('customer')->user();
-        return view('Dashboard.customer pages.customer_dashboard', compact('customer')); // <-- NEW
+        return view('Dashboard.customer pages.customer_dashboard', compact('customer'));
     }
 
     public function store(Request $request)
@@ -45,14 +44,6 @@ class CustomerController extends Controller
             'email' => 'required|email|unique:customer,email',
             'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
-        ], [
-            // ✅ Custom error messages go here
-            'fullname.required' => 'Please enter the full name of the customer.',
-            'email.required' => 'The email address is required.',
-            'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email is already registered.',
-            'role_id.required' => 'Please select a valid role from the dropdown.',
-            'status.required' => 'Please select a valid status.',
         ]);
 
         Customer::create([
@@ -74,22 +65,13 @@ class CustomerController extends Controller
             'email' => 'required|email|unique:customer,email,' . $request->id,
             'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
-        ], [
-            'fullname.required' => 'Please enter the full name.',
-            'email.required' => 'Email address is required.',
-            'email.email' => 'Enter a valid email address.',
-            'email.unique' => 'This email is already taken.',
-            'role_id.required' => 'Please select a valid role.',
-            'status.required' => 'Please select a valid status.',
         ]);
 
-        // 👇 FIXED: Update individual properties instead of using mass assignment
         $customer->fullname = $request->fullname;
         $customer->email = $request->email;
-        $customer->role_id = $request->role_id; // This will now force the update
+        $customer->role_id = $request->role_id;
         $customer->status = $request->status;
-
-        $customer->save(); // Save to database
+        $customer->save();
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully!');
     }
@@ -124,54 +106,41 @@ class CustomerController extends Controller
             'email' => 'required|email|unique:customer,email,' . $customer->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // ✅ Ensure validation
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['name', 'email', 'phone', 'address']);
-
-        // ✅ Handle Profile Image Upload
-        if ($request->hasFile('profile_image')) {
-            if ($customer->profile_image && file_exists(storage_path('app/public/' . $customer->profile_image))) {
-                unlink(storage_path('app/public/' . $customer->profile_image));
-            }
-
-            $path = $request->file('profile_image')->store('profile_images', 'public');
-            $data['profile_image'] = $path;
-        }
-
-        $customer->update($data);
-
-        return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
-    }
-    public function updatePassword(Request $request)
-    {
-        $customer = Auth::guard('customer')->user();
-
-        $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:4|confirmed',
-        ], [
-            'current_password.required' => 'Please enter your current password.',
-            'new_password.required' => 'Please enter a new password.',
-            'new_password.min' => 'The new password must be at least 4 characters.',
-            'new_password.confirmed' => 'The password confirmation does not match.',
-        ]);
-
-        // Check if current password matches
-        if (!Hash::check($request->current_password, $customer->password)) {
-            return back()->with('error', 'Current password is incorrect.');
-        }
-
-        // Update the password
-        $customer->password = Hash::make($request->new_password);
+        $customer->name = $request->name;
+        $customer->email = $request->email;
         $customer->save();
 
-        return redirect()->back()->with('success', 'Password changed successfully!');
+        $profile = $customer->profile;
+        if (!$profile) {
+            $profile = new \App\Models\Profile();
+            $profile->profileable_type = get_class($customer);
+            $profile->profileable_id = $customer->id;
+        }
+
+        $profile->phone = $request->phone;
+        $profile->address = $request->address;
+
+        if ($request->hasFile('profile_image')) {
+            // ✅ FIXED: Correctly check and delete the old image path
+            if ($profile->profile_image && file_exists(storage_path('app/public/profile_images/' . $profile->profile_image))) {
+                unlink(storage_path('app/public/profile_images/' . $profile->profile_image));
+            }
+
+            // ✅ FIXED: Store correctly inside 'profile_images'
+            $path = $request->file('profile_image')->store('profile_images', 'public');
+            $profile->profile_image = $path;
+        }
+
+        $profile->save();
+
+        return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
 
     public function validateCurrentPassword(Request $request)
     {
-        // ✅ Detect if Admin or Customer is logged in
         if (Auth::guard('admin')->check()) {
             $user = Auth::guard('admin')->user();
         } elseif (Auth::guard('customer')->check()) {
@@ -180,7 +149,6 @@ class CustomerController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        // Check the password
         if (Hash::check($request->current_password, $user->password)) {
             return response()->json(['success' => true]);
         } else {

@@ -76,7 +76,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
   Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
   Route::post('/profile/update', [AdminController::class, 'updateProfile'])->name('profile.update');
-  Route::post('/password/update', [AdminController::class, 'updatePassword'])->name('password.update');
+  Route::post('/password/update', [AuthController::class, 'updatePassword'])->name('password.update');
 
   // Customer Management (Admin Only)
   Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
@@ -103,6 +103,7 @@ Route::post('/products/add', [ProductController::class, 'store'])->name('product
 Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
+Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form');
 /*
 |--------------------------------------------------------------------------
 | Customer Routes (Protected with auth:customer)

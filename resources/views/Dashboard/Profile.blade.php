@@ -31,7 +31,6 @@
                     <div class="card">
                         <div class="card-body">
                             @php
-                                // ✅ DYNAMIC USER DETECTION
                                 if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
                                     $role = 'Admin';
@@ -52,7 +51,6 @@
                                     $profileRoute = '#';
                                 }
 
-                                // Get first letter for avatar
                                 $initial = $user ? strtoupper(substr($user->name ?? 'U', 0, 1)) : 'U';
                             @endphp
 
@@ -63,43 +61,41 @@
                                 </h4>
                                 <span class="badge badge-info">{{ $role }}</span>
                             </div>
-
-                            {{-- ✅ WRAP THE ENTIRE ROW IN THE FORM AND ADD enctype="multipart/form-data" --}}
                             <form action="{{ $updateRoute }}" method="POST" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="row">
-                                    <!-- Profile Picture Section -->
                                     <div class="col-md-4 border-right text-center">
                                         <div class="profile-img-container mb-3">
-                                            @if ($user && $user->profile_image)
-                                                {{-- If they have a real image, show it --}}
-                                                <img src="{{ asset('storage/' . $user->profile_image) }}"
-                                                    alt="Profile Picture" id="profilePreview"
-                                                    class="img-fluid rounded-circle shadow-sm"
-                                                    style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
-                                            @else
-                                                {{-- If no image, show the Large First Letter Icon --}}
-                                                <div
-                                                    style="
-                                                    width: 150px; 
-                                                    height: 150px; 
-                                                    border-radius: 50%; 
-                                                    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-                                                    color: white; 
-                                                    display: flex; 
-                                                    align-items: center; 
-                                                    justify-content: center; 
-                                                    font-weight: bold; 
-                                                    font-size: 70px;
-                                                    text-transform: uppercase;
-                                                    border: 4px solid #f0f0f0;
-                                                    margin: 0 auto;
-                                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                                ">
-                                                    {{ $initial }}
-                                                </div>
-                                            @endif
+                                            <div id="profilePreviewContainer"
+                                                style="width: 150px; height: 150px; margin: 0 auto;">
+
+                                                @if ($user && $user->profile && $user->profile->profile_image)
+                                                    <img src="{{ asset('storage/profile_images/' . $user->profile->profile_image) }}?v={{ time() }}"
+                                                        alt="Profile Picture" class="img-fluid rounded-circle shadow-sm"
+                                                        style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
+                                                @else
+                                                    <div
+                                                        style="
+                    width: 150px; 
+                    height: 150px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+                    color: white; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-weight: bold; 
+                    font-size: 70px;
+                    text-transform: uppercase;
+                    border: 4px solid #f0f0f0;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                ">
+                                                        {{ $initial }}
+                                                    </div>
+                                                @endif
+
+                                            </div>
 
                                             <div class="mt-3">
                                                 <h5 class="font-weight-bold mb-0">{{ $user->name ?? 'User' }}</h5>
@@ -110,11 +106,9 @@
                                         </div>
                                         <hr>
                                         <div class="d-flex justify-content-center gap-2">
-                                            {{-- ✅ MOVE THE FILE INPUT INSIDE THE FORM --}}
                                             <input type="file" id="profileImageInput" name="profile_image"
                                                 accept="image/*" style="display: none;">
 
-                                            <!-- Change Photo Button -->
                                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                                 onclick="document.getElementById('profileImageInput').click();">
                                                 <i class="mdi mdi-camera"></i> Change Photo
@@ -160,7 +154,7 @@
                                                 <div class="form-group">
                                                     <label for="phone">Phone Number</label>
                                                     <input type="text" class="form-control" id="phone" name="phone"
-                                                        value="{{ old('phone', $user->phone ?? '') }}"
+                                                        value="{{ old('phone', $user->profile->phone ?? '') }}"
                                                         placeholder="Enter your phone number">
                                                 </div>
                                             </div>
@@ -176,7 +170,7 @@
 
                                         <div class="form-group">
                                             <label for="address">Address</label>
-                                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter your current address">{{ old('address', $user->address ?? '') }}</textarea>
+                                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter your current address">{{ old('address', $user->profile->address ?? '') }}</textarea>
                                         </div>
 
                                         <div class="form-group mt-4">
@@ -197,15 +191,19 @@
         </div>
         <!-- content-wrapper ends -->
     </div>
-
     <script>
-        // Preview the selected image before uploading
         document.getElementById('profileImageInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    document.getElementById('profilePreview').src = event.target.result;
+                    const container = document.getElementById('profilePreviewContainer');
+                    container.innerHTML = `
+                    <img src="${event.target.result}" 
+                         alt="Profile Picture" 
+                         class="img-fluid rounded-circle shadow-sm"
+                         style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
+                `;
                 };
                 reader.readAsDataURL(file);
             }

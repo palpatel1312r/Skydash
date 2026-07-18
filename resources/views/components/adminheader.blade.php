@@ -133,7 +133,7 @@
                                     Profile
                                 </a>
                             @endif
-                            <a class="dropdown-item" href="#" onclick="openChangePasswordModal()">
+                            <a class="dropdown-item" href="{{ route('admin.password.form') }}">
                                 <i class="ti-key text-primary"></i>
                                 Change Password
                             </a>
@@ -367,7 +367,6 @@
         </div>
     </div>
     <style>
-        /* Remove the blue border outline on click for the mobile toggle button */
         .navbar-toggler:focus,
         .navbar-toggler:active,
         .navbar-toggler:hover {
