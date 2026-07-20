@@ -48,7 +48,7 @@
                                             <th>Role</th>
                                             <th>Created At</th>
                                             <th>Status</th>
-                                            <th>Action</th>
+                                            {{-- <th>Action</th> --}}
                                             <th>Update</th>
                                         </tr>
                                     </thead>
@@ -70,27 +70,27 @@
                                                 <td>
                                                     @if ($item->status == 'Active')
                                                         <label class="badge badge-success">Active</label>
-                                                    @elseif ($item->status == 'Blocked')
-                                                        <label class="badge badge-danger">Blocked</label>
+                                                    @elseif ($item->status == 'Inactive')
+                                                        <label class="badge badge-warning">Inactive</label>
                                                     @else
                                                         <label class="badge badge-warning">{{ $item->status }}</label>
                                                     @endif
                                                 </td>
-                                                <td>
+                                                {{-- <td>
                                                     @if ($item->status == 'Active')
                                                         <a class="btn btn-sm btn-danger"
-                                                            href="{{ route('admin.customers.status', ['status' => 'Blocked', 'id' => $item->id]) }}"
+                                                            href="{{ route('admin.customers.status', ['status' => 'Inactive', 'id' => $item->id]) }}"
                                                             onclick="return confirm('Are you sure you want to block this user?')">
-                                                            <i class="mdi mdi-block"></i> Block
+                                                            <i class="mdi mdi-block"></i> Active
                                                         </a>
                                                     @else
                                                         <a class="btn btn-sm btn-success"
                                                             href="{{ route('admin.customers.status', ['status' => 'Active', 'id' => $item->id]) }}"
                                                             onclick="return confirm('Are you sure you want to unblock this user?')">
-                                                            <i class="mdi mdi-check"></i> Unblock
+                                                            <i class="mdi mdi-check"></i> Inactive
                                                         </a>
                                                     @endif
-                                                </td>
+                                                </td> --}}
                                                 <td>
                                                     <a href="{{ route('admin.customers.edit', $item->id) }}"
                                                         class="btn btn-primary btn-sm">
@@ -159,9 +159,9 @@
                                                                                 <option value="Active"
                                                                                     {{ $item->status == 'Active' ? 'selected' : '' }}>
                                                                                     Active</option>
-                                                                                <option value="Blocked"
-                                                                                    {{ $item->status == 'Blocked' ? 'selected' : '' }}>
-                                                                                    Blocked</option>
+                                                                                <option value="Inactive"
+                                                                                    {{ $item->status == 'Inactive' ? 'selected' : '' }}>
+                                                                                    Inactive</option>
                                                                             </select>
                                                                         </div>
 

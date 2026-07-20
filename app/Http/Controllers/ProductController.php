@@ -11,19 +11,22 @@ class ProductController extends Controller
 {
   public function create()
   {
+    session(['active_menu' => 'products']);
     return view('Dashboard.product pages.products_create');
   }
 
   public function edit($id)
   {
+    session(['active_menu' => 'products']);
     $product = Product::findOrFail($id);
     return view('Dashboard.product pages.products_update', compact('product'));
   }
   public function index()
   {
-    $products = Product::all();
+    session(['active_menu' => 'products']);
 
-    // ✅ Debug - Check if products exist
+
+    $products = Product::orderBy('created_at', 'desc')->get();
     Log::info('Products count: ' . $products->count());
 
     return view('Dashboard.product pages.products', compact('products'));

@@ -64,8 +64,7 @@
                                                                 class="img-thumbnail"
                                                                 style="width: 80px; height: 80px; object-fit: cover;">
                                                         @else
-                                                    
-                                                            <img src="{{ asset('storage/' . $item->image) }}"
+                                                            <img src="{{ asset($item->image) }}" alt="Product Image"
                                                                 alt="Product Image" class="img-thumbnail"
                                                                 style="width: 80px; height: 80px; object-fit: cover;">
                                                         @endif

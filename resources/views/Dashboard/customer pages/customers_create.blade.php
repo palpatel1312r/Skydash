@@ -27,31 +27,31 @@
                                 </a>
                             </div>
 
-                            <form action="{{ route('admin.customers.store') }}" method="POST">
+                            <form action="{{ route('admin.customers.store') }}" method="POST" id="customerForm">
                                 @csrf
 
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Full Name</label>
-                                            {{-- ✅ Added value="{{ old('fullname') }}" to retain input --}}
-                                            <input type="text" name="fullname"
+                                            <input type="text" name="fullname" id="fullname"
                                                 class="form-control @error('fullname') is-invalid @enderror"
-                                                value="{{ old('fullname') }}">
+                                                value="{{ old('fullname') }}"
+                                                placeholder="Enter customer's full name">
                                             @error('fullname')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="fullname-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            {{-- ✅ Added value="{{ old('email') }}" to retain input --}}
-                                            <input type="email" name="email"
+                                            <input type="email" name="email" id="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                value="{{ old('email') }}">
+                                                value="{{ old('email') }}"
+                                                placeholder="Enter customer's email address">
                                             @error('email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="email-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -60,35 +60,17 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Role</label>
-                                            <select name="role_id"
-                                                class="form-select @error('role_id') is-invalid @enderror">
-                                                <option value="">Select role</option>
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role->id }}"
-                                                        {{ old('role_id') == $role->id ? 'selected' : '' }}>
-                                                        {{ $role->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('role_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
                                             <label>Status</label>
-                                            <select name="status"
+                                            <select name="status" id="status"
                                                 class="form-select @error('status') is-invalid @enderror">
                                                 <option value="">Select Status</option>
                                                 <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>
                                                     Active</option>
-                                                <option value="Blocked" {{ old('status') == 'Blocked' ? 'selected' : '' }}>
-                                                    Blocked</option>
+                                                <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>
+                                                    Inactive</option>
                                             </select>
                                             @error('status')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="status-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -112,25 +94,48 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Clear errors when typing in text inputs (text, email)
-            document.querySelectorAll('input[type="text"], input[type="email"]').forEach(input => {
-                input.addEventListener('input', function() {
-                    this.classList.remove('is-invalid');
-                    const errorDiv = this.closest('.form-group').querySelector('.invalid-feedback');
+            // Function to completely remove error styling and messages
+            function removeFieldError(field) {
+                // Remove the is-invalid class
+                field.classList.remove('is-invalid');
+
+                // Find and remove the error message div
+                const formGroup = field.closest('.form-group');
+                if (formGroup) {
+                    const errorDiv = formGroup.querySelector('.invalid-feedback');
                     if (errorDiv) {
+                        // Hide the error div
                         errorDiv.style.display = 'none';
+                        errorDiv.style.visibility = 'hidden';
                     }
-                });
+                }
+            }
+
+            // Handle all input fields
+            document.querySelectorAll('input, select').forEach(field => {
+                // For text and email inputs - trigger on input
+                if (field.type === 'text' || field.type === 'email') {
+                    field.addEventListener('input', function() {
+                        if (this.value.trim() !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
+
+                // For select dropdowns - trigger on change
+                if (field.tagName === 'SELECT') {
+                    field.addEventListener('change', function() {
+                        if (this.value !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
             });
 
-            // 2. Clear errors when changing dropdown selections
-            document.querySelectorAll('select').forEach(select => {
-                select.addEventListener('change', function() {
-                    this.classList.remove('is-invalid');
-                    const errorDiv = this.closest('.form-group').querySelector('.invalid-feedback');
-                    if (errorDiv) {
-                        errorDiv.style.display = 'none';
-                    }
+            // Force clear errors when any field gets focus
+            document.querySelectorAll('input, select').forEach(field => {
+                field.addEventListener('focus', function() {
+                    removeFieldError(this);
                 });
             });
         });

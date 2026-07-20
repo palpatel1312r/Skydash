@@ -27,7 +27,7 @@
                                 </a>
                             </div>
 
-                            <form action="{{ route('admin.customers.update') }}" method="POST">
+                            <form action="{{ route('admin.customers.update') }}" method="POST" id="customerUpdateForm">
                                 @csrf
                                 <input type="hidden" name="id" value="{{ $customer->id }}">
 
@@ -35,22 +35,24 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Full Name</label>
-                                            <input type="text" name="fullname"
+                                            <input type="text" name="fullname" id="fullname"
                                                 class="form-control @error('fullname') is-invalid @enderror"
-                                                value="{{ old('fullname', $customer->fullname) }}">
+                                                value="{{ old('fullname', $customer->fullname) }}"
+                                                placeholder="Enter customer's full name">
                                             @error('fullname')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="fullname-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input type="email" name="email"
+                                            <input type="email" name="email" id="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                value="{{ old('email', $customer->email) }}">
+                                                value="{{ old('email', $customer->email) }}"
+                                                placeholder="Enter customer's email address">
                                             @error('email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="email-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -59,39 +61,22 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Role</label>
-                                            {{-- ✅ FIXED: name="role_id" --}}
-                                            <select name="role_id"
-                                                class="form-select @error('role_id') is-invalid @enderror">
-                                                <option value="">Select Role</option>
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role->id }}"
-                                                        {{ old('role_id', $customer->role_id) == $role->id ? 'selected' : '' }}>
-                                                        {{ $role->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('role_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
                                             <label>Status</label>
-                                            {{-- ✅ This one was correct (name="status") --}}
-                                            <select name="status"
+                                            <select name="status" id="status"
                                                 class="form-select @error('status') is-invalid @enderror">
-                                                <option value="">Select Status</option>
+                                                <option value="" disabled
+                                                    {{ old('status', $customer->status) == '' ? 'selected' : '' }}>
+                                                    Select Status
+                                                </option>
                                                 <option value="Active"
                                                     {{ old('status', $customer->status) == 'Active' ? 'selected' : '' }}>
                                                     Active</option>
-                                                <option value="Blocked"
-                                                    {{ old('status', $customer->status) == 'Blocked' ? 'selected' : '' }}>
-                                                    Blocked</option>
+                                                <option value="Inactive"
+                                                    {{ old('status', $customer->status) == 'Inactive' ? 'selected' : '' }}>
+                                                    Inactive</option>
                                             </select>
                                             @error('status')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="status-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -112,4 +97,94 @@
             </div>
         </div>
     </div>
+    {{-- <style>
+        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link,
+        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:hover,
+        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:focus {
+            background: #2c3e7d !important;
+            color: #ffffff !important;
+            border-radius: 4px;
+        }
+
+        /* Ensure the icon and text turn white */
+        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link i,
+        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link .menu-title {
+            color: #ffffff !important;
+        }
+
+        /* ✅ ALTERNATIVE LIGHT MODE FIX */
+        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link,
+        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link:hover {
+            background: #5c73f2 !important;
+            color: #0d6efd !important;
+        }
+
+        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link i,
+        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link .menu-title {
+            color: #0d6efd !important;
+        }
+
+        /* Fix for the navbar toggler */
+        .navbar-toggler:focus,
+        .navbar-toggler:active,
+        .navbar-toggler:hover {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ✅ CRITICAL FIX: Stop the template from defaulting to all-active when session is empty */
+        .sidebar .nav .nav-item:not(.active)>.nav-link {
+            background: transparent !important;
+            color: inherit !important;
+        }
+    </style> --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to completely remove error styling and messages
+            function removeFieldError(field) {
+                // Remove the is-invalid class
+                field.classList.remove('is-invalid');
+
+                // Find and remove the error message div
+                const formGroup = field.closest('.form-group');
+                if (formGroup) {
+                    const errorDiv = formGroup.querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        // Hide the error div
+                        errorDiv.style.display = 'none';
+                        errorDiv.style.visibility = 'hidden';
+                        errorDiv.textContent = '';
+                    }
+                }
+            }
+
+            // Handle all input fields
+            document.querySelectorAll('input, select').forEach(field => {
+                // For text and email inputs - trigger on input
+                if (field.type === 'text' || field.type === 'email') {
+                    field.addEventListener('input', function() {
+                        if (this.value.trim() !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
+
+                // For select dropdowns - trigger on change
+                if (field.tagName === 'SELECT') {
+                    field.addEventListener('change', function() {
+                        if (this.value !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
+            });
+
+            // Force clear errors when any field gets focus
+            document.querySelectorAll('input, select').forEach(field => {
+                field.addEventListener('focus', function() {
+                    removeFieldError(this);
+                });
+            });
+        });
+    </script>
 @endsection

@@ -36,7 +36,7 @@
                                             <label>Title</label>
                                             <input type="text" name="title"
                                                 class="form-control @error('title') is-invalid @enderror"
-                                                value="{{ old('title') }}" >
+                                                value="{{ old('title') }}" placeholder="Enter product title">
                                             @error('title')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -47,7 +47,7 @@
                                             <label>Price (₹)</label>
                                             <input type="number" name="price"
                                                 class="form-control @error('price') is-invalid @enderror"
-                                                value="{{ old('price') }}" step="0.01">
+                                                value="{{ old('price') }}" step="0.01" placeholder="0.00">
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -61,7 +61,7 @@
                                             <label>Quantity</label>
                                             <input type="number" name="quantity"
                                                 class="form-control @error('quantity') is-invalid @enderror"
-                                                value="{{ old('quantity') }}" >
+                                                value="{{ old('quantity') }}" placeholder="Enter stock quantity">
                                             @error('quantity')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -71,7 +71,7 @@
                                         <div class="form-group">
                                             <label>Category</label>
                                             <select name="category"
-                                                class="form-control @error('category') is-invalid @enderror" >
+                                                class="form-control @error('category') is-invalid @enderror">
                                                 <option value="">Select Category</option>
                                                 <option value="Accessories"
                                                     {{ old('category') == 'Accessories' ? 'selected' : '' }}>Accessories
@@ -97,8 +97,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Type</label>
-                                            <select name="type" class="form-control @error('type') is-invalid @enderror"
-                                                >
+                                            <select name="type" class="form-control @error('type') is-invalid @enderror">
                                                 <option value="">Select Type</option>
                                                 <option value="Best Sellers"
                                                     {{ old('type') == 'Best Sellers' ? 'selected' : '' }}>Best Sellers

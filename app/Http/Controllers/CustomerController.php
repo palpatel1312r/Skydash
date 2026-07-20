@@ -12,7 +12,8 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::with('role')->get();
+        session(['active_menu' => 'customers']);
+        $customers = Customer::with('role')->orderBy('created_at', 'desc')->get();
         $roles = \App\Models\Role::all();
         Log::info('Customers found: ' . $customers->count());
 
@@ -21,16 +22,16 @@ class CustomerController extends Controller
 
     public function create()
     {
+        session(['active_menu' => 'customers']);
         $roles = \App\Models\Role::all();
         return view('Dashboard.customer pages.customers_create', compact('roles'));
     }
     public function edit($id)
     {
+        session(['active_menu' => 'customers']);
         $customer = Customer::findOrFail($id);
-        $roles = \App\Models\Role::all();
-        return view('Dashboard.customer pages.customers_update', compact('customer', 'roles'));
+        return view('Dashboard.customer pages.customers_update', compact('customer'));
     }
-
     public function dashboard()
     {
         $customer = Auth::guard('customer')->user();
@@ -42,20 +43,27 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email',
-            'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
         ]);
+
+        // Get the customer role ID (assuming you have a role named 'customer')
+        $customerRole = \App\Models\Role::where('name', 'customer')->first();
+
+        if (!$customerRole) {
+            return redirect()->back()->with('error', 'Customer role not found. Please create a "customer" role first.');
+        }
 
         Customer::create([
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make('1234'),
-            'role_id' => $request->role_id,
+            'role_id' => $customerRole->id, // Auto-assign customer role
             'status' => $request->status,
         ]);
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer created successfully!');
     }
+
     public function update(Request $request)
     {
         $customer = Customer::findOrFail($request->id);
@@ -63,18 +71,17 @@ class CustomerController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email,' . $request->id,
-            'role_id' => 'required|exists:roles,id',
             'status' => 'required|string',
         ]);
 
         $customer->fullname = $request->fullname;
         $customer->email = $request->email;
-        $customer->role_id = $request->role_id;
         $customer->status = $request->status;
         $customer->save();
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully!');
     }
+
     public function destroy($id)
     {
         $customer = Customer::findOrFail($id);
@@ -97,6 +104,7 @@ class CustomerController extends Controller
         $customer = Auth::guard('customer')->user();
         return view('Dashboard.Profile', compact('customer'));
     }
+
     public function updateProfile(Request $request)
     {
         $customer = Auth::guard('customer')->user();

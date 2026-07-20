@@ -27,7 +27,8 @@
                                 </a>
                             </div>
 
-                            <form action="{{ route('products.update') }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('products.update') }}" method="POST" enctype="multipart/form-data"
+                                id="productUpdateForm">
                                 @csrf
                                 <input type="hidden" name="id" value="{{ $product->id }}">
 
@@ -35,22 +36,24 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Title</label>
-                                            <input type="text" name="title"
+                                            <input type="text" name="title" id="title"
                                                 class="form-control @error('title') is-invalid @enderror"
-                                                value="{{ old('title', $product->title) }}">
+                                                value="{{ old('title', $product->title) }}"
+                                                placeholder="Enter product title">
                                             @error('title')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="title-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Price (₹)</label>
-                                            <input type="number" name="price"
+                                            <input type="number" name="price" id="price"
                                                 class="form-control @error('price') is-invalid @enderror"
-                                                value="{{ old('price', $product->price) }}" step="0.01">
+                                                value="{{ old('price', $product->price) }}" step="0.01"
+                                                placeholder="0.00">
                                             @error('price')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="price-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -60,20 +63,25 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Quantity</label>
-                                            <input type="number" name="quantity"
+                                            <input type="number" name="quantity" id="quantity"
                                                 class="form-control @error('quantity') is-invalid @enderror"
-                                                value="{{ old('quantity', $product->quantity) }}">
+                                                value="{{ old('quantity', $product->quantity) }}"
+                                                placeholder="Enter stock quantity">
                                             @error('quantity')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="quantity-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Category</label>
-                                            <select name="category"
+                                            <select name="category" id="category"
                                                 class="form-control @error('category') is-invalid @enderror">
-                                                <option value="">Select Category</option>
+                                                {{-- ✅ PLACEHOLDER FOR DROPDOWN --}}
+                                                <option value="" disabled
+                                                    {{ old('category', $product->category) == '' ? 'selected' : '' }}>
+                                                    Select Category
+                                                </option>
                                                 <option value="Accessories"
                                                     {{ old('category', $product->category) == 'Accessories' ? 'selected' : '' }}>
                                                     Accessories</option>
@@ -91,7 +99,7 @@
                                                     Home & Living</option>
                                             </select>
                                             @error('category')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="category-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -101,8 +109,13 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Type</label>
-                                            <select name="type" class="form-control @error('type') is-invalid @enderror">
-                                                <option value="">Select Type</option>
+                                            <select name="type" id="type"
+                                                class="form-control @error('type') is-invalid @enderror">
+                                                {{-- ✅ PLACEHOLDER FOR DROPDOWN --}}
+                                                <option value="" disabled
+                                                    {{ old('type', $product->type) == '' ? 'selected' : '' }}>
+                                                    Select Type
+                                                </option>
                                                 <option value="Best Sellers"
                                                     {{ old('type', $product->type) == 'Best Sellers' ? 'selected' : '' }}>
                                                     Best Sellers</option>
@@ -117,7 +130,7 @@
                                                     Featured</option>
                                             </select>
                                             @error('type')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="type-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -130,11 +143,11 @@
                                                         width="100" class="img-thumbnail">
                                                 </div>
                                             @endif
-                                            <input type="file" name="image"
+                                            <input type="file" name="image" id="image"
                                                 class="form-control @error('image') is-invalid @enderror" accept="image/*">
                                             <small class="text-muted">Leave empty to keep current image</small>
                                             @error('image')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback" id="image-error">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
@@ -142,9 +155,10 @@
 
                                 <div class="form-group">
                                     <label>Description</label>
-                                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description', $product->description) }}</textarea>
+                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
+                                        rows="3" placeholder="Enter product description">{{ old('description', $product->description) }}</textarea>
                                     @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback" id="description-error">{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -163,4 +177,55 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to completely remove error styling and messages
+            function removeFieldError(field) {
+                // Remove the is-invalid class
+                field.classList.remove('is-invalid');
+
+                // Find and remove the error message div
+                const formGroup = field.closest('.form-group');
+                if (formGroup) {
+                    const errorDiv = formGroup.querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        // Hide the error div
+                        errorDiv.style.display = 'none';
+                        errorDiv.style.visibility = 'hidden';
+                        errorDiv.textContent = '';
+                    }
+                }
+            }
+
+            // Handle all input fields
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                // For text, email, number, textarea inputs - trigger on input
+                if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field
+                    .tagName === 'TEXTAREA') {
+                    field.addEventListener('input', function() {
+                        if (this.value.trim() !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
+
+                // For select dropdowns and file inputs - trigger on change
+                if (field.tagName === 'SELECT' || field.type === 'file') {
+                    field.addEventListener('change', function() {
+                        if (this.value !== '') {
+                            removeFieldError(this);
+                        }
+                    });
+                }
+            });
+
+            // Force clear errors when any field gets focus
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('focus', function() {
+                    removeFieldError(this);
+                });
+            });
+        });
+    </script>
 @endsection
