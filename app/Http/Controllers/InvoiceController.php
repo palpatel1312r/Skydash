@@ -15,7 +15,6 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::findOrFail($id);
 
-        // 1. VALIDATE DATE, CUSTOMER, PRODUCTS, TAX RATE, AND PRICES
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'invoice_date' => 'required|date',
             'customer_id'  => 'required|exists:customer,id',
@@ -33,6 +32,11 @@ class InvoiceController extends Controller
             'tax_rate.numeric'      => 'Tax rate must be a valid number.',
             'tax_rate.min'          => 'Tax rate cannot be less than 0.',
             'tax_rate.max'          => 'Tax rate cannot exceed 100.',
+
+            // ✅ ADD THESE LINES FOR QUANTITY ERRORS
+            'quantity.*.required'   => 'Please enter a valid quantity.',
+            'quantity.*.integer'    => 'Quantity must be a whole number.',
+            'quantity.*.min'        => 'Quantity must be at least 1.',
         ]);
 
         // 2. If ANY validation fails, redirect back with ALL errors
@@ -160,6 +164,7 @@ class InvoiceController extends Controller
         $request->validate([
             'total_rows' => 'required|integer|min:1',
         ]);
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'invoice_number' => 'required|unique:invoices',
             'invoice_date'    => 'required|date',
@@ -170,14 +175,33 @@ class InvoiceController extends Controller
             'subtotal.*'      => 'required|numeric|min:0',
             'product_id.*'    => 'required|exists:product,id',
         ], [
+            // ✅ Customer and Product messages
             'customer_id.required'  => 'Please select a valid Customer from the dropdown.',
             'product_id.*.required' => 'Please select a valid Product from the dropdown.',
             'product_id.*.exists'   => 'The selected product does not exist.',
-            // ✅ ADD THESE LINES TO FIX THE PRICE ERROR MESSAGE
+
+            // ✅ Price error messages
             'price.*.required'      => 'Please enter a valid price for the product.',
             'price.*.numeric'       => 'Price must be a valid number.',
+
+            // ✅ Tax Rate messages
             'tax_rate.required'     => 'Please enter the tax rate.',
             'tax_rate.numeric'      => 'Tax rate must be a valid number.',
+            'tax_rate.min'          => 'Tax rate cannot be less than 0.',
+
+            // ✅ INVOICE NUMBER MESSAGES (Add this too)
+            'invoice_number.required' => 'The invoice number is required.',
+            'invoice_number.unique'   => 'This invoice number has already been taken.',
+
+            // ✅ FIX QUANTITY MESSAGES (These were missing!)
+            'quantity.*.required'   => 'Please enter a valid quantity.',
+            'quantity.*.integer'    => 'Quantity must be a whole number.',
+            'quantity.*.min'        => 'Quantity must be at least 1.',
+
+            // ✅ SUBTOTAL MESSAGES (Add these too)
+            'subtotal.*.required'   => 'Subtotal is required.',
+            'subtotal.*.numeric'    => 'Subtotal must be a valid number.',
+            'subtotal.*.min'        => 'Subtotal cannot be less than 0.',
         ]);
 
         // 3. If ANY validation fails (Customer OR Products), redirect back with ALL errors
@@ -187,6 +211,7 @@ class InvoiceController extends Controller
                 ->withInput();
         }
 
+        // ... rest of your store logic below here ...
         // If we reach here, EVERYTHING (Customer + Products) is 100% valid
         $customer = Customer::find($request->customer_id);
 

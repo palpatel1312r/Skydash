@@ -47,7 +47,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input type="email" name="email" id="email"
+                                            <input type="" name="email" id="email"
                                                 class="form-control @error('email') is-invalid @enderror"
                                                 value="{{ old('email', $customer->email) }}"
                                                 placeholder="Enter customer's email address">
@@ -97,7 +97,7 @@
             </div>
         </div>
     </div>
-    {{-- <style>
+    <style>
         .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link,
         .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:hover,
         .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:focus {
@@ -133,11 +133,11 @@
         }
 
         /* ✅ CRITICAL FIX: Stop the template from defaulting to all-active when session is empty */
-        .sidebar .nav .nav-item:not(.active)>.nav-link {
+        /* .sidebar .nav .nav-item:not(.active)>.nav-link {
             background: transparent !important;
             color: inherit !important;
-        }
-    </style> --}}
+        } */
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to completely remove error styling and messages

@@ -39,11 +39,22 @@ class CustomerController extends Controller
     {
         $request->validate([
             'fullname' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer,email',
+
+            // ✅ CHANGED: Added regex to force ONLY @gmail.com emails
+            'email' => [
+                'required',
+                'email',
+                'unique:customer,email',
+                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
+            ],
+
             'status' => 'required|string',
+        ], [
+            'email.email' => 'Please enter a valid email format.',
+            'email.unique' => 'This email address is already registered.',
+            'email.regex' => 'Email must be a valid @gmail.com address.', // Custom error for regex failure
         ]);
 
-        // Get the customer role ID (assuming you have a role named 'customer')
         $customerRole = \App\Models\Role::where('name', 'customer')->first();
 
         if (!$customerRole) {
@@ -67,7 +78,15 @@ class CustomerController extends Controller
 
         $request->validate([
             'fullname' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer,email,' . $request->id,
+
+            // ✅ CHANGED: Added regex to force ONLY @gmail.com emails on update
+            'email' => [
+                'required',
+                'email',
+                'unique:customer,email,' . $request->id,
+                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
+            ],
+
             'status' => 'required|string',
         ]);
 
@@ -134,7 +153,7 @@ class CustomerController extends Controller
                 unlink(storage_path('app/public/profile_images/' . $profile->profile_image));
             }
 
-            // ✅ FIXED: Store correctly inside 'profile_images'
+
             $path = $request->file('profile_image')->store('profile_images', 'public');
             $profile->profile_image = $path;
         }

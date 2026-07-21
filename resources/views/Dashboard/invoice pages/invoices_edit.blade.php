@@ -29,7 +29,7 @@
                             </div>
 
                             <form action="{{ route('admin.invoices.update', $invoice->id) }}" method="POST"
-                                id="invoiceForm" autocomplete="off">
+                                id="invoiceForm" autocomplete="off" novalidate>
                                 @csrf
                                 @method('PUT')
 
@@ -93,9 +93,15 @@
                                             $selectedProductId = $hasOldData
                                                 ? $oldProductId
                                                 : $existingProduct['product_id'] ?? '';
-                                            $selectedQty = $hasOldData
-                                                ? old('quantity.' . $i)
-                                                : $existingProduct['quantity'] ?? 1;
+
+                                            // ✅ FIX: Only set Qty to 1 if a product is actually selected
+                                            $selectedQty = '';
+                                            if (!empty($selectedProductId)) {
+                                                $selectedQty = $hasOldData
+                                                    ? old('quantity.' . $i)
+                                                    : $existingProduct['quantity'] ?? 1;
+                                            }
+
                                             $selectedPrice = $hasOldData
                                                 ? old('price.' . $i)
                                                 : $existingProduct['price'] ?? '';
@@ -107,7 +113,7 @@
                                         <div class="row product-row align-items-end pr-0"
                                             data-row-id="{{ $i + 1 }}">
 
-                                            {{-- Product Dropdown (Width 4) --}}
+                                            {{-- 1. Product Dropdown (Width 4) --}}
                                             <div class="col-md-4">
                                                 <label>Select Product</label>
                                                 <select name="product_id[]"
@@ -129,40 +135,46 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-2 text-start">
+
+                                            {{-- 2. Qty (Width 2) --}}
+                                            <div class="col-md-2">
                                                 <label>Qty</label>
                                                 <input type="number" name="quantity[]"
-                                                    class="form-control product-quantity text-start"
-                                                    value="{{ $selectedQty }}" min="1"
-                                                    oninput="updateProductDetailsFromQuantity(this)">
+                                                    class="form-control product-quantity @error('quantity.' . $i) is-invalid @enderror"
+                                                    value="{{ $selectedQty }}" min="1" placeholder="Qty"
+                                                    oninput="updateProductDetailsFromQuantity(this); clearFieldError(this)">
+                                                @error('quantity.' . $i)
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="text-start d-block">Price (₹)</label>
+
+                                            {{-- 3. Price (Width 2) --}}
+                                            <div class="col-md-2">
+                                                <label>Price (₹)</label>
                                                 <input type="number" name="price[]"
-                                                    class="form-control product-price text-start @error('price.' . $i) is-invalid @enderror"
+                                                    class="form-control product-price @error('price.' . $i) is-invalid @enderror"
                                                     placeholder="0.00" step="0.01" value="{{ $selectedPrice }}"
                                                     style="background-color: #ffffff !important;"
                                                     oninput="updateSubtotalFromPrice(this); clearFieldError(this)">
                                                 @error('price.' . $i)
-                                                    <div class="invalid-feedback text-start">{{ $message }}</div>
+                                                    <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
-                                            {{-- Subtotal (Width 2, Right Aligned) --}}
+                                            {{-- 4. Subtotal (Width 2) --}}
                                             <div class="col-md-2">
-                                                <label class="text-end d-block">Subtotal (₹)</label>
+                                                <label>Subtotal (₹)</label>
                                                 <input type="text" name="subtotal[]"
-                                                    class="form-control product-subtotal text-end"
-                                                    value="{{ $selectedSubtotal }}" readonly
-                                                    style="background-color: #ffffff !important;">
+                                                    class="form-control product-subtotal" value="{{ $selectedSubtotal }}"
+                                                    readonly
+                                                    style="background-color: #ffffff !important; text-align: right;">
                                             </div>
 
-                                            {{-- Remove Button (Width 1, Right Aligned) --}}
-                                            <div class="col-md-1 d-flex flex-row align-items-end justify-content-end"
-                                                style="padding-bottom: 5px; gap: 5px;">
+                                            {{-- 5. ✅ FIXED Remove Button (Width 2, Pushed to Right & Bottom) --}}
+                                            <div class="col-md-2 d-flex align-items-end justify-content-end pb-3">
                                                 <button type="button" class="btn btn-danger btn-sm remove-row"
                                                     onclick="removeProductRow(this)"
-                                                    style="height: 38px; font-size: 12px; padding: 0 8px; white-space: nowrap;">
+                                                    style="height: 38px; font-size: 12px; padding: 0 12px; white-space: nowrap;">
                                                     <i class="mdi mdi-delete" style="font-size: 14px;"></i> Remove
                                                 </button>
                                             </div>
@@ -223,14 +235,14 @@
         </div>
     </div>
 
-    {{-- ✅ FIXES THE RED BORDER --}}
     <style>
         /* 1. Reset Bootstrap 5's native invalid border styling */
         .form-control:invalid,
         .form-select:invalid,
         .form-control.is-invalid,
         .form-select.is-invalid {
-            border-color: #ced4da !important; /* Default gray by default */
+            border-color: #ced4da !important;
+            /* Default gray by default */
             background-image: none !important;
         }
 
@@ -240,50 +252,92 @@
             border-color: #dc3545 !important;
         }
 
+        /* ✅ FORCE REMOVE RED BORDER when is-invalid is GONE */
+        .form-control:not(.is-invalid),
+        .form-select:not(.is-invalid) {
+            border-color: #ced4da !important;
+        }
+
         /* 3. Hide error messages by default */
         .invalid-feedback {
             display: none !important;
         }
 
         /* 4. Show error messages ONLY when is-invalid is present */
-        .is-invalid ~ .invalid-feedback {
+        .is-invalid~.invalid-feedback {
             display: block !important;
+        }
+
+        /* ✅ ALIGNMENT FIX: Prevent layout shift */
+        .product-row .col-md-4,
+        .product-row .col-md-2,
+        .product-row .col-md-3,
+        .product-row .col-md-1 {
+            min-height: 85px !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .product-row {
+            display: flex;
+            align-items: flex-start !important;
+            margin-bottom: 20px;
+        }
+
+        .product-row .col-md-1.d-flex {
+            min-height: 85px !important;
         }
     </style>
 
     <script>
-        // ✅ Error Clear Function
         function clearFieldError(field) {
-            // 1. Remove the validation styling from the specific field
+            // 1. Remove the class that makes it red (Bootstrap 5 standard)
             field.classList.remove('is-invalid');
 
-            // 2. Hide the feedback message
-            const parent = field.closest('.form-group') || field.parentElement;
-            const feedback = parent.querySelector('.invalid-feedback');
-            if (feedback) {
-                feedback.style.display = 'none';
-                feedback.textContent = '';
+            // 2. Force reset the native HTML5 validity so Bootstrap stops blocking it
+            field.setCustomValidity('');
+
+            // 3. Find the parent column and delete the error message from DOM
+            const column = field.closest('[class*="col-md-"]');
+            if (column) {
+                const errorDiv = column.querySelector('.invalid-feedback');
+                if (errorDiv) {
+                    errorDiv.remove(); // ✅ Permanently delete the error text
+                }
             }
         }
 
         function updateProductDetails(select) {
             clearFieldError(select);
+
             const row = select.closest('.product-row');
             const priceInput = row.querySelector('.product-price');
             const subtotalInput = row.querySelector('.product-subtotal');
             const quantityInput = row.querySelector('.product-quantity');
-            const selectedOption = select.options[select.selectedIndex];
+            const option = select.options[select.selectedIndex];
 
-            if (selectedOption && selectedOption.value && selectedOption.getAttribute('data-price')) {
-                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            if (option.value) {
+                row.classList.remove('hide-fields');
+
+                const price = parseFloat(option.dataset.price) || 0;
                 priceInput.value = price.toFixed(2);
-                const quantity = parseInt(quantityInput.value) || 1;
-                subtotalInput.value = (price * quantity).toFixed(2);
+
+                // ✅ Set Qty to 1
+                quantityInput.value = 1;
+
+                // ✅ EXPLICITLY CLEAR THE QTY ERROR HERE!
+                clearFieldError(quantityInput);
+
+                updateSubtotalFromPrice(priceInput);
             } else {
+                row.classList.add('hide-fields');
+
                 priceInput.value = '';
+                quantityInput.value = '';
                 subtotalInput.value = '';
+                calculateTotal();
             }
-            calculateTotal();
         }
 
         function updateProductDetailsFromQuantity(input) {
@@ -300,6 +354,8 @@
         }
 
         function updateSubtotalFromPrice(input) {
+            clearFieldError(input);
+
             const row = input.closest('.product-row');
             const quantityInput = row.querySelector('.product-quantity');
             const subtotalInput = row.querySelector('.product-subtotal');
@@ -319,18 +375,17 @@
                 }
             });
             row.querySelector('.product-subtotal').value = '';
-            row.querySelector('.product-quantity').value = 1;
+            row.querySelector('.product-quantity').value = '';
 
             const select = row.querySelector('.product-select');
             if (select) select.selectedIndex = 0;
 
-            row.querySelectorAll('.is-invalid').forEach(field => {
-                field.classList.remove('is-invalid');
-            });
-            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
-                errorDiv.style.display = '';
-                errorDiv.textContent = '';
-            });
+            // Clear deeply on new row
+            row.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
+
+            // ✅ NEW: Make sure the new row starts HIDDEN
+            row.classList.add('hide-fields');
 
             select.addEventListener('change', function() {
                 updateProductDetails(this);
@@ -430,14 +485,10 @@
                 });
             });
 
+            // On submit, clean up
             document.getElementById('invoiceForm').addEventListener('submit', function() {
-                document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
-                    errorDiv.style.display = '';
-                    errorDiv.textContent = '';
-                });
-                document.querySelectorAll('.is-invalid').forEach(field => {
-                    field.classList.remove('is-invalid');
-                });
+                document.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
+                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
             });
 
             calculateTotal();

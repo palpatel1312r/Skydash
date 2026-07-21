@@ -27,7 +27,7 @@
                                 </a>
                             </div>
 
-                            <form action="{{ route('admin.customers.store') }}" method="POST" id="customerForm">
+                         <form action="{{ route('admin.customers.store') }}" method="POST" id="customerForm" novalidate>
                                 @csrf
 
                                 <div class="row">
@@ -36,8 +36,7 @@
                                             <label>Full Name</label>
                                             <input type="text" name="fullname" id="fullname"
                                                 class="form-control @error('fullname') is-invalid @enderror"
-                                                value="{{ old('fullname') }}"
-                                                placeholder="Enter customer's full name">
+                                                value="{{ old('fullname') }}" placeholder="Enter customer's full name">
                                             @error('fullname')
                                                 <div class="invalid-feedback" id="fullname-error">{{ $message }}</div>
                                             @enderror
@@ -48,8 +47,7 @@
                                             <label>Email</label>
                                             <input type="email" name="email" id="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                value="{{ old('email') }}"
-                                                placeholder="Enter customer's email address">
+                                                value="{{ old('email') }}" placeholder="Enter customer's email address">
                                             @error('email')
                                                 <div class="invalid-feedback" id="email-error">{{ $message }}</div>
                                             @enderror
@@ -66,7 +64,8 @@
                                                 <option value="">Select Status</option>
                                                 <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>
                                                     Active</option>
-                                                <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>
+                                                <option value="Inactive"
+                                                    {{ old('status') == 'Inactive' ? 'selected' : '' }}>
                                                     Inactive</option>
                                             </select>
                                             @error('status')
@@ -92,21 +91,20 @@
         </div>
     </div>
 
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to completely remove error styling and messages
             function removeFieldError(field) {
-                // Remove the is-invalid class
+                // 1. Remove the is-invalid class from the input
                 field.classList.remove('is-invalid');
 
-                // Find and remove the error message div
+                // 2. Find and completely remove the error message div from the DOM
                 const formGroup = field.closest('.form-group');
                 if (formGroup) {
                     const errorDiv = formGroup.querySelector('.invalid-feedback');
                     if (errorDiv) {
-                        // Hide the error div
-                        errorDiv.style.display = 'none';
-                        errorDiv.style.visibility = 'hidden';
+                        errorDiv.remove(); // Delete the error entirely
                     }
                 }
             }

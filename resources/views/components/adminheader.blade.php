@@ -205,6 +205,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin.user.index') }}">
+                                <i class="icon-columns menu-icon"></i>
+                                <span class="menu-title">Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.products.index') }}">
                                 <i class="icon-layout menu-icon"></i>
                                 <span class="menu-title">Products</span>
@@ -273,7 +279,7 @@
     <script src="{{ asset('Dashboard/vendors/js/vendor.bundle.base.js') }}"></script>
     <!-- endinject -->
     <!-- Plugin js for this page -->
-    <script src="{{ asset('Dashboard/vendors/chart.js/Chart.min.js') }}"></script>
+    {{-- <script src="{{ asset('Dashboard/vendors/chart.js/Chart.min.js') }}"></script> --}}
     <script src="{{ asset('Dashboard/vendors/datatables.net/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ asset('Dashboard/js/dataTables.select.min.js') }}"></script>

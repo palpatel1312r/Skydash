@@ -27,7 +27,7 @@
                                 </a>
                             </div>
 
-                            <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm">
+                            <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm" novalidate>
                                 @csrf
                                 <input type="hidden" name="total_rows" id="total_rows" value="{{ old('total_rows', 1) }}">
 
@@ -80,9 +80,9 @@
                                         <div class="row product-row align-items-end pr-0"
                                             data-row-id="{{ $i + 1 }}">
 
-                                            {{-- Product Dropdown (Wider) --}}
-                                            <div class="col-md-5">
-                                                <label>Select Product</label>
+                                            {{-- Product Dropdown (Made smaller to free up space) --}}
+                                            <div class="col-md-4">
+                                                <label>Select Product:</label>
                                                 <select name="product_id[]"
                                                     class="form-control product-select @error('product_id.' . $i) is-invalid @enderror"
                                                     onchange="updateProductDetails(this)"
@@ -98,50 +98,49 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                {{-- ✅ ERROR MESSAGE DISPLAYED DIRECTLY UNDER THE SELECT (NO INLINE STYLE) --}}
                                                 @error('product_id.' . $i)
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
-                                            {{-- Qty (Tiny) --}}
-                                            <div class="col-md-1">
-                                                <label>Qty</label>
-                                                <input type="number" name="quantity[]"
-                                                    class="form-control product-quantity"
-                                                    value="{{ old('quantity.' . $i, 1) }}" min="1"
-                                                    oninput="updateProductDetailsFromQuantity(this)">
-                                            </div>
-
                                             <div class="col-md-2">
-                                                <label>Price (₹)</label>
+                                                <label>Qty:</label>
+                                                <input type="number" name="quantity[]"
+                                                    class="form-control product-quantity @error('quantity.' . $i) is-invalid @enderror"
+                                                    value="{{ old('quantity.' . $i, '') }}" min="1"
+                                                    placeholder="Qty" oninput="updateProductDetailsFromQuantity(this)"
+                                                    onfocus="clearFieldError(this)">
 
+                                                @error('quantity.' . $i)
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            {{-- Price --}}
+                                            <div class="col-md-2">
+                                                <label>Price (₹):</label>
                                                 <input type="number" name="price[]"
                                                     class="form-control product-price @error('price.' . $i) is-invalid @enderror"
                                                     placeholder="Price" step="0.01" value="{{ old('price.' . $i) }}"
                                                     style="background-color:#ffffff !important;"
                                                     oninput="updateSubtotalFromPrice(this)">
-
                                                 @error('price.' . $i)
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
-                                            {{-- Subtotal (Standard) --}}
+                                            {{-- Subtotal --}}
                                             <div class="col-md-2">
                                                 <label>Subtotal (₹)</label>
                                                 <input type="text" name="subtotal[]"
-                                                    class="form-control product-subtotal"
+                                                    class="form-control product-subtotal " placeholder="Subtotal"
                                                     value="{{ old('subtotal.' . $i, '') }}" readonly
-                                                    style="background-color: #ffffff !important;">
+                                                    style="background-color: #ffffff !important; ">
                                             </div>
 
-                                            {{-- Remove Button (Width = 2) --}}
-                                            <div class="col-md-2 d-flex flex-row align-items-end justify-content-end"
-                                                style="padding-bottom: 5px; gap: 5px;">
+                                            <div class="col-md-2 d-flex align-items-end justify-content-end pb-3">
                                                 <button type="button" class="btn btn-danger btn-sm remove-row"
                                                     onclick="removeProductRow(this)"
-                                                    style="height: 38px; font-size: 12px; padding: 0 8px; white-space: nowrap;">
+                                                    style="height: 38px; font-size: 12px; padding: 0 12px; white-space: nowrap;">
                                                     <i class="mdi mdi-delete" style="font-size: 14px;"></i> Remove
                                                 </button>
                                             </div>
@@ -257,50 +256,91 @@
         .is-invalid~.invalid-feedback {
             display: block !important;
         }
+
+        /* ✅ ALIGNMENT FIX: Prevent layout shift */
+        .product-row .col-md-5,
+        .product-row .col-md-1,
+        .product-row .col-md-2 {
+            min-height: 85px !important;
+            /* Locks the height even when error appears */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .product-row {
+            display: flex;
+            align-items: flex-start !important;
+            /* Aligns everything to the top */
+            margin-bottom: 20px;
+        }
+
+        .product-row .col-md-2.d-flex {
+            min-height: 85px !important;
+            /* Locks the height for the Remove button column too */
+        }
     </style>
 
     <script>
-        // ✅ 100% Working Error Clear Function
+        // ✅ Fixed: Removes error from input AND the parent col-md wrapper
         function clearFieldError(field) {
-            // 1. Remove the red border
+            // 1. Remove the red border from the input itself
             field.classList.remove('is-invalid');
 
-            // 2. Find the parent column containing the error div
+            // 2. Reset native browser validation
+            field.setCustomValidity('');
+
+            // 3. 🔥 CRITICAL FIX FOR EDIT PAGE: Find the wrapper column
             const column = field.closest('[class*="col-md-"]');
             if (column) {
+                column.classList.remove('is-invalid'); // Removes red border from the wrapper
+
+                // 4. Completely destroy the error message HTML
                 const errorDiv = column.querySelector('.invalid-feedback');
                 if (errorDiv) {
-                    errorDiv.style.display = 'none';
-                    errorDiv.textContent = '';
+                    errorDiv.remove();
                 }
             }
         }
 
-        // Function to update product details when product is selected
         function updateProductDetails(select) {
             clearFieldError(select);
 
             const row = select.closest('.product-row');
-
             const priceInput = row.querySelector('.product-price');
             const subtotalInput = row.querySelector('.product-subtotal');
             const quantityInput = row.querySelector('.product-quantity');
-
             const option = select.options[select.selectedIndex];
 
             if (option.value) {
+                // 🟢 PRODUCT SELECTED
+                row.classList.remove('hide-fields');
+
                 const price = parseFloat(option.dataset.price) || 0;
                 priceInput.value = price.toFixed(2);
+
+                // ✅ Fills Qty with 1 when a product is selected
+                quantityInput.value = 1;
+
+                // ✅ FORCE CLEAR QTY ERROR EXPLICITLY!
+                clearFieldError(quantityInput);
+
+                // Calculate subtotal
                 updateSubtotalFromPrice(priceInput);
             } else {
+                // 🔴 NO PRODUCT
+                row.classList.add('hide-fields');
+
                 priceInput.value = '';
+                quantityInput.value = '';
                 subtotalInput.value = '';
                 calculateTotal();
             }
         }
-
-        // Function to update product details when quantity changes
+        // ✅ FIXED: Clear error on Qty input
         function updateProductDetailsFromQuantity(input) {
+            clearFieldError(input); // <--- THIS WAS MISSING!
+
             const row = input.closest('.product-row');
             const productSelect = row.querySelector('.product-select');
             const priceInput = row.querySelector('.product-price');
@@ -327,7 +367,6 @@
             calculateTotal();
         }
 
-        // Add Product Row
         function addProductRow() {
             const row = document.querySelector('.product-row').cloneNode(true);
             const container = document.getElementById('product-rows');
@@ -338,18 +377,17 @@
                 }
             });
             row.querySelector('.product-subtotal').value = '';
-            row.querySelector('.product-quantity').value = 1;
+            row.querySelector('.product-quantity').value = '';
 
             const select = row.querySelector('.product-select');
             if (select) select.selectedIndex = 0;
 
-            row.querySelectorAll('.is-invalid').forEach(field => {
-                field.classList.remove('is-invalid');
-            });
-            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
-                errorDiv.style.display = '';
-                errorDiv.textContent = '';
-            });
+            // 🔥 CLEAN UP CLONED ERRORS
+            row.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
+
+            // ✅ Make sure the new row starts HIDDEN
+            row.classList.add('hide-fields');
 
             select.addEventListener('change', function() {
                 updateProductDetails(this);
@@ -448,15 +486,15 @@
             });
 
             // Optional: Clear all errors on form submit
-            document.getElementById('invoiceForm').addEventListener('submit', function() {
-                document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
-                    errorDiv.style.display = '';
-                    errorDiv.textContent = '';
-                });
-                document.querySelectorAll('.is-invalid').forEach(field => {
-                    field.classList.remove('is-invalid');
-                });
-            });
+            // document.getElementById('invoiceForm').addEventListener('submit', function() {
+            //     document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
+            //         errorDiv.style.display = '';
+            //         errorDiv.textContent = '';
+            //     });
+            //     document.querySelectorAll('.is-invalid').forEach(field => {
+            //         field.classList.remove('is-invalid');
+            //     });
+            // });
 
             calculateTotal();
         });
