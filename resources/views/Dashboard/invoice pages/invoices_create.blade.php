@@ -113,13 +113,18 @@
                                                     oninput="updateProductDetailsFromQuantity(this)">
                                             </div>
 
-                                            {{-- Price (Small) - Now Editable --}}
                                             <div class="col-md-2">
                                                 <label>Price (₹)</label>
-                                                <input type="number" name="price[]" class="form-control product-price"
-                                                    placeholder="Price" step="0.01" value="{{ old('price.' . $i, '') }}"
-                                                    style="background-color: #ffffff !important;"
+
+                                                <input type="number" name="price[]"
+                                                    class="form-control product-price @error('price.' . $i) is-invalid @enderror"
+                                                    placeholder="Price" step="0.01" value="{{ old('price.' . $i) }}"
+                                                    style="background-color:#ffffff !important;"
                                                     oninput="updateSubtotalFromPrice(this)">
+
+                                                @error('price.' . $i)
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
 
                                             {{-- Subtotal (Standard) --}}
@@ -156,9 +161,15 @@
                                     <div class="col-md-6 offset-md-6">
                                         <div class="form-group">
                                             <label>Tax Rate (%)</label>
-                                            <input type="number" name="tax_rate" class="form-control"
-                                                value="{{ old('tax_rate', 10) }}" step="0.01"
-                                                oninput="calculateTotal()" placeholder="Tax Rate">
+
+                                            <input type="number" name="tax_rate"
+                                                class="form-control @error('tax_rate') is-invalid @enderror"
+                                                value="{{ old('tax_rate', 10) }}" step="0.01" placeholder="Tax Rate"
+                                                oninput="calculateTotal(); clearFieldError(this)">
+
+                                            @error('tax_rate')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
                                         <div class="form-group">
                                             <label>Subtotal</label>
@@ -249,18 +260,17 @@
     </style>
 
     <script>
-        // Function to clear field error
+        // ✅ 100% Working Error Clear Function
         function clearFieldError(field) {
-            // Remove is-invalid class (This triggers CSS to hide the error automatically)
+            // 1. Remove the red border
             field.classList.remove('is-invalid');
 
-            // Force hide any error messages manually
-            const parentColumn = field.closest('.col-md-5, .col-md-6, .col-md-12');
-            if (parentColumn) {
-                const errorDiv = parentColumn.querySelector('.invalid-feedback');
+            // 2. Find the parent column containing the error div
+            const column = field.closest('[class*="col-md-"]');
+            if (column) {
+                const errorDiv = column.querySelector('.invalid-feedback');
                 if (errorDiv) {
-                    // ✅ CRITICAL FIX: Remove the inline style entirely to let CSS take over
-                    errorDiv.style.display = '';
+                    errorDiv.style.display = 'none';
                     errorDiv.textContent = '';
                 }
             }
@@ -271,23 +281,22 @@
             clearFieldError(select);
 
             const row = select.closest('.product-row');
+
             const priceInput = row.querySelector('.product-price');
             const subtotalInput = row.querySelector('.product-subtotal');
             const quantityInput = row.querySelector('.product-quantity');
-            const selectedOption = select.options[select.selectedIndex];
 
-            if (selectedOption && selectedOption.value && selectedOption.getAttribute('data-price')) {
-                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const option = select.options[select.selectedIndex];
+
+            if (option.value) {
+                const price = parseFloat(option.dataset.price) || 0;
                 priceInput.value = price.toFixed(2);
-
-                const quantity = parseInt(quantityInput.value) || 1;
-                subtotalInput.value = (price * quantity).toFixed(2);
+                updateSubtotalFromPrice(priceInput);
             } else {
                 priceInput.value = '';
                 subtotalInput.value = '';
+                calculateTotal();
             }
-
-            calculateTotal();
         }
 
         // Function to update product details when quantity changes
@@ -305,15 +314,16 @@
             }
         }
 
-        // Function to update subtotal when price is manually edited
         function updateSubtotalFromPrice(input) {
-            const row = input.closest('.product-row');
-            const quantityInput = row.querySelector('.product-quantity');
-            const subtotalInput = row.querySelector('.product-subtotal');
+            clearFieldError(input);
 
-            const price = parseFloat(input.value) || 0;
-            const quantity = parseInt(quantityInput.value) || 1;
-            subtotalInput.value = (price * quantity).toFixed(2);
+            const row = input.closest('.product-row');
+
+            const qty = parseFloat(row.querySelector('.product-quantity').value) || 1;
+            const subtotal = row.querySelector('.product-subtotal');
+
+            subtotal.value = ((parseFloat(input.value) || 0) * qty).toFixed(2);
+
             calculateTotal();
         }
 
@@ -437,6 +447,7 @@
                 });
             });
 
+            // Optional: Clear all errors on form submit
             document.getElementById('invoiceForm').addEventListener('submit', function() {
                 document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
                     errorDiv.style.display = '';

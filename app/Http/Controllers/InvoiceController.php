@@ -113,7 +113,6 @@ class InvoiceController extends Controller
     }
     public function index()
     {
-        session(['active_menu' => 'invoices']);
         $invoices = Invoice::with('customer')->orderBy('created_at', 'desc')->get();
 
         // ✅ Loop through invoices to group duplicate products
@@ -144,14 +143,12 @@ class InvoiceController extends Controller
     }
     public function create()
     {
-        session(['active_menu' => 'invoices']);
         $customers = Customer::all();
         $products = Product::all();
         return view('Dashboard.invoice pages.invoices_create', compact('customers', 'products'));
     }
     public function edit($id)
     {
-        session(['active_menu' => 'invoices']);
         $invoice = Invoice::with('customer')->findOrFail($id);
         $customers = Customer::all();
         $products = Product::all();
@@ -160,12 +157,9 @@ class InvoiceController extends Controller
     }
     public function store(Request $request)
     {
-        // 1. Validate the total rows (Standard Laravel validation)
         $request->validate([
             'total_rows' => 'required|integer|min:1',
         ]);
-
-        // 2. RUN ALL VALIDATIONS TOGETHER (Customer + Products)
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'invoice_number' => 'required|unique:invoices',
             'invoice_date'    => 'required|date',
@@ -174,11 +168,16 @@ class InvoiceController extends Controller
             'quantity.*'      => 'required|integer|min:1',
             'price.*'         => 'required|numeric|min:0',
             'subtotal.*'      => 'required|numeric|min:0',
-            'product_id.*'    => 'required|exists:product,id', // <-- This catches empty products!
+            'product_id.*'    => 'required|exists:product,id',
         ], [
             'customer_id.required'  => 'Please select a valid Customer from the dropdown.',
             'product_id.*.required' => 'Please select a valid Product from the dropdown.',
             'product_id.*.exists'   => 'The selected product does not exist.',
+            // ✅ ADD THESE LINES TO FIX THE PRICE ERROR MESSAGE
+            'price.*.required'      => 'Please enter a valid price for the product.',
+            'price.*.numeric'       => 'Price must be a valid number.',
+            'tax_rate.required'     => 'Please enter the tax rate.',
+            'tax_rate.numeric'      => 'Tax rate must be a valid number.',
         ]);
 
         // 3. If ANY validation fails (Customer OR Products), redirect back with ALL errors

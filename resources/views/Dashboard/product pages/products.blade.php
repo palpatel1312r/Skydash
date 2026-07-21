@@ -94,7 +94,7 @@
                                                 <td>
                                                     <a href="{{ route('products.edit', $item->id) }}"
                                                         class="btn btn-primary btn-sm">
-                                                        <i class="mdi mdi-pencil"></i> Edit
+                                                        <i class="mdi mdi-pencil"></i> Update
                                                     </a>
                                                     <a href="#" class="btn btn-danger btn-sm"
                                                         onclick="confirmDelete({{ $item->id }})">

@@ -375,27 +375,6 @@
             box-shadow: none !important;
         }
     </style>
-    <script>
-        function openChangePasswordModal() {
-            const user = @json(auth()->guard('admin')->check() ? 'admin' : (auth()->guard('customer')->check() ? 'customer' : null));
-
-            if (!user) return;
-
-            // Set the correct form action URL based on user type
-            const form = document.getElementById('changePasswordForm');
-            if (user === 'admin') {
-                form.action = "{{ route('admin.password.update') }}";
-            } else if (user === 'customer') {
-                form.action = "{{ route('customer.password.update') }}";
-            }
-
-            // Clear previous inputs so old errors don't linger
-            form.reset();
-
-            // Show the modal using jQuery (which your template loads)
-            $('#changePasswordModal').modal('show');
-        }
-    </script>
 </body>
 
 </html>

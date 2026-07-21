@@ -77,9 +77,9 @@
                                             <label>Category</label>
                                             <select name="category" id="category"
                                                 class="form-control @error('category') is-invalid @enderror">
-                                                {{-- ✅ PLACEHOLDER FOR DROPDOWN --}}
-                                                <option value="" disabled
-                                                    {{ old('category', $product->category) == '' ? 'selected' : '' }}>
+                                                {{-- ✅ FIX: Only show as selected if product has NO category --}}
+                                                <option value="" {{ !$product->category ? 'selected' : '' }}
+                                                    disabled>
                                                     Select Category
                                                 </option>
                                                 <option value="Accessories"
@@ -111,9 +111,8 @@
                                             <label>Type</label>
                                             <select name="type" id="type"
                                                 class="form-control @error('type') is-invalid @enderror">
-                                                {{-- ✅ PLACEHOLDER FOR DROPDOWN --}}
-                                                <option value="" disabled
-                                                    {{ old('type', $product->type) == '' ? 'selected' : '' }}>
+                                                {{-- ✅ FIX: Only show as selected if product has NO type --}}
+                                                <option value="" {{ !$product->type ? 'selected' : '' }} disabled>
                                                     Select Type
                                                 </option>
                                                 <option value="Best Sellers"

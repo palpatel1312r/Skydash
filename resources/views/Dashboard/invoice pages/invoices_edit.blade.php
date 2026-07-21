@@ -29,7 +29,7 @@
                             </div>
 
                             <form action="{{ route('admin.invoices.update', $invoice->id) }}" method="POST"
-                                id="invoiceForm">
+                                id="invoiceForm" autocomplete="off">
                                 @csrf
                                 @method('PUT')
 
@@ -129,24 +129,22 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-
-                                            {{-- Qty (Width 2, Centered) --}}
-                                            <div class="col-md-2 text-center">
+                                            <div class="col-md-2 text-start">
                                                 <label>Qty</label>
                                                 <input type="number" name="quantity[]"
-                                                    class="form-control product-quantity text-center"
+                                                    class="form-control product-quantity text-start"
                                                     value="{{ $selectedQty }}" min="1"
                                                     oninput="updateProductDetailsFromQuantity(this)">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="text-end d-block">Price (₹)</label>
+                                                <label class="text-start d-block">Price (₹)</label>
                                                 <input type="number" name="price[]"
-                                                    class="form-control product-price text-end @error('price.' . $i) is-invalid @enderror"
+                                                    class="form-control product-price text-start @error('price.' . $i) is-invalid @enderror"
                                                     placeholder="0.00" step="0.01" value="{{ $selectedPrice }}"
                                                     style="background-color: #ffffff !important;"
-                                                    oninput="updateSubtotalFromPrice(this)">
+                                                    oninput="updateSubtotalFromPrice(this); clearFieldError(this)">
                                                 @error('price.' . $i)
-                                                    <div class="invalid-feedback text-end">{{ $message }}</div>
+                                                    <div class="invalid-feedback text-start">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
@@ -178,14 +176,14 @@
 
                                 <hr>
 
-                                <div class="row">
-                                    <div class="col-md-6 offset-md-6">
+                                <div class="row justify-content-end">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Tax Rate (%)</label>
                                             <input type="number" name="tax_rate"
                                                 class="form-control @error('tax_rate') is-invalid @enderror"
                                                 value="{{ old('tax_rate', $invoice->tax_rate) }}" step="0.01"
-                                                oninput="calculateTotal()" placeholder="Tax Rate">
+                                                oninput="calculateTotal(); clearFieldError(this)" placeholder="Tax Rate">
                                             @error('tax_rate')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -224,91 +222,48 @@
             </div>
         </div>
     </div>
+
+    {{-- ✅ FIXES THE RED BORDER --}}
     <style>
-        /* ✅ 1. FORCE INACTIVE MENUS TO BE TRANSPARENT */
-        .sidebar-dark .sidebar .nav .nav-item:not(.active)>a.nav-link,
-        .sidebar-light .sidebar .nav .nav-item:not(.active)>a.nav-link {
-            background: transparent !important;
-            color: #ffffff !important;
+        /* 1. Reset Bootstrap 5's native invalid border styling */
+        .form-control:invalid,
+        .form-select:invalid,
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #ced4da !important; /* Default gray by default */
+            background-image: none !important;
         }
 
-        /* ✅ 2. FORCE ACTIVE MENU TO BE BLUE */
-        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link,
-        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:hover,
-        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link:focus {
-            background: #2c3e7d !important;
-            color: #ffffff !important;
-            border-radius: 4px;
+        /* 2. ONLY turn red if Laravel specifically adds the 'is-invalid' class */
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #dc3545 !important;
         }
 
-        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link i,
-        .sidebar-dark .sidebar .nav .nav-item.active>a.nav-link .menu-title {
-            color: #ffffff !important;
-        }
-
-        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link,
-        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link:hover {
-            background: #5c73f2 !important;
-            color: #0d6efd !important;
-        }
-
-        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link i,
-        .sidebar-light .sidebar .nav .nav-item.active>a.nav-link .menu-title {
-            color: #0d6efd !important;
-        }
-
-        /* Fix for the navbar toggler */
-        .navbar-toggler:focus,
-        .navbar-toggler:active,
-        .navbar-toggler:hover {
-            outline: none !important;
-            box-shadow: none !important;
-        }
-
-        /* ✅ CRITICAL FIX: Prevent layout shift */
-        .product-row .col-md-2,
-        .product-row .col-md-3,
-        .product-row .col-md-4 {
-            min-height: 85px;
-        }
-
-        .product-row {
-            display: flex;
-            align-items: flex-end !important;
-        }
-
-        .product-row>div {
-            align-self: flex-end;
-        }
-
-        /* ✅ FINAL FIX FOR ERROR MESSAGES: Bootstrap Standard */
+        /* 3. Hide error messages by default */
         .invalid-feedback {
-            display: none;
-            width: 100%;
-            margin-top: 0.25rem;
-            font-size: 80%;
-            color: #dc3545;
+            display: none !important;
         }
 
-        .is-invalid~.invalid-feedback {
-            display: block;
-        }
-
-        /* Remove number spinners */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        input[type=number] {
-            -moz-appearance: textfield;
+        /* 4. Show error messages ONLY when is-invalid is present */
+        .is-invalid ~ .invalid-feedback {
+            display: block !important;
         }
     </style>
+
     <script>
+        // ✅ Error Clear Function
         function clearFieldError(field) {
-            // Step 1: Remove the is-invalid class (which triggers CSS to hide the error)
+            // 1. Remove the validation styling from the specific field
             field.classList.remove('is-invalid');
+
+            // 2. Hide the feedback message
+            const parent = field.closest('.form-group') || field.parentElement;
+            const feedback = parent.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.style.display = 'none';
+                feedback.textContent = '';
+            }
         }
 
         function updateProductDetails(select) {
@@ -371,6 +326,10 @@
 
             row.querySelectorAll('.is-invalid').forEach(field => {
                 field.classList.remove('is-invalid');
+            });
+            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
+                errorDiv.style.display = '';
+                errorDiv.textContent = '';
             });
 
             select.addEventListener('change', function() {
@@ -472,24 +431,16 @@
             });
 
             document.getElementById('invoiceForm').addEventListener('submit', function() {
+                document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
+                    errorDiv.style.display = '';
+                    errorDiv.textContent = '';
+                });
                 document.querySelectorAll('.is-invalid').forEach(field => {
                     field.classList.remove('is-invalid');
                 });
             });
+
+            calculateTotal();
         });
-        (function() {
-            const sidebarMenus = document.querySelectorAll('.sidebar .nav .nav-item');
-            if (sidebarMenus.length > 0) {
-                sidebarMenus.forEach(item => item.classList.remove('active'));
-                const invoiceLink = Array.from(sidebarMenus).find(item => {
-                    const link = item.querySelector('a');
-                    return link && (link.getAttribute('href').includes('/invoices') || link.textContent
-                        .trim() === 'Invoices');
-                });
-                if (invoiceLink) {
-                    invoiceLink.classList.add('active');
-                }
-            }
-        })();
     </script>
 @endsection

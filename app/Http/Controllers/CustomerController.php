@@ -12,7 +12,6 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        session(['active_menu' => 'customers']);
         $customers = Customer::with('role')->orderBy('created_at', 'desc')->get();
         $roles = \App\Models\Role::all();
         Log::info('Customers found: ' . $customers->count());
@@ -22,13 +21,11 @@ class CustomerController extends Controller
 
     public function create()
     {
-        session(['active_menu' => 'customers']);
         $roles = \App\Models\Role::all();
         return view('Dashboard.customer pages.customers_create', compact('roles'));
     }
     public function edit($id)
     {
-        session(['active_menu' => 'customers']);
         $customer = Customer::findOrFail($id);
         return view('Dashboard.customer pages.customers_update', compact('customer'));
     }
