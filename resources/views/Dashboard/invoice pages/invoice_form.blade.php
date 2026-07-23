@@ -6,10 +6,20 @@
             <div class="row">
                 <div class="col-md-12 grid-margin">
                     @if (session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                     @endif
                     @if (session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -20,28 +30,34 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="card-title">
-                                    <i class="mdi mdi-file-document-edit-outline text-primary"></i> Update Invoice
-                                    #{{ $invoice->invoice_number }}
+                                    <i
+                                        class="mdi mdi-{{ isset($invoice) ? 'file-document-edit-outline' : 'file-document-outline' }} text-primary"></i>
+                                    {{ isset($invoice) ? 'Update Invoice #' . $invoice->invoice_number : 'Create New Invoice' }}
                                 </h4>
                                 <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="mdi mdi-arrow-left"></i> Back to Invoices
                                 </a>
                             </div>
 
-                            <form action="{{ route('admin.invoices.update', $invoice->id) }}" method="POST"
-                                id="invoiceForm" autocomplete="off" novalidate>
+                            {{-- DYNAMIC FORM ACTION & METHOD --}}
+                            <form
+                                action="{{ isset($invoice) ? route('admin.invoices.update', $invoice->id) : route('invoices.store') }}"
+                                method="POST" id="invoiceForm" novalidate>
                                 @csrf
-                                @method('PUT')
+                                @if (isset($invoice))
+                                    @method('PUT')
+                                @endif
 
                                 <input type="hidden" name="total_rows" id="total_rows"
-                                    value="{{ old('total_rows', count($invoice->products)) }}">
+                                    value="{{ old('total_rows', isset($invoice) ? count($invoice->products) : 1) }}">
 
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Invoice Number</label>
                                             <input type="text" name="invoice_number" class="form-control"
-                                                value="{{ old('invoice_number', $invoice->invoice_number) }}" readonly>
+                                                value="{{ old('invoice_number', $invoice->invoice_number ?? 'INV-' . date('Ymd') . '-' . rand(100, 999)) }}"
+                                                readonly>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -49,7 +65,7 @@
                                             <label>Invoice Date</label>
                                             <input type="date" name="invoice_date"
                                                 class="form-control @error('invoice_date') is-invalid @enderror"
-                                                value="{{ old('invoice_date', \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d')) }}">
+                                                value="{{ old('invoice_date', isset($invoice) ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                             @error('invoice_date')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -65,7 +81,7 @@
                                         <option value="">-- Select Customer --</option>
                                         @foreach ($customers as $customer)
                                             <option value="{{ $customer->id }}"
-                                                {{ old('customer_id', $invoice->customer_id) == $customer->id ? 'selected' : '' }}>
+                                                {{ old('customer_id', $invoice->customer_id ?? '') == $customer->id ? 'selected' : '' }}>
                                                 {{ $customer->fullname }} ({{ $customer->email }})
                                             </option>
                                         @endforeach
@@ -81,7 +97,7 @@
                                 <div id="global-alert-container" style="min-height: 10px;"></div>
                                 <div id="product-rows">
                                     @php
-                                        $rowCount = old('total_rows', count($invoice->products));
+                                        $rowCount = old('total_rows', isset($invoice) ? count($invoice->products) : 1);
                                     @endphp
 
                                     @for ($i = 0; $i < $rowCount; $i++)
@@ -94,7 +110,6 @@
                                                 ? $oldProductId
                                                 : $existingProduct['product_id'] ?? '';
 
-                                            // ✅ FIX: Only set Qty to 1 if a product is actually selected
                                             $selectedQty = '';
                                             if (!empty($selectedProductId)) {
                                                 $selectedQty = $hasOldData
@@ -113,7 +128,7 @@
                                         <div class="row product-row align-items-end pr-0"
                                             data-row-id="{{ $i + 1 }}">
 
-                                            {{-- 1. Product Dropdown (Width 4) --}}
+                                            {{-- Product Dropdown (Width 4) --}}
                                             <div class="col-md-4">
                                                 <label>Select Product</label>
                                                 <select name="product_id[]"
@@ -136,7 +151,7 @@
                                                 @enderror
                                             </div>
 
-                                            {{-- 2. Qty (Width 2) --}}
+                                            {{-- Qty (Width 2) --}}
                                             <div class="col-md-2">
                                                 <label>Qty</label>
                                                 <input type="number" name="quantity[]"
@@ -148,7 +163,7 @@
                                                 @enderror
                                             </div>
 
-                                            {{-- 3. Price (Width 2) --}}
+                                            {{-- Price (Width 2) --}}
                                             <div class="col-md-2">
                                                 <label>Price (₹)</label>
                                                 <input type="number" name="price[]"
@@ -161,7 +176,7 @@
                                                 @enderror
                                             </div>
 
-                                            {{-- 4. Subtotal (Width 2) --}}
+                                            {{-- Subtotal (Width 2) --}}
                                             <div class="col-md-2">
                                                 <label>Subtotal (₹)</label>
                                                 <input type="text" name="subtotal[]"
@@ -170,7 +185,7 @@
                                                     style="background-color: #ffffff !important; text-align: right;">
                                             </div>
 
-                                            {{-- 5. ✅ FIXED Remove Button (Width 2, Pushed to Right & Bottom) --}}
+                                            {{-- Remove Button (Width 2) --}}
                                             <div class="col-md-2 d-flex align-items-end justify-content-end pb-3">
                                                 <button type="button" class="btn btn-danger btn-sm remove-row"
                                                     onclick="removeProductRow(this)"
@@ -188,14 +203,15 @@
 
                                 <hr>
 
-                                <div class="row justify-content-end">
-                                    <div class="col-md-4">
+                                <div class="row {{ isset($invoice) ? 'justify-content-end' : '' }}">
+                                    <div
+                                        class="col-md-{{ isset($invoice) ? 4 : 6 }} offset-md-{{ isset($invoice) ? 0 : 6 }}">
                                         <div class="form-group">
                                             <label>Tax Rate (%)</label>
                                             <input type="number" name="tax_rate"
                                                 class="form-control @error('tax_rate') is-invalid @enderror"
-                                                value="{{ old('tax_rate', $invoice->tax_rate) }}" step="0.01"
-                                                oninput="calculateTotal(); clearFieldError(this)" placeholder="Tax Rate">
+                                                value="{{ old('tax_rate', $invoice->tax_rate ?? 10) }}" step="0.01"
+                                                placeholder="Tax Rate" oninput="calculateTotal(); clearFieldError(this)">
                                             @error('tax_rate')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -203,17 +219,19 @@
                                         <div class="form-group">
                                             <label>Subtotal</label>
                                             <input type="text" name="subtotal_amount" id="subtotal_amount"
-                                                class="form-control" readonly style="background: #f8f9fa;">
+                                                class="form-control" value="{{ old('subtotal_amount', '0.00') }}"
+                                                readonly style="background: #f8f9fa;">
                                         </div>
                                         <div class="form-group">
                                             <label>Tax Amount</label>
                                             <input type="text" name="tax_amount" id="tax_amount" class="form-control"
-                                                readonly style="background: #f8f9fa;">
+                                                value="{{ old('tax_amount', '0.00') }}" readonly
+                                                style="background: #f8f9fa;">
                                         </div>
                                         <div class="form-group">
                                             <label><strong>Total Amount</strong></label>
                                             <input type="text" name="total_amount" id="total_amount"
-                                                class="form-control" readonly
+                                                class="form-control" value="{{ old('total_amount', '0.00') }}" readonly
                                                 style="background: #f8f9fa; font-weight: bold; font-size: 1.2em;">
                                         </div>
                                     </div>
@@ -221,7 +239,8 @@
 
                                 <div class="mt-4">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-content-save"></i> Update Invoice
+                                        <i class="mdi mdi-content-save"></i>
+                                        {{ isset($invoice) ? 'Update Invoice' : 'Create Invoice' }}
                                     </button>
                                     <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary">
                                         <i class="mdi mdi-arrow-left"></i> Cancel
@@ -236,43 +255,54 @@
     </div>
 
     <style>
-        /* 1. Reset Bootstrap 5's native invalid border styling */
-        .form-control:invalid,
-        .form-select:invalid,
-        .form-control.is-invalid,
-        .form-select.is-invalid {
+        /* ✅ FORCE WHITE BACKGROUND ON ALL READONLY INPUTS */
+        input[readonly].form-control,
+        input[readonly],
+        .form-control[readonly],
+        .form-control[readonly]:focus,
+        .form-control[readonly]:active {
+            background-color: #ffffff !important;
             border-color: #ced4da !important;
-            /* Default gray by default */
-            background-image: none !important;
+            color: #212529 !important;
+            opacity: 1 !important;
+            cursor: default !important;
         }
 
-        /* 2. ONLY turn red if Laravel specifically adds the 'is-invalid' class */
-        .form-control.is-invalid,
-        .form-select.is-invalid {
+        .btn-danger.remove-row:disabled,
+        .btn-danger.remove-row.disabled {
+            opacity: 1 !important;
+            background-color: #dc3545 !important;
             border-color: #dc3545 !important;
+            color: #fff !important;
         }
 
-        /* ✅ FORCE REMOVE RED BORDER when is-invalid is GONE */
-        .form-control:not(.is-invalid),
-        .form-select:not(.is-invalid) {
-            border-color: #ced4da !important;
+        .form-select.is-invalid,
+        select.is-invalid,
+        .form-control.is-invalid {
+            border-color: #dc3545 !important;
+            border-width: 1px !important;
+            border-style: solid !important;
+            padding-right: calc(0.75em + 2.375rem) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.1h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right calc(0.375em + 0.1875rem) center !important;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
         }
 
-        /* 3. Hide error messages by default */
         .invalid-feedback {
             display: none !important;
+            color: #dc3545 !important;
+            font-size: 80% !important;
+            margin-top: 0.25rem !important;
         }
 
-        /* 4. Show error messages ONLY when is-invalid is present */
         .is-invalid~.invalid-feedback {
             display: block !important;
         }
 
-        /* ✅ ALIGNMENT FIX: Prevent layout shift */
-        .product-row .col-md-4,
-        .product-row .col-md-2,
-        .product-row .col-md-3,
-        .product-row .col-md-1 {
+        .product-row .col-md-5,
+        .product-row .col-md-1,
+        .product-row .col-md-2 {
             min-height: 85px !important;
             display: flex;
             flex-direction: column;
@@ -285,32 +315,26 @@
             margin-bottom: 20px;
         }
 
-        .product-row .col-md-1.d-flex {
+        .product-row .col-md-2.d-flex {
             min-height: 85px !important;
         }
     </style>
 
     <script>
         function clearFieldError(field) {
-            // 1. Remove the class that makes it red (Bootstrap 5 standard)
             field.classList.remove('is-invalid');
-
-            // 2. Force reset the native HTML5 validity so Bootstrap stops blocking it
             field.setCustomValidity('');
-
-            // 3. Find the parent column and delete the error message from DOM
             const column = field.closest('[class*="col-md-"]');
             if (column) {
                 const errorDiv = column.querySelector('.invalid-feedback');
                 if (errorDiv) {
-                    errorDiv.remove(); // ✅ Permanently delete the error text
+                    errorDiv.remove();
                 }
             }
         }
 
         function updateProductDetails(select) {
             clearFieldError(select);
-
             const row = select.closest('.product-row');
             const priceInput = row.querySelector('.product-price');
             const subtotalInput = row.querySelector('.product-subtotal');
@@ -319,20 +343,13 @@
 
             if (option.value) {
                 row.classList.remove('hide-fields');
-
                 const price = parseFloat(option.dataset.price) || 0;
                 priceInput.value = price.toFixed(2);
-
-                // ✅ Set Qty to 1
                 quantityInput.value = 1;
-
-                // ✅ EXPLICITLY CLEAR THE QTY ERROR HERE!
                 clearFieldError(quantityInput);
-
                 updateSubtotalFromPrice(priceInput);
             } else {
                 row.classList.add('hide-fields');
-
                 priceInput.value = '';
                 quantityInput.value = '';
                 subtotalInput.value = '';
@@ -341,6 +358,7 @@
         }
 
         function updateProductDetailsFromQuantity(input) {
+            clearFieldError(input);
             const row = input.closest('.product-row');
             const productSelect = row.querySelector('.product-select');
             const priceInput = row.querySelector('.product-price');
@@ -355,7 +373,6 @@
 
         function updateSubtotalFromPrice(input) {
             clearFieldError(input);
-
             const row = input.closest('.product-row');
             const quantityInput = row.querySelector('.product-quantity');
             const subtotalInput = row.querySelector('.product-subtotal');
@@ -368,7 +385,6 @@
         function addProductRow() {
             const row = document.querySelector('.product-row').cloneNode(true);
             const container = document.getElementById('product-rows');
-
             row.querySelectorAll('input').forEach(input => {
                 if (input.type !== 'hidden') {
                     input.value = '';
@@ -376,40 +392,29 @@
             });
             row.querySelector('.product-subtotal').value = '';
             row.querySelector('.product-quantity').value = '';
-
             const select = row.querySelector('.product-select');
             if (select) select.selectedIndex = 0;
-
-            // Clear deeply on new row
             row.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
             row.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
-
-            // ✅ NEW: Make sure the new row starts HIDDEN
             row.classList.add('hide-fields');
-
             select.addEventListener('change', function() {
                 updateProductDetails(this);
             });
-
             const qtyInput = row.querySelector('.product-quantity');
             qtyInput.addEventListener('input', function() {
                 updateProductDetailsFromQuantity(this);
             });
-
             const priceInput = row.querySelector('.product-price');
             priceInput.addEventListener('input', function() {
                 updateSubtotalFromPrice(this);
             });
-
             container.appendChild(row);
-
             document.getElementById('total_rows').value = parseInt(document.getElementById('total_rows').value) + 1;
             calculateTotal();
         }
 
         function removeProductRow(button) {
             const rows = document.querySelectorAll('.product-row');
-
             if (rows.length === 1) {
                 const alertContainer = document.getElementById('global-alert-container');
                 const errorHtml = `
@@ -421,7 +426,6 @@
                 </div>
             `;
                 alertContainer.insertAdjacentHTML('beforeend', errorHtml);
-
                 setTimeout(function() {
                     const errorAlert = document.getElementById('last-product-error');
                     if (errorAlert) {
@@ -430,10 +434,8 @@
                         setTimeout(() => errorAlert.remove(), 100);
                     }
                 }, 2000);
-
                 return;
             }
-
             button.closest('.product-row').remove();
             document.getElementById('total_rows').value = parseInt(document.getElementById('total_rows').value) - 1;
             calculateTotal();
@@ -442,18 +444,15 @@
         function calculateTotal() {
             const rows = document.querySelectorAll('.product-row');
             let subtotal = 0;
-
             rows.forEach(row => {
                 const subtotalInput = row.querySelector('.product-subtotal');
                 if (subtotalInput && subtotalInput.value !== '') {
                     subtotal += parseFloat(subtotalInput.value) || 0;
                 }
             });
-
             const taxRate = parseFloat(document.querySelector('input[name="tax_rate"]').value) || 0;
             const taxAmount = subtotal * (taxRate / 100);
             const total = subtotal + taxAmount;
-
             document.getElementById('subtotal_amount').value = subtotal.toFixed(2);
             document.getElementById('tax_amount').value = taxAmount.toFixed(2);
             document.getElementById('total_amount').value = total.toFixed(2);
@@ -461,36 +460,29 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             calculateTotal();
-
             const customerSelect = document.getElementById('customerSelect');
             customerSelect.addEventListener('change', function() {
                 clearFieldError(this);
             });
-
             document.querySelectorAll('.product-select').forEach(select => {
                 select.addEventListener('change', function() {
                     updateProductDetails(this);
                 });
             });
-
             document.querySelectorAll('.product-quantity').forEach(input => {
                 input.addEventListener('input', function() {
                     updateProductDetailsFromQuantity(this);
                 });
             });
-
             document.querySelectorAll('.product-price').forEach(input => {
                 input.addEventListener('input', function() {
                     updateSubtotalFromPrice(this);
                 });
             });
-
-            // On submit, clean up
             document.getElementById('invoiceForm').addEventListener('submit', function() {
                 document.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
                 document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
             });
-
             calculateTotal();
         });
     </script>

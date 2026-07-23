@@ -14,7 +14,8 @@ return new class extends Migration
             $table->string('email', 191)->unique();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->string('role')->default('Admin'); // Admin or Superadmin
+            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
+
             $table->string('status')->default('Active');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

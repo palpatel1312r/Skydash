@@ -16,7 +16,7 @@ class AdminController extends Controller
     public function profile()
     {
         $admin = Auth::guard('admin')->user();
-        return view('Dashboard.Profile', compact('admin'));
+        return view('components.Profile', compact('admin'));
     }
 
     public function updateProfile(Request $request)
@@ -62,5 +62,4 @@ class AdminController extends Controller
 
         return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
     }
-
 }

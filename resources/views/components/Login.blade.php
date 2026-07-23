@@ -49,13 +49,10 @@
                                     {{ session('success') }}
                                 </div>
                             @endif --}}
-
-                            <!-- Single Login Form -->
                             <form method="POST" action="{{ route('login.auto') }}">
                                 @csrf
 
                                 <div class="form-group">
-                                    {{-- Added: @error('email') is-invalid @enderror inside the class --}}
                                     <input type="email" name="email"
                                         class="form-control form-control-lg @error('email') is-invalid @enderror"
                                         placeholder="Email" value="{{ old('email') }}">
@@ -64,7 +61,6 @@
                                     @enderror
                                 </div>
                                 <div class="form-group">
-                                    {{-- Added: @error('password') is-invalid @enderror inside the class --}}
                                     <input type="password" name="password"
                                         class="form-control form-control-lg @error('password') is-invalid @enderror"
                                         placeholder="Password">
@@ -81,7 +77,7 @@
                                 </div>
 
                                 <div class="my-2 d-flex justify-content-between align-items-center">
-                                    <a href="#" class="auth-link text-black">Forgot password?</a>
+                                 <a href="{{ route('password.request') }}" class="auth-link text-black">Forgot password?</a>
                                 </div>
 
                                 <div class="text-center mt-4 font-weight-light">
@@ -104,12 +100,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Only handle clearing errors when user types, but don't hide them on page load
             document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(
                 input => {
                     input.addEventListener('input', function() {
+                        // Only remove the red border (is-invalid)
                         this.classList.remove('is-invalid');
+
+                        // Hide the text error only if the user has actually typed something AND it's not a blocked message
                         const errorMessage = this.parentElement.querySelector('span.text-danger');
-                        if (errorMessage) {
+                        if (errorMessage && this.value.trim() !== '') {
                             errorMessage.style.display = 'none';
                         }
                     });

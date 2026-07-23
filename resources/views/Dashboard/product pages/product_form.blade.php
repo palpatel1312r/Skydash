@@ -20,17 +20,23 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="card-title">
-                                    <i class="mdi mdi-package-plus text-primary"></i> Update Product
+                                    <i
+                                        class="mdi mdi-{{ isset($product) ? 'package-variant-closed' : 'package-plus' }} text-primary"></i>
+                                    {{ isset($product) ? 'Update Product' : 'Add New Product' }}
                                 </h4>
                                 <a href="{{ route('products') }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="mdi mdi-arrow-left"></i> Back to Products
                                 </a>
                             </div>
 
-                            <form action="{{ route('products.update') }}" method="POST" enctype="multipart/form-data"
-                                id="productUpdateForm">
+                            {{-- DYNAMIC FORM ACTION & METHOD --}}
+                            <form action="{{ isset($product) ? route('products.update') : route('products.add') }}"
+                                method="POST" enctype="multipart/form-data" id="productForm">
                                 @csrf
-                                <input type="hidden" name="id" value="{{ $product->id }}">
+                                @if (isset($product))
+                                    @method('PUT')
+                                    <input type="hidden" name="id" value="{{ $product->id }}">
+                                @endif
 
                                 <div class="row">
                                     <div class="col-md-6">
@@ -38,7 +44,7 @@
                                             <label>Title</label>
                                             <input type="text" name="title" id="title"
                                                 class="form-control @error('title') is-invalid @enderror"
-                                                value="{{ old('title', $product->title) }}"
+                                                value="{{ old('title', $product->title ?? '') }}"
                                                 placeholder="Enter product title">
                                             @error('title')
                                                 <div class="invalid-feedback" id="title-error">{{ $message }}</div>
@@ -50,7 +56,7 @@
                                             <label>Price (₹)</label>
                                             <input type="number" name="price" id="price"
                                                 class="form-control @error('price') is-invalid @enderror"
-                                                value="{{ old('price', $product->price) }}" step="0.01"
+                                                value="{{ old('price', $product->price ?? '') }}" step="0.01"
                                                 placeholder="0.00">
                                             @error('price')
                                                 <div class="invalid-feedback" id="price-error">{{ $message }}</div>
@@ -65,7 +71,7 @@
                                             <label>Quantity</label>
                                             <input type="number" name="quantity" id="quantity"
                                                 class="form-control @error('quantity') is-invalid @enderror"
-                                                value="{{ old('quantity', $product->quantity) }}"
+                                                value="{{ old('quantity', $product->quantity ?? '') }}"
                                                 placeholder="Enter stock quantity">
                                             @error('quantity')
                                                 <div class="invalid-feedback" id="quantity-error">{{ $message }}</div>
@@ -77,26 +83,32 @@
                                             <label>Category</label>
                                             <select name="category" id="category"
                                                 class="form-control @error('category') is-invalid @enderror">
-                                                {{-- ✅ FIX: Only show as selected if product has NO category --}}
-                                                <option value="" {{ !$product->category ? 'selected' : '' }}
+                                                {{-- ✅ Uses null coalescing operator (??) to safely handle both Create & Edit --}}
+                                                <option value=""
+                                                    {{ empty(old('category', $product->category ?? '')) ? 'selected' : '' }}
                                                     disabled>
                                                     Select Category
                                                 </option>
                                                 <option value="Accessories"
-                                                    {{ old('category', $product->category) == 'Accessories' ? 'selected' : '' }}>
-                                                    Accessories</option>
+                                                    {{ old('category', $product->category ?? '') == 'Accessories' ? 'selected' : '' }}>
+                                                    Accessories
+                                                </option>
                                                 <option value="Shoes"
-                                                    {{ old('category', $product->category) == 'Shoes' ? 'selected' : '' }}>
-                                                    Shoes</option>
+                                                    {{ old('category', $product->category ?? '') == 'Shoes' ? 'selected' : '' }}>
+                                                    Shoes
+                                                </option>
                                                 <option value="Clothes"
-                                                    {{ old('category', $product->category) == 'Clothes' ? 'selected' : '' }}>
-                                                    Clothes</option>
+                                                    {{ old('category', $product->category ?? '') == 'Clothes' ? 'selected' : '' }}>
+                                                    Clothes
+                                                </option>
                                                 <option value="Electronics"
-                                                    {{ old('category', $product->category) == 'Electronics' ? 'selected' : '' }}>
-                                                    Electronics</option>
+                                                    {{ old('category', $product->category ?? '') == 'Electronics' ? 'selected' : '' }}>
+                                                    Electronics
+                                                </option>
                                                 <option value="Home"
-                                                    {{ old('category', $product->category) == 'Home' ? 'selected' : '' }}>
-                                                    Home & Living</option>
+                                                    {{ old('category', $product->category ?? '') == 'Home' ? 'selected' : '' }}>
+                                                    Home & Living
+                                                </option>
                                             </select>
                                             @error('category')
                                                 <div class="invalid-feedback" id="category-error">{{ $message }}</div>
@@ -111,22 +123,27 @@
                                             <label>Type</label>
                                             <select name="type" id="type"
                                                 class="form-control @error('type') is-invalid @enderror">
-                                                {{-- ✅ FIX: Only show as selected if product has NO type --}}
-                                                <option value="" {{ !$product->type ? 'selected' : '' }} disabled>
+                                                <option value=""
+                                                    {{ empty(old('type', $product->type ?? '')) ? 'selected' : '' }}
+                                                    disabled>
                                                     Select Type
                                                 </option>
                                                 <option value="Best Sellers"
-                                                    {{ old('type', $product->type) == 'Best Sellers' ? 'selected' : '' }}>
-                                                    Best Sellers</option>
+                                                    {{ old('type', $product->type ?? '') == 'Best Sellers' ? 'selected' : '' }}>
+                                                    Best Sellers
+                                                </option>
                                                 <option value="New Arrivals"
-                                                    {{ old('type', $product->type) == 'New Arrivals' ? 'selected' : '' }}>
-                                                    New Arrivals</option>
+                                                    {{ old('type', $product->type ?? '') == 'New Arrivals' ? 'selected' : '' }}>
+                                                    New Arrivals
+                                                </option>
                                                 <option value="Sale"
-                                                    {{ old('type', $product->type) == 'Sale' ? 'selected' : '' }}>Sale
+                                                    {{ old('type', $product->type ?? '') == 'Sale' ? 'selected' : '' }}>
+                                                    Sale
                                                 </option>
                                                 <option value="Featured"
-                                                    {{ old('type', $product->type) == 'Featured' ? 'selected' : '' }}>
-                                                    Featured</option>
+                                                    {{ old('type', $product->type ?? '') == 'Featured' ? 'selected' : '' }}>
+                                                    Featured
+                                                </option>
                                             </select>
                                             @error('type')
                                                 <div class="invalid-feedback" id="type-error">{{ $message }}</div>
@@ -136,7 +153,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Image</label>
-                                            @if ($product->image)
+                                            @if (isset($product) && $product->image)
                                                 <div class="mb-2">
                                                     <img src="{{ asset($product->image) }}" alt="Current Image"
                                                         width="100" class="img-thumbnail">
@@ -144,7 +161,8 @@
                                             @endif
                                             <input type="file" name="image" id="image"
                                                 class="form-control @error('image') is-invalid @enderror" accept="image/*">
-                                            <small class="text-muted">Leave empty to keep current image</small>
+                                            <small class="text-muted">Max size: 2MB (JPG, PNG,
+                                                GIF){{ isset($product) ? ' - Leave empty to keep current image' : '' }}</small>
                                             @error('image')
                                                 <div class="invalid-feedback" id="image-error">{{ $message }}</div>
                                             @enderror
@@ -155,7 +173,7 @@
                                 <div class="form-group">
                                     <label>Description</label>
                                     <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
-                                        rows="3" placeholder="Enter product description">{{ old('description', $product->description) }}</textarea>
+                                        rows="3" placeholder="Enter product description">{{ old('description', $product->description ?? '') }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback" id="description-error">{{ $message }}</div>
                                     @enderror
@@ -163,7 +181,8 @@
 
                                 <div class="mt-4">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-content-save"></i> Update Product
+                                        <i class="mdi mdi-content-save"></i>
+                                        {{ isset($product) ? 'Update Product' : 'Save Product' }}
                                     </button>
                                     <a href="{{ route('products') }}" class="btn btn-outline-secondary btn-sm">
                                         <i class="mdi mdi-arrow-left"></i> Back to Products
@@ -177,29 +196,36 @@
         </div>
     </div>
 
+    <style>
+        .form-control.is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .is-invalid~.invalid-feedback {
+            display: block !important;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Function to completely remove error styling and messages
             function removeFieldError(field) {
-                // Remove the is-invalid class
+                // 1. Remove the is-invalid class
                 field.classList.remove('is-invalid');
 
-                // Find and remove the error message div
+                // 2. Find and completely remove the error message div from the DOM
                 const formGroup = field.closest('.form-group');
                 if (formGroup) {
                     const errorDiv = formGroup.querySelector('.invalid-feedback');
                     if (errorDiv) {
-                        // Hide the error div
-                        errorDiv.style.display = 'none';
-                        errorDiv.style.visibility = 'hidden';
-                        errorDiv.textContent = '';
+                        errorDiv.remove(); // Delete the error entirely (permanent removal)
                     }
                 }
             }
 
             // Handle all input fields
             document.querySelectorAll('input, select, textarea').forEach(field => {
-                // For text, email, number, textarea inputs - trigger on input
+                // For text, email, number, and textarea inputs - trigger on input
                 if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field
                     .tagName === 'TEXTAREA') {
                     field.addEventListener('input', function() {

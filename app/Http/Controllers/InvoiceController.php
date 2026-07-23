@@ -149,15 +149,21 @@ class InvoiceController extends Controller
     {
         $customers = Customer::all();
         $products = Product::all();
-        return view('Dashboard.invoice pages.invoices_create', compact('customers', 'products'));
+        return view('Dashboard.invoice pages.invoice_form', compact('customers', 'products'));
     }
     public function edit($id)
     {
+        // ✅ Load the invoice WITH its customer relationship
         $invoice = Invoice::with('customer')->findOrFail($id);
+
+        // ✅ Load all customers for the dropdown
         $customers = Customer::all();
+
+        // ✅ Load products for the product rows
         $products = Product::all();
 
-        return view('Dashboard.invoice pages.invoices_edit', compact('invoice', 'customers', 'products'));
+        // ✅ Pass ALL three variables to the merged view
+        return view('Dashboard.invoice pages.invoice_form', compact('invoice', 'customers', 'products'));
     }
     public function store(Request $request)
     {

@@ -38,7 +38,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 /*
 |--------------------------------------------------------------------------
 | Public Routes (No middleware)
@@ -89,7 +92,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
   // Customer Management
   Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
   Route::post('/customers/store', [CustomerController::class, 'store'])->name('customers.store');
-  Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
+  // Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
+  Route::match(['put', 'post'], '/customers/update', [CustomerController::class, 'update'])->name('customers.update');
   Route::get('/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('customers.status');
   Route::delete('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.delete');
   Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
@@ -123,7 +127,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 */
 
 Route::post('/products/add', [ProductController::class, 'store'])->name('products.add');
-Route::post('/products/update', [ProductController::class, 'update'])->name('products.update');
+Route::match(['put', 'post'], '/products/update', [ProductController::class, 'update'])->name('products.update');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
 Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form');

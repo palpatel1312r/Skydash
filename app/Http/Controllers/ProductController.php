@@ -11,13 +11,13 @@ class ProductController extends Controller
 {
   public function create()
   {
-    return view('Dashboard.product pages.products_create');
+    return view('Dashboard.product pages.product_form');
   }
 
   public function edit($id)
   {
     $product = Product::findOrFail($id);
-    return view('Dashboard.product pages.products_update', compact('product'));
+    return view('Dashboard.product pages.product_form', compact('product'));
   }
   public function index()
   {

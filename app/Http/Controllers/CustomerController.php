@@ -22,12 +22,12 @@ class CustomerController extends Controller
     public function create()
     {
         $roles = \App\Models\Role::all();
-        return view('Dashboard.customer pages.customers_create', compact('roles'));
+        return view('Dashboard.customer pages.customer_form', compact('roles'));
     }
     public function edit($id)
     {
         $customer = Customer::findOrFail($id);
-        return view('Dashboard.customer pages.customers_update', compact('customer'));
+        return view('Dashboard.customer pages.customer_form', compact('customer'));
     }
     public function dashboard()
     {
@@ -118,7 +118,7 @@ class CustomerController extends Controller
     public function profile()
     {
         $customer = Auth::guard('customer')->user();
-        return view('Dashboard.Profile', compact('customer'));
+        return view('components.Profile', compact('customer'));
     }
 
     public function updateProfile(Request $request)

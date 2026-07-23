@@ -62,9 +62,6 @@
                                             @error('email')
                                                 <div class="invalid-feedback" id="email-error">{{ $message }}</div>
                                             @enderror
-                                            @if (isset($user))
-                                                <small class="text-muted">Email cannot be changed.</small>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -102,25 +99,24 @@
                                         <div class="form-group">
                                             <label>Select User Type:</label>
                                             <select name="user_type" id="user_type_select"
-                                                class="form-control @error('user_type') is-invalid @enderror"
-                                                {{ isset($user) ? 'disabled' : 'required' }}>
+                                                class="form-control @error('user_type') is-invalid @enderror">
                                                 <option value="">Select User Type</option>
                                                 <option value="super_admin"
-                                                    {{ old('user_type', $user['guard'] ?? '') == 'admin' && ($user['role_name'] ?? '') == 'Super Admin' ? 'selected' : '' }}>
-                                                    Super Admin</option>
+                                                    {{ ($user['role_name'] ?? '') == 'Super Admin' ? 'selected' : '' }}>
+                                                    Super Admin
+                                                </option>
                                                 <option value="admin"
-                                                    {{ old('user_type', $user['guard'] ?? '') == 'admin' && ($user['role_name'] ?? '') != 'Super Admin' ? 'selected' : '' }}>
-                                                    Admin</option>
+                                                    {{ ($user['role_name'] ?? '') == 'Admin' ? 'selected' : '' }}>
+                                                    Admin
+                                                </option>
                                                 <option value="customer"
-                                                    {{ old('user_type', $user['guard'] ?? '') == 'customer' ? 'selected' : '' }}>
-                                                    Customer</option>
+                                                    {{ ($user['guard'] ?? '') == 'customer' ? 'selected' : '' }}>
+                                                    Customer
+                                                </option>
                                             </select>
                                             @error('user_type')
                                                 <div class="invalid-feedback" id="user_type-error">{{ $message }}</div>
                                             @enderror
-                                            @if (isset($user))
-                                                <small class="text-muted">User Type cannot be changed.</small>
-                                            @endif
                                         </div>
                                     </div>
 
@@ -128,7 +124,7 @@
                                         <div class="form-group">
                                             <label>Select Role:</label>
                                             <select name="role_id" id="role_id_select"
-                                                class="form-control @error('role_id') is-invalid @enderror" required>
+                                                class="form-control @error('role_id') is-invalid @enderror">
                                                 <option value="">Select Role</option>
                                                 @foreach (\App\Models\Role::all() as $role)
                                                     <option value="{{ $role->id }}"
@@ -209,6 +205,10 @@
             // Force clear errors when any field gets focus
             document.querySelectorAll('input, select').forEach(field => {
                 field.addEventListener('focus', function() {
+                    removeFieldError(this);
+                });
+                // ✅ NEW: Clear errors when the user leaves the field (blur)
+                field.addEventListener('blur', function() {
                     removeFieldError(this);
                 });
             });

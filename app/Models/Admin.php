@@ -17,7 +17,7 @@ class Admin extends Authenticatable
         'password',
         'phone',
         'address',
-        'role_id',   
+        'role_id',
         'status',
     ];
 
@@ -29,5 +29,15 @@ class Admin extends Authenticatable
     public function profile()
     {
         return $this->morphOne(Profile::class, 'profileable');
+    }
+    // ✅ ADD THIS INSIDE YOUR Admin MODEL
+    protected static function booted()
+    {
+        static::creating(function ($admin) {
+            // If role_id is empty, automatically set it to 2 (Admin)
+            if (empty($admin->role_id)) {
+                $admin->role_id = 2;
+            }
+        });
     }
 }

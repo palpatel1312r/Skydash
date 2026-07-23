@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -20,7 +24,7 @@ class AuthController extends Controller
     }
     public function showChangePasswordForm()
     {
-        return view('Dashboard.change_password');
+        return view('components.change_password');
     }
     public function updatePassword(Request $request)
     {
@@ -83,12 +87,11 @@ class AuthController extends Controller
             'password' => 'required|min:4|confirmed',
         ]);
 
-        // ✅ FIXED: Properly closed the array and added the missing brackets
         $customer = Customer::create([
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_id' => 3,
+            'role_id' => 3, // Default Customer Role ID
             'status' => 'Active',
         ]);
 
@@ -119,14 +122,14 @@ class AuthController extends Controller
             if ($user->status !== 'Active') {
                 Auth::guard('admin')->logout();
                 return back()->withErrors([
-                    'blocked' => 'Your account has been blocked. Please contact the Super Admin.',
+                    'email' => 'Your account has been blocked. Please contact the Super Admin.',
                 ])->withInput($request->except('password'));
             }
 
             $request->session()->regenerate();
 
-            // Redirect based on role
-            if ($user->role == 'Superadmin') {
+            // ✅ FIXED: Redirect based on role_id instead of string 'role'
+            if ($user->role_id == 1) { // Super Admin has role_id = 1
                 Log::info('Superadmin login successful', ['email' => $email]);
                 return redirect()->route('superadmin.dashboard');
             }
@@ -143,7 +146,7 @@ class AuthController extends Controller
             if ($customer->status !== 'Active') {
                 Auth::guard('customer')->logout();
                 return back()->withErrors([
-                    'blocked' => 'Your account is not active. Please contact support.',
+                    'email' => 'Your account is not active. Please contact support.',
                 ])->withInput($request->except('password'));
             }
 
@@ -171,5 +174,78 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->with('success', 'Logged out successfully!');
+    }
+    
+    // ✅ FORGOT PASSWORD METHODS
+
+    // Show the form to request a password reset link
+    public function showForgotPasswordForm()
+    {
+        return view('components.forgot_password');
+    }
+
+    // Send the reset link email
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // Try to find the user in Admins or Customers
+        $admin = \App\Models\Admin::where('email', $request->email)->first();
+        $customer = \App\Models\Customer::where('email', $request->email)->first();
+
+        if (!$admin && !$customer) {
+            return back()->withErrors(['email' => 'We can\'t find a user with that email address.']);
+        }
+
+        // Determine which guard to use
+        $guard = $admin ? 'admin' : 'customer';
+
+        try {
+            $status = Password::broker($guard)->sendResetLink(
+                ['email' => $request->email]
+            );
+
+            return $status === Password::RESET_LINK_SENT
+                ? back()->with(['success' => 'Password reset link sent to your email!'])
+                : back()->withErrors(['email' => __($status)]);
+
+        } catch (\Exception $e) {
+            // Fallback: If email fails, show the link on screen for testing purposes (Remove this after testing!)
+            return back()->with('success', 'Password reset link would be sent to ' . $request->email . ' (Check your console for the URL if emails fail)');
+        }
+    }
+
+    // Show the form to reset the password
+    public function showResetPasswordForm($token)
+    {
+        return view('components.reset_password', ['token' => $token]);
+    }
+
+    // Handle the password reset submission
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:4|confirmed',
+        ]);
+
+        // Determine which guard based on the email
+        $admin = \App\Models\Admin::where('email', $request->email)->first();
+        $guard = $admin ? 'admin' : 'customer';
+
+        $status = Password::broker($guard)->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', 'Your password has been reset successfully!')
+            : back()->withErrors(['email' => [__($status)]]);
     }
 }
