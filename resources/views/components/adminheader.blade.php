@@ -181,6 +181,7 @@
             </div>
 
             {{-- ======================= ADMIN SIDEBAR ======================= --}}
+            {{-- ======================= ADMIN SIDEBAR ======================= --}}
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
                     @if (auth()->guard('admin')->check())
@@ -188,7 +189,12 @@
                             $user = auth()->guard('admin')->user();
                         @endphp
 
-                        <li class="nav-item">
+                        {{-- 1. DASHBOARD --}}
+                        @php
+                            $isDashboardActive =
+                                request()->routeIs('superadmin.dashboard') || request()->routeIs('admin.dashboard');
+                        @endphp
+                        <li class="nav-item {{ $isDashboardActive ? 'active' : '' }}">
                             <a class="nav-link"
                                 href="{{ $user->role_id == 1 ? route('superadmin.dashboard') : route('admin.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
@@ -196,22 +202,45 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
+                        {{-- 2. CUSTOMERS --}}
+                        @php
+                            $isCustomerActive =
+                                request()->routeIs('admin.customers.index') ||
+                                request()->routeIs('admin.customers.create') ||
+                                request()->routeIs('admin.customers.edit');
+                        @endphp
+                        <li class="nav-item {{ $isCustomerActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.customers.index') }}">
                                 <i class="icon-columns menu-icon"></i>
                                 <span class="menu-title">Customers</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+
+                        {{-- 3. USERS --}}
+                        @php
+                            $isUserActive =
+                                request()->routeIs('admin.user.index') ||
+                                request()->routeIs('admin.user.create') ||
+                                request()->routeIs('admin.user.edit');
+                        @endphp
+                        <li class="nav-item {{ $isUserActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.user.index') }}">
                                 <i class="icon-columns menu-icon"></i>
                                 <span class="menu-title">Users</span>
                             </a>
                         </li>
 
-                        {{-- ✅ ONLY SHOW PRODUCTS TO ADMIN AND SUPER ADMIN --}}
+                        {{-- 4. PRODUCTS (Only for Admin / Super Admin) --}}
                         @if ($user->role_id == 1 || $user->role_id == 2)
-                            <li class="nav-item">
+                            @php
+                                $isProductActive =
+                                    request()->routeIs('products') ||
+                                    request()->routeIs('products.create') ||
+                                    request()->routeIs('products.edit') ||
+                                    request()->routeIs('products.add') ||
+                                    request()->routeIs('products.update');
+                            @endphp
+                            <li class="nav-item {{ $isProductActive ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('products') }}">
                                     <i class="icon-layout menu-icon"></i>
                                     <span class="menu-title">Products</span>
@@ -219,21 +248,44 @@
                             </li>
                         @endif
 
-                        <li class="nav-item">
+                        {{-- 5. INVOICES (Your existing logic) --}}
+                        @php
+                            $isInvoiceActive =
+                                request()->routeIs('invoices.index') ||
+                                request()->routeIs('invoices.create') ||
+                                request()->routeIs('invoices.edit') ||
+                                request()->routeIs('admin.invoices.update');
+                        @endphp
+                        <li class="nav-item {{ $isInvoiceActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('invoices.index') }}">
                                 <i class="icon-file menu-icon"></i>
                                 <span class="menu-title">Invoices</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+
+                        {{-- 6. PROFILE --}}
+                        @php
+                            $isProfileActive =
+                                request()->routeIs('admin.profile') ||
+                                request()->routeIs('admin.password.form') ||
+                                request()->routeIs('admin.password.update');
+                        @endphp
+                        <li class="nav-item {{ $isProfileActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.profile') }}">
                                 <i class="mdi mdi-account-circle menu-icon"></i>
                                 <span class="menu-title">Profile</span>
                             </a>
                         </li>
 
+                        {{-- 7. MANAGE ROLES --}}
                         @if ($user)
-                            <li class="nav-item">
+                            @php
+                                $isRoleActive =
+                                    request()->routeIs('roles.index') ||
+                                    request()->routeIs('roles.create') ||
+                                    request()->routeIs('roles.edit');
+                            @endphp
+                            <li class="nav-item {{ $isRoleActive ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('roles.index') }}">
                                     <i class="mdi mdi-account-multiple menu-icon"></i>
                                     <span class="menu-title">Manage Roles</span>
@@ -243,25 +295,38 @@
 
                         {{-- ======================= CUSTOMER SIDEBAR ======================= --}}
                     @elseif (auth()->guard('customer')->check())
-                        <li class="nav-item">
+                        {{-- 1. CUSTOMER DASHBOARD --}}
+                        @php
+                            $isCustomerDashboardActive = request()->routeIs('customer.dashboard');
+                        @endphp
+                        <li class="nav-item {{ $isCustomerDashboardActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('customer.dashboard') }}">
                                 <i class="icon-grid menu-icon"></i>
                                 <span class="menu-title">Dashboard</span>
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
-                            <a class="nav-link" href="{{ route('customer.products') }}">
-                                <i class="icon-layout menu-icon"></i>
-                                <span class="menu-title">Products</span>
-                            </a>
-                        </li> --}}
-                        <li class="nav-item">
+
+                        {{-- 2. CUSTOMER INVOICES --}}
+                        @php
+                            $isCustomerInvoiceActive =
+                                request()->routeIs('customer.invoices') ||
+                                request()->routeIs('customer.invoices.create') ||
+                                request()->routeIs('customer.invoices.edit');
+                        @endphp
+                        <li class="nav-item {{ $isCustomerInvoiceActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('customer.invoices') }}">
                                 <i class="icon-file menu-icon"></i>
                                 <span class="menu-title">Invoices</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+
+                        {{-- 3. CUSTOMER PROFILE --}}
+                        @php
+                            $isCustomerProfileActive =
+                                request()->routeIs('customer.profile') ||
+                                request()->routeIs('customer.password.update');
+                        @endphp
+                        <li class="nav-item {{ $isCustomerProfileActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('customer.profile') }}">
                                 <i class="mdi mdi-account-circle menu-icon"></i>
                                 <span class="menu-title">Profile</span>
