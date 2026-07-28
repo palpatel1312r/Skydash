@@ -68,8 +68,8 @@
                                                             <i class="mdi mdi-delete" style="font-size: 16px;"></i>
                                                         </button>
                                                         <form id="delete-form-{{ $role->id }}"
-                                                            action="{{ route('superadmin.roles.destroy', $role->id) }}"
-                                                            method="POST" style="display:none;">
+                                                            action="{{ route('roles.destroy', $role->id) }}" method="POST"
+                                                            style="display:none;">
                                                             @csrf @method('DELETE')
                                                         </form>
                                                     </td>
@@ -91,7 +91,7 @@
                                 <h5 class="modal-title"><i class="mdi mdi-plus-circle-outline"></i> Add Role</h5>
                                 <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                             </div>
-                            <form action="{{ route('superadmin.roles.store') }}" method="POST" novalidate>
+                            <form action="{{ route('roles.store') }}" method="POST" novalidate>
                                 @csrf
                                 <div class="modal-body p-4">
                                     <div class="form-group">
@@ -122,7 +122,7 @@
                                     <h5 class="modal-title"><i class="mdi mdi-pencil-outline"></i> Edit Role</h5>
                                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                                 </div>
-                                <form action="{{ route('superadmin.roles.update', $role->id) }}" method="POST" novalidate>
+                                <form action="{{ route('roles.update', $role->id) }}" method="POST" novalidate>
                                     @csrf @method('PUT')
                                     <div class="modal-body p-4">
                                         <div class="form-group">

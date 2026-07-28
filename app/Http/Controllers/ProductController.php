@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,13 +12,17 @@ class ProductController extends Controller
 {
   public function create()
   {
-    return view('Dashboard.product pages.product_form');
+    $products = Product::all();  // Add this line
+    $customers = Customer::all();  // Keep if you need customers
+    return view('Dashboard.product pages.product_form', compact('products', 'customers'));
   }
 
   public function edit($id)
   {
     $product = Product::findOrFail($id);
-    return view('Dashboard.product pages.product_form', compact('product'));
+    $products = Product::all();  // Add this line
+    $customers = Customer::all();  // Keep if you need customers
+    return view('Dashboard.product pages.product_form', compact('product', 'products', 'customers'));
   }
   public function index()
   {

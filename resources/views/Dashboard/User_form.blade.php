@@ -33,7 +33,7 @@
 
                             <form
                                 action="{{ isset($user) ? route('admin.user.update', ['id' => $user['id'], 'guard' => $user['guard']]) : route('admin.user.store') }}"
-                                method="POST" novalidate id="userForm">
+                                method="POST" novalidate id="userForm" onsubmit="return false;">
                                 @csrf
                                 @if (isset($user))
                                     @method('PUT')
@@ -137,6 +137,21 @@
     </div>
 
     <style>
+        /* 🔥 FORCE OVERRIDE THEME STYLES FOR SELECT ELEMENTS */
+        select.form-control.is-invalid,
+        select.is-invalid,
+        select.form-control.is-invalid:focus,
+        select.is-invalid:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.1h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right calc(0.375em + 0.1875rem) center !important;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
+            padding-right: calc(1.5em + 0.75rem) !important;
+        }
+
+        /* Keep these existing rules */
         .form-control.is-invalid {
             border-color: #dc3545 !important;
         }
@@ -145,7 +160,6 @@
             display: block !important;
         }
     </style>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
@@ -195,7 +209,20 @@
                 });
             }
 
-            // 5. AJAX SUBMISSION
+            // 5. AUTO-FOCUS TO CONFIRM PASSWORD (NEW)
+            // 5. AUTO-FOCUS TO CONFIRM PASSWORD (Improved)
+            $('#passwordField').on('input', function() {
+                var passwordVal = $(this).val();
+                // Only move focus if:
+                // 1. Password is at least 4 characters long
+                // 2. Confirm Password field is NOT already focused
+                // 3. Confirm Password field is empty (so we don't interrupt typing)
+                if (passwordVal.length >= 4 && $('#confirmPasswordField').val() === '') {
+                    $('#confirmPasswordField').focus();
+                }
+            });
+
+            // 6. AJAX SUBMISSION
             $('#userForm').on('submit', function(e) {
                 e.preventDefault();
 
@@ -230,20 +257,21 @@
                         if (xhr.status === 422) {
                             var errors = xhr.responseJSON.errors;
 
-                            // Loop through errors and display them
                             $.each(errors, function(key, messages) {
                                 var input = $('[name="' + key + '"]');
                                 if (input.length) {
                                     var formGroup = input.closest('.form-group');
                                     formGroup.find('.invalid-feedback').remove();
+
+                                    // ✅ FORCE CLASS ADDITION
                                     input.addClass('is-invalid');
-                                    // Append error message right under the input
+
+                                    // Append error message
                                     formGroup.append(
                                         '<div class="invalid-feedback" style="display:block;">' +
                                         messages[0] + '</div>'
                                     );
                                 } else {
-                                    // If field not found, show in global alert
                                     $('#global-alert-container').append(
                                         '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
                                         messages[0] +

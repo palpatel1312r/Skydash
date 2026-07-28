@@ -290,7 +290,7 @@ class InvoiceController extends Controller
         $taxRate = floatval($request->tax_rate);
         $taxAmount = $subtotal * ($taxRate / 100);
         $totalAmount = $subtotal + $taxAmount;
-        $invoiceNumber = 'INV-CUST-' . date('Ymd') . '-' . rand(100, 999);
+        $invoiceNumber = 'INV-' . date('Ymd') . '-' . rand(100, 999);
 
         Invoice::create([
             'invoice_number'    => $invoiceNumber,
@@ -356,7 +356,7 @@ class InvoiceController extends Controller
                     break;
             }
         }
-        $invoices = $query->orderBy('invoice_date', 'desc')->paginate(5);
+        $invoices = $query->orderBy('invoice_date', 'desc')->paginate(2);
 
         return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer', 'customers'));
     }
@@ -369,18 +369,23 @@ class InvoiceController extends Controller
             $query->where('customer_id', $request->customer_id);
         }
 
-        // ✅ Apply Time Filter
-        if ($request->filled('time')) {
+        // ✅ Apply Date Range Filter
+        if ($request->filled('date_range')) {
             $now = now();
-            switch ($request->time) {
+            switch ($request->date_range) {
                 case 'today':
                     $query->whereDate('invoice_date', $now->toDateString());
                     break;
-                case '1_week':
-                    $query->where('invoice_date', '>=', $now->copy()->subWeek());
+                case 'yesterday':
+                    $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
                     break;
-                case '2_week':
-                    $query->where('invoice_date', '>=', $now->copy()->subWeeks(2));
+                case 'this_week':
+                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+                    break;
+                case 'last_week':
+                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
+                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
+                    $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
                     break;
                 case 'this_month':
                     $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
@@ -389,13 +394,17 @@ class InvoiceController extends Controller
                     $lastMonth = $now->copy()->subMonth();
                     $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
                     break;
+                case 'custom':
+                    if ($request->filled('start_date') && $request->filled('end_date')) {
+                        $query->whereBetween('invoice_date', [$request->start_date, $request->end_date]);
+                    }
+                    break;
             }
         }
 
-        // ✅ Get paginated results (10 per page)
         $invoices = $query->paginate(5);
 
-        // ✅ Group products logic (kept your existing logic)
+        // ✅ Group products logic (Keep your existing logic)
         foreach ($invoices as $invoice) {
             $grouped = [];
             if (is_array($invoice->products)) {
@@ -417,6 +426,7 @@ class InvoiceController extends Controller
 
         return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
     }
+
     public function create()
     {
         $customers = Customer::all();

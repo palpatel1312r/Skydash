@@ -34,7 +34,6 @@ class CustomerController extends Controller
         $customer = Auth::guard('customer')->user();
         return view('Dashboard.customer pages.customer_dashboard', compact('customer'));
     }
-
     public function store(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -47,6 +46,12 @@ class CustomerController extends Controller
             ],
             'status' => 'required|string',
         ], [
+            // ✅ ADDED MISSING CUSTOM MESSAGES HERE
+            'fullname.required' => 'Please enter the customer\'s full name.',
+            'status.required' => 'Please select a status for the customer.',
+
+            // Your existing email messages
+            'email.required' => 'Please enter the customer\'s email address.',
             'email.email' => 'Please enter a valid email format.',
             'email.unique' => 'This email address is already registered.',
             'email.regex' => 'Email must be a valid @gmail.com address.',
@@ -88,6 +93,16 @@ class CustomerController extends Controller
                 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
             ],
             'status' => 'required|string',
+        ], [
+            // ✅ ADDED MISSING CUSTOM MESSAGES HERE
+            'fullname.required' => 'Please enter the customer\'s full name.',
+            'status.required' => 'Please select a status for the customer.',
+
+            // Your existing email messages
+            'email.required' => 'Please enter the customer\'s email address.',
+            'email.email' => 'Please enter a valid email format.',
+            'email.unique' => 'This email address is already registered.',
+            'email.regex' => 'Email must be a valid @gmail.com address.',
         ]);
 
         if ($validator->fails()) {

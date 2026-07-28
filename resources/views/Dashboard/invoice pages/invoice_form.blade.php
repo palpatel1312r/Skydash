@@ -580,7 +580,7 @@
                                 errorAlert.remove();
                             }, 500);
                         }
-                    }, 3000);
+                    }, 300);
                     return;
                 }
 

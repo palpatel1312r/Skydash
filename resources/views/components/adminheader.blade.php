@@ -15,7 +15,7 @@
     <!-- Material Design Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
     <!-- Plugin css for this page -->
-    <link rel="stylesheet" href="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}"> --}}
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/ti-icons/css/themify-icons.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('Dashboard/js/select.dataTables.min.css') }}">
     <!-- End plugin css for this page -->
@@ -26,7 +26,7 @@
 
     <link rel="shortcut icon" href="{{ asset('Dashboard/images/favicon.png') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
@@ -284,7 +284,7 @@
     <!-- Plugin js for this page -->
     {{-- <script src="{{ asset('Dashboard/vendors/chart.js/Chart.min.js') }}"></script> --}}
     <script src="{{ asset('Dashboard/vendors/datatables.net/jquery.dataTables.js') }}"></script>
-    <script src="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.js') }}"></script>
+    {{-- <script src="{{ asset('Dashboard/vendors/datatables.net-bs4/dataTables.bootstrap4.js') }}"></script> --}}
     <script src="{{ asset('Dashboard/js/dataTables.select.min.js') }}"></script>
 
     <!-- End plugin js for this page -->

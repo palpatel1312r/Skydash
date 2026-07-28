@@ -4,6 +4,12 @@
     <!-- partial -->
     <div class="main-panel">
         <div class="content-wrapper">
+            {{-- ✅ EXTERNAL TOP RIGHT HEADER --}}
+            <div class="d-flex justify-content-end">
+                <a href="{{ route('customer.invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
+                    <i class="mdi mdi-plus me-1"></i> Create Invoice
+                </a>
+            </div>
             <div class="row">
                 <div class="col-md-12 grid-margin">
                     @if (session('success'))
@@ -34,28 +40,26 @@
                             {{-- ✅ ATTRACTIVE HEADER WITH TITLE, FILTERS, AND CREATE BUTTON --}}
                             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
-                                {{-- LEFT: Title & Total Count Badge --}}
+                                {{-- LEFT: Title --}}
                                 <div class="d-flex align-items-center gap-2">
                                     <h4 class="card-title mb-0">
                                         <i class="mdi mdi-file-document-outline text-primary"></i> My Invoices
                                     </h4>
-                                    {{-- <span class="badge badge-primary badge-pill px-3 py-2 shadow-sm"
-                                        style="font-size: 0.85rem;">
-                                        {{ $invoices->total() }} Total
-                                    </span> --}}
                                 </div>
 
-                                <div class="d-flex align-items gap-2 flex-wrap">
+                                {{-- ✅ COLORFUL FILTERS (Using Bootstrap 4 Classes) --}}
+                                <div class="d-flex align-items-center flex-wrap gap-2">
 
-                                    {{-- Customer Filter --}}
-                                    <div class="input-group input-group-sm" style="width: 180px;">
+                                    {{-- Colorful Customer Filter --}}
+                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text border-right-0 text-primary bg-light">
+                                            <span
+                                                class="input-group-text bg-primary text-white border-primary rounded-left">
                                                 <i class="mdi mdi-account-outline"></i>
                                             </span>
                                         </div>
                                         <select id="filterCustomer"
-                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                            class="form-control border-left-0 border-primary bg-light text-dark font-weight-bold rounded-right shadow-sm">
                                             <option value="">All Customers</option>
                                             @if (isset($customers))
                                                 @foreach ($customers as $customer)
@@ -68,15 +72,16 @@
                                         </select>
                                     </div>
 
-                                    {{-- Time Filter --}}
-                                    <div class="input-group input-group-sm" style="width: 150px;">
+                                    {{-- Colorful Time Filter --}}
+                                    <div class="input-group input-group-sm shadow rounded" style="width: 150px;">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text border-right-0 text-primary bg-light">
+                                            <span
+                                                class="input-group-text bg-primary text-white border-primary rounded-left">
                                                 <i class="mdi mdi-calendar-clock"></i>
                                             </span>
                                         </div>
                                         <select id="filterTime"
-                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                            class="form-control border-left-0 border-primary bg-light text-dark font-weight-bold rounded-right shadow-sm">
                                             <option value="">All Time</option>
                                             <option value="today" {{ request('time') == 'today' ? 'selected' : '' }}>Today
                                             </option>
@@ -90,17 +95,17 @@
                                                 {{ request('time') == 'last_month' ? 'selected' : '' }}>Last Month</option>
                                         </select>
                                     </div>
-                                </div>
 
-                                {{-- RIGHT: Create Button with Soft shadow --}}
-                                <div>
-                                    <a href="{{ route('customer.invoices.create') }}"
-                                        class="btn btn-primary btn-sm shadow-sm ">
-                                        <i class="mdi mdi-plus"></i> Create Invoice
-                                    </a>
+                                    {{-- ✅ CLEAR FILTER BUTTON (Only shows if a filter is active) --}}
+                                    @if (request()->has('customer_id') || request()->has('time'))
+                                        <a href="{{ route('customer.invoices') }}"
+                                            class="btn btn-outline-danger btn-sm shadow-sm px-2" title="Clear Filters">
+                                            <i class="mdi mdi-close"></i> Clear
+                                        </a>
+                                    @endif
+
                                 </div>
                             </div>
-
                             @if ($invoices->isEmpty())
                                 <div class="text-center py-5">
                                     <i class="mdi mdi-file-document-outline" style="font-size: 64px; color: #ddd;"></i>
@@ -114,12 +119,14 @@
                                             <tr>
                                                 <th>#</th>
                                                 <th>Invoice No</th>
-                                                <th>Date</th>
+
                                                 <th>Products</th>
+                                                <th>Quantity</th>
                                                 <th>Price</th>
                                                 <th>Subtotal</th>
                                                 <th>Tax</th>
                                                 <th>Total Amount</th>
+                                                <th>Date</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -128,13 +135,15 @@
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td><strong>{{ $item->invoice_number }}</strong></td>
-                                                    <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}
-                                                    </td>
+
                                                     <td>
                                                         @foreach ($item->products as $product)
                                                             <span
                                                                 class="badge badge-info mb-1">{{ $product['product_name'] }}</span>
                                                         @endforeach
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <strong>{{ collect($item->products)->sum('quantity') }}</strong>
                                                     </td>
                                                     <td>
                                                         @if (isset($item->products[0]))
@@ -148,7 +157,8 @@
                                                     <td>
                                                         <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                                     </td>
-
+                                                    <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}
+                                                    </td>
                                                     <td>
                                                         <button type="button" class="btn btn-info btn-sm"
                                                             data-toggle="modal"
@@ -266,43 +276,72 @@
     @endforeach
     </div>
     <style>
-        /* FORCE BOOTSTRAP 4 PAGINATION STYLE */
+        /* --- MODERN GLOWING PILL PAGINATION --- */
         .pagination {
             display: flex !important;
             justify-content: center !important;
-            margin-top: 20px !important;
-            border-radius: 4px !important;
+            margin-top: 30px !important;
+            gap: 6px !important;
+            /* Space between buttons */
+            padding-bottom: 20px !important;
         }
 
-        .pagination .page-item .page-link {
-            color: #0d6efd !important;
-            background-color: #fff !important;
-            border: 1px solid #dee2e6 !important;
-            padding: 0.5rem 0.75rem !important;
-            margin-left: -1px !important;
+        .pagination .page-item {
+            margin: 0 !important;
         }
 
-        .pagination .page-item.active .page-link {
-            background-color: #0d6efd !important;
+        /* 1. DEFAULT STATE - White pill with gray border */
+        .pagination .page-link {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 50px !important;
+            /* Perfect pill shape */
+            padding: 8px 16px !important;
+            font-weight: 500 !important;
+            color: #555555 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+            text-decoration: none !important;
+        }
+
+        /* 2. HOVER STATE - Light blue glow */
+        .pagination .page-link:hover {
+            background: #f0f7ff !important;
             border-color: #0d6efd !important;
-            color: #fff !important;
-            z-index: 3 !important;
+            color: #0d6efd !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15) !important;
+            z-index: 2 !important;
         }
 
-        .pagination .page-item:first-child .page-link {
-            border-top-left-radius: 4px !important;
-            border-bottom-left-radius: 4px !important;
+        /* 3. ACTIVE STATE - Exact Blue Gradient + Glow from your image */
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(145deg, #0d6efd 0%, #0dcaf0 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 20px rgba(13, 110, 253, 0.45) !important;
+            /* Strong blue glow */
+            transform: scale(1.05) !important;
+            /* Slight pop effect */
         }
 
-        .pagination .page-item:last-child .page-link {
-            border-top-right-radius: 4px !important;
-            border-bottom-right-radius: 4px !important;
-        }
-
+        /* 4. DISABLED STATE */
         .pagination .page-item.disabled .page-link {
-            color: #6c757d !important;
-            background-color: #fff !important;
-            border-color: #dee2e6 !important;
+            color: #adb5bd !important;
+            background: #ffffff !important;
+            border-color: #e0e0e0 !important;
+            box-shadow: none !important;
+            transform: none !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+        }
+
+        /* 5. RESPONSIVE */
+        @media (max-width: 576px) {
+            .pagination .page-link {
+                padding: 6px 12px !important;
+                font-size: 14px !important;
+            }
         }
     </style>
 

@@ -24,7 +24,7 @@ class RoleController extends Controller
         ]);
 
         Role::create(['name' => $request->name]);
-        return redirect()->route('superadmin.roles.index')->with('success', 'Role created successfully!');
+        return redirect()->route('roles.index')->with('success', 'Role created successfully!');
     }
 
     public function update(Request $request, Role $role)
@@ -37,12 +37,12 @@ class RoleController extends Controller
         ]);
 
         $role->update(['name' => $request->name]);
-        return redirect()->route('superadmin.roles.index')->with('success', 'Role updated successfully!');
+        return redirect()->route('roles.index')->with('success', 'Role updated successfully!');
     }
 
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('superadmin.roles.index')->with('success', 'Role deleted successfully!');
+        return redirect()->route('roles.index')->with('success', 'Role deleted successfully!');
     }
 }

@@ -6,24 +6,15 @@
         <div class="content-wrapper">
             <div class="row">
                 <div class="col-md-12 grid-margin">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
+                    {{-- Alert code --}}
                 </div>
+            </div>
+
+            {{-- ✅ EXTERNAL TOP RIGHT HEADER --}}
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
+                    <i class="mdi mdi-plus me-1"></i>Create New Invoice
+                </a>
             </div>
 
             <div class="row">
@@ -31,29 +22,30 @@
                     <div class="card">
                         <div class="card-body">
 
-                            {{-- ✅ HEADER WITH FILTERS AND CREATE BUTTON --}}
-                            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <div
+                                class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
 
-                                {{-- LEFT: Title & Total Count --}}
-                                <div class="d-flex align-items-center gap-2">
-                                    <h4 class="card-title mb-0">
-                                        <i class="mdi mdi-file-document-outline text-primary"></i> Invoice List
-                                    </h4>
-                                    
+                                {{-- LEFT: Title & Stats --}}
+                                <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
+                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
+                                        <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="card-title mb-0 fw-bold text-dark">Invoice List</h4>
+                                        <small class="text-muted">Manage your invoices</small>
+                                    </div>
                                 </div>
 
-                                {{-- CENTER: Filters --}}
-                                <div class="d-flex align-items gap-2 flex-wrap">
+                                {{-- ✅ FIXED FILTERS SECTION --}}
+                                <div class="d-flex align-items-center flex-wrap gap-2">
 
                                     {{-- Customer Filter --}}
-                                    <div class="input-group input-group-sm" style="width: 180px;">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text border-right-0 text-primary bg-light">
-                                                <i class="mdi mdi-account-outline"></i>
-                                            </span>
-                                        </div>
+                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
+                                        <span class="input-group-text bg-primary text-white border-primary px-3">
+                                            <i class="mdi mdi-account-outline"></i>
+                                        </span>
                                         <select id="filterCustomer"
-                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                            class="form-select border-start-0 border-primary bg-white text-dark fw-bold">
                                             <option value="">All Customers</option>
                                             @foreach ($customers as $customer)
                                                 <option value="{{ $customer->id }}"
@@ -64,35 +56,76 @@
                                         </select>
                                     </div>
 
-                                    {{-- Time Filter --}}
-                                    <div class="input-group input-group-sm" style="width: 150px;">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text border-right-0 text-primary bg-light">
-                                                <i class="mdi mdi-calendar-clock"></i>
-                                            </span>
-                                        </div>
-                                        <select id="filterTime"
-                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                    {{-- Date Range Dropdown (Rounded Pill) --}}
+                                    {{-- REMOVED input-group-prepend --}}
+                                    <div class="input-group input-group-sm shadow rounded-pill"
+                                        style="width: 180px; overflow: hidden;">
+                                        <span class="input-group-text bg-primary text-white border-0 px-3">
+                                            <i class="mdi mdi-calendar-range"></i>
+                                        </span>
+                                        <select id="dateRange" class="form-select border-0 bg-white text-dark fw-bold">
                                             <option value="">All Time</option>
-                                            <option value="today" {{ request('time') == 'today' ? 'selected' : '' }}>Today
+                                            <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>
+                                                Today</option>
+                                            <option value="yesterday"
+                                                {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday
                                             </option>
-                                            <option value="1_week" {{ request('time') == '1_week' ? 'selected' : '' }}>1
-                                                Week</option>
-                                            <option value="2_week" {{ request('time') == '2_week' ? 'selected' : '' }}>2
-                                                Weeks</option>
+                                            <option value="this_week"
+                                                {{ request('date_range') == 'this_week' ? 'selected' : '' }}>This Week
+                                            </option>
+                                            <option value="last_week"
+                                                {{ request('date_range') == 'last_week' ? 'selected' : '' }}>Last Week
+                                            </option>
                                             <option value="this_month"
-                                                {{ request('time') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                                                {{ request('date_range') == 'this_month' ? 'selected' : '' }}>This Month
+                                            </option>
                                             <option value="last_month"
-                                                {{ request('time') == 'last_month' ? 'selected' : '' }}>Last Month</option>
+                                                {{ request('date_range') == 'last_month' ? 'selected' : '' }}>Last Month
+                                            </option>
+                                            <option value="custom"
+                                                {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range
+                                            </option>
                                         </select>
                                     </div>
-                                </div>
 
-                                {{-- RIGHT: Create Button --}}
-                                <div>
-                                    <a href="{{ route('invoices.create') }}" class="btn btn-primary btn-sm shadow-sm">
-                                        <i class="mdi mdi-plus"></i> Create New Invoice
-                                    </a>
+                                    {{-- ✅ CUSTOM DATE RANGE INPUTS (Rounded Pills) --}}
+                                    <div id="customDateContainer" style="display: none;">
+                                        <div class="input-group input-group-sm shadow rounded-pill"
+                                            style="width: 145px; overflow: hidden;">
+                                            <span class="input-group-text bg-primary text-white border-0 px-3"
+                                                style="border-radius: 0;">
+                                                <i class="mdi mdi-calendar-start"></i>
+                                            </span>
+                                            <input type="date" id="customStartDate"
+                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
+                                                value="{{ request('start_date') }}" style="border-radius: 0;">
+                                        </div>
+
+                                        <span class="mx-1 text-primary fw-bold">to</span>
+
+                                        <div class="input-group input-group-sm shadow rounded-pill"
+                                            style="width: 145px; overflow: hidden;">
+                                            <span class="input-group-text bg-primary text-white border-0 px-3"
+                                                style="border-radius: 0;">
+                                                <i class="mdi mdi-calendar-end"></i>
+                                            </span>
+                                            <input type="date" id="customEndDate"
+                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
+                                                value="{{ request('end_date') }}" style="border-radius: 0;">
+                                        </div>
+                                    </div>
+
+                                    {{-- ✅ CLEAR FILTER BUTTON (Pill Shape) --}}
+                                    @if (request()->has('customer_id') ||
+                                            request()->has('date_range') ||
+                                            request()->has('start_date') ||
+                                            request()->has('end_date'))
+                                        <a href="{{ route('invoices.index') }}"
+                                            class="btn btn-outline-danger btn-sm shadow-sm rounded-pill px-3"
+                                            title="Clear Filters">
+                                            <i class="mdi mdi-close me-1"></i> Clear
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
 
@@ -152,8 +185,9 @@
                                                 <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
                                                 <td>
                                                     <!-- View Invoice Button -->
-                                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
-                                                        data-target="#viewInvoiceModal{{ $item->id }}">
+                                                    <button type="button" class="btn btn-info btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#viewInvoiceModal{{ $item->id }}">
                                                         <i class="mdi mdi-eye"></i> View
                                                     </button>
 
@@ -170,8 +204,8 @@
                                                     </button>
 
                                                     <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('admin.invoices.destroy', $item->id) }}" method="POST"
-                                                        style="display: none;">
+                                                        action="{{ route('admin.invoices.destroy', $item->id) }}"
+                                                        method="POST" style="display: none;">
                                                         @csrf
                                                         @method('DELETE')
                                                     </form>
@@ -186,10 +220,10 @@
                                 </table>
                             </div>
 
-                            {{-- ✅ PAGINATION --}}
+                            {{-- ✅ BOOTSTRAP 5 PAGINATION --}}
                             @if ($invoices->hasPages())
                                 <div class="d-flex justify-content-center mt-4">
-                                    {{ $invoices->appends(request()->query())->links('pagination::bootstrap-4') }}
+                                    {{ $invoices->appends(request()->query())->links() }}
                                 </div>
                             @endif
 
@@ -198,104 +232,177 @@
                 </div>
             </div>
         </div>
-        <!-- content-wrapper ends -->
+    </div>
+    <!-- content-wrapper ends -->
 
-        <!-- View Invoice Modals -->
-        @foreach ($invoices as $item)
-            <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header" style="background: #f8f9fa;">
-                            <h5 class="modal-title">
-                                <strong>Invoice #{{ $item->invoice_number }}</strong>
-                            </h5>
-                            <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <h6>Customer Information</h6>
-                                    <p>
-                                        <strong>Name:</strong> {{ $item->customer->fullname ?? 'N/A' }}<br>
-                                        <strong>Email:</strong> {{ $item->customer->email ?? 'N/A' }}<br>
-                                        <strong>Phone:</strong> {{ $item->customer->phone ?? 'N/A' }}
-                                    </p>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <h6>Invoice Information</h6>
-                                    <p>
-                                        <strong>Invoice #:</strong> {{ $item->invoice_number }}<br>
-                                        <strong>Date:</strong>
-                                        {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}<br>
-                                        <strong>Status:</strong>
-                                        @if ($item->status == 'Paid')
-                                            <span class="badge badge-success">Paid</span>
-                                        @elseif ($item->status == 'Unpaid')
-                                            <span class="badge badge-warning">Unpaid</span>
-                                        @else
-                                            <span class="badge badge-danger">{{ $item->status }}</span>
-                                        @endif
-                                    </p>
-                                </div>
+    <!-- View Invoice Modals -->
+    @foreach ($invoices as $item)
+        <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: #f8f9fa;">
+                        <h5 class="modal-title">
+                            <strong>Invoice #{{ $item->invoice_number }}</strong>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Customer Information</h6>
+                                <p>
+                                    <strong>Name:</strong> {{ $item->customer->fullname ?? 'N/A' }}<br>
+                                    <strong>Email:</strong> {{ $item->customer->email ?? 'N/A' }}<br>
+                                    <strong>Phone:</strong> {{ $item->customer->phone ?? 'N/A' }}
+                                </p>
                             </div>
+                            <div class="col-md-6 text-end">
+                                <h6>Invoice Information</h6>
+                                <p>
+                                    <strong>Invoice #:</strong> {{ $item->invoice_number }}<br>
+                                    <strong>Date:</strong>
+                                    {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}<br>
+                                    <strong>Status:</strong>
+                                    @if ($item->status == 'Paid')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif ($item->status == 'Unpaid')
+                                        <span class="badge bg-warning">Unpaid</span>
+                                    @else
+                                        <span class="badge bg-danger">{{ $item->status }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead class="thead-light">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product Name</th>
+                                        <th>Quantity</th>
+                                        <th class="text-end">Price</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($item->products as $index => $product)
                                         <tr>
-                                            <th>#</th>
-                                            <th>Product Name</th>
-                                            <th>Quantity</th>
-                                            <th class="text-right">Price</th>
-                                            <th class="text-right">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($item->products as $index => $product)
-                                            <tr>
-                                                <td>{{ $index + 1 }}</td>
-                                                <td>
-                                                    {{ $product['product_name'] }}
-                                                    @if (isset($product['quantity']) && $product['quantity'] > 1)
-                                                        <strong>(x{{ $product['quantity'] }})</strong>
-                                                    @endif
-                                                </td>
-                                                <td class="text-right">x{{ $product['quantity'] ?? 1 }}</td>
-                                                <td class="text-right">₹{{ number_format($product['price'], 2) }}</td>
-                                                <td class="text-right">₹{{ number_format($product['subtotal'], 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-right"><strong>Subtotal:</strong></td>
-                                            <td class="text-right">₹{{ number_format($item->subtotal, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-right"><strong>Tax ({{ $item->tax_rate }}%)
-                                                    :</strong></td>
-                                            <td class="text-right">₹{{ number_format($item->tax_amount, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-right"><strong>Grand Total:</strong></td>
-                                            <td class="text-right">
-                                                <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>
+                                                {{ $product['product_name'] }}
+                                                @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                    <strong>(x{{ $product['quantity'] }})</strong>
+                                                @endif
                                             </td>
+                                            <td class="text-end">x{{ $product['quantity'] ?? 1 }}</td>
+                                            <td class="text-end">₹{{ number_format($product['price'], 2) }}</td>
+                                            <td class="text-end">₹{{ number_format($product['subtotal'], 2) }}</td>
                                         </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td class="text-end">₹{{ number_format($item->subtotal, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Tax ({{ $item->tax_rate }}%)
+                                                :</strong></td>
+                                        <td class="text-end">₹{{ number_format($item->tax_amount, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Grand Total:</strong></td>
+                                        <td class="text-end">
+                                            <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-        @endforeach
+        </div>
+    @endforeach
     </div>
 
-    {{-- ✅ SCRIPT FOR FILTERS AND ALERTS --}}
+    <style>
+        /* --- MODERN GLOWING PILL PAGINATION (Bootstrap 5 Compatible) --- */
+        .pagination {
+            display: flex !important;
+            justify-content: center !important;
+            margin-top: 30px !important;
+            gap: 8px !important;
+            /* Adds spacing between buttons */
+            padding-bottom: 20px !important;
+        }
+
+        .pagination .page-item {
+            margin: 0 !important;
+        }
+
+        .pagination .page-link {
+            color: #4a4a4a !important;
+            /* Dark gray text */
+            background: #ffffff !important;
+            /* Pure white background */
+            border: 1px solid #e2e8f0 !important;
+            /* Soft gray border */
+            border-radius: 50px !important;
+            /* FULLY ROUNDED PILL SHAPE */
+            padding: 10px 18px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        }
+
+        /* Hover Effect: Electric Blue */
+        .pagination .page-link:hover {
+            background: #0d6efd !important;
+            /* Primary Blue */
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+            transform: translateY(-3px) !important;
+            /* Lifts up */
+            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3) !important;
+            /* Blue glow */
+            z-index: 2 !important;
+        }
+
+        /* Active State: Bright Cyan-Blue Gradient */
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(145deg, #0d6efd 0%, #0dcaf0 100%) !important;
+            /* Blue to Cyan */
+            border-color: #0d6efd !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(13, 110, 253, 0.4) !important;
+            transform: scale(1.05) !important;
+            /* Slight zoom */
+        }
+
+        /* Disabled State */
+        .pagination .page-item.disabled .page-link {
+            color: #adb5bd !important;
+            background: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+            box-shadow: none !important;
+            transform: none !important;
+            cursor: not-allowed !important;
+        }
+
+        /* --- RESPONSIVENESS --- */
+        @media (max-width: 576px) {
+            .pagination .page-link {
+                padding: 8px 14px !important;
+                font-size: 14px !important;
+            }
+        }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Confirm Delete
@@ -318,48 +425,65 @@
                 });
             }, 500);
 
-            // ✅ FILTERS REDIRECT LOGIC
-            $('#filterCustomer, #filterTime').on('change', function() {
+            // 1. Show/Hide Custom Date Inputs when 'Custom Range' is selected
+            $('#dateRange').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#customDateContainer').fadeIn(200);
+                } else {
+                    $('#customDateContainer').hide();
+                    $('#customStartDate').val('');
+                    $('#customEndDate').val('');
+                }
+            });
+
+            // Trigger the check on page load (if 'custom' is already selected from URL)
+            if ($('#dateRange').val() === 'custom') {
+                $('#customDateContainer').show();
+            }
+
+            // 2. FILTERS REDIRECT LOGIC (Triggers when Customer OR Date Range changes)
+            $('#filterCustomer, #dateRange, #customStartDate, #customEndDate').on('change', function() {
                 var customer = $('#filterCustomer').val();
-                var time = $('#filterTime').val();
+                var dateRange = $('#dateRange').val();
+                var startDate = $('#customStartDate').val();
+                var endDate = $('#customEndDate').val();
 
                 var url = new URL(window.location.href);
 
+                // Set or remove Customer filter
                 if (customer) {
                     url.searchParams.set('customer_id', customer);
                 } else {
                     url.searchParams.delete('customer_id');
                 }
 
-                if (time) {
-                    url.searchParams.set('time', time);
+                // Set or remove Date Range filter
+                if (dateRange) {
+                    url.searchParams.set('date_range', dateRange);
                 } else {
-                    url.searchParams.delete('time');
+                    url.searchParams.delete('date_range');
+                }
+
+                // Only send start_date and end_date if the range is 'custom'
+                if (dateRange === 'custom') {
+                    if (startDate) {
+                        url.searchParams.set('start_date', startDate);
+                    } else {
+                        url.searchParams.delete('start_date');
+                    }
+                    if (endDate) {
+                        url.searchParams.set('end_date', endDate);
+                    } else {
+                        url.searchParams.delete('end_date');
+                    }
+                } else {
+                    // Remove custom date params if not in custom mode
+                    url.searchParams.delete('start_date');
+                    url.searchParams.delete('end_date');
                 }
 
                 window.location.href = url.toString();
             });
         });
     </script>
-
-    {{-- ✅ CSS FOR BOOTSTRAP 4 PAGINATION --}}
-    <style>
-        .pagination {
-            display: flex !important;
-            justify-content: center !important;
-            margin-top: 20px !important;
-        }
-
-        .pagination .page-link {
-            color: #0d6efd !important;
-            background-color: #fff !important;
-            border: 1px solid #dee2e6 !important;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #0d6efd !important;
-            border-color: #0d6efd !important;
-            color: #fff !important;
-        }
-    </style>
 @endsection

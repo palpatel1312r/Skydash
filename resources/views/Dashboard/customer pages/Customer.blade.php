@@ -92,21 +92,21 @@
                                                     @endif
                                                 </td> --}}
                                                 <td>
+                                                    <!-- Added d-inline-block to align horizontally -->
                                                     <a href="{{ route('admin.customers.edit', $item->id) }}"
-                                                        class="btn btn-primary btn-sm">
+                                                        class="btn btn-primary btn-sm d-inline-block">
                                                         <i class="mdi mdi-pencil"></i> Update
                                                     </a>
 
-                                                    <button type="button" class="btn btn-danger btn-sm"
-                                                        onclick="confirmDelete('{{ $item->id }}')">
-                                                        <i class="mdi mdi-delete"></i> Delete
-                                                    </button>
-
-                                                    <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('admin.customers.delete', $item->id) }}"
-                                                        method="POST" style="display: none;">
+                                                    <!-- Added d-inline-block to the form as well -->
+                                                    <form action="{{ route('admin.customers.delete', $item->id) }}"
+                                                        method="POST" class="d-inline-block"
+                                                        onsubmit="return confirm('Are you sure you want to delete this customer? This action cannot be undone.');">
                                                         @csrf
                                                         @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="mdi mdi-delete"></i> Delete
+                                                        </button>
                                                     </form>
 
                                                     <div class="modal fade" id="updateModal{{ $item->id }}"
@@ -139,7 +139,6 @@
                                                                                 class="form-control">
                                                                         </div>
 
-
                                                                         <div class="form-group">
                                                                             <label>Role:</label>
                                                                             <select name="role_id" class="form-control">
@@ -155,7 +154,7 @@
 
                                                                         <div class="form-group">
                                                                             <label>Status:</label>
-                                                                            <select name="status" class="form-control">
+                                                                            <select name="status" class="form-select">
                                                                                 <option value="Active"
                                                                                     {{ $item->status == 'Active' ? 'selected' : '' }}>
                                                                                     Active</option>
@@ -195,25 +194,102 @@
 
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        function confirmDelete(customerId) {
-            if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
-                document.getElementById('delete-form-' + customerId).submit();
-            }
-            return false;
-        }
+        $(document).ready(function() {
+            // 1. SETUP CSRF TOKEN
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    alert.style.transition = 'opacity 1s ease';
-                    alert.style.opacity = '1';
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 500);
+            // 2. CLEAR FIELD ERROR HELPER
+            window.clearFieldError = function(field) {
+                var $col = $(field).closest('.form-group');
+                $col.find('.invalid-feedback').remove();
+                $(field).removeClass('is-invalid');
+            };
+
+            // 3. LIVE CLEARING (Input/Change events)
+            $('#customerForm input, #customerForm select').on('input change', function() {
+                if ($(this).val().trim() !== '') {
+                    clearFieldError(this);
+                }
+            });
+
+            // 4. AJAX SUBMISSION
+            $('#customerForm').on('submit', function(e) {
+                e.preventDefault();
+
+                // Clear ALL existing errors
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+                $('#global-alert-container').empty();
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        // Show success alert
+                        $('#global-alert-container').html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            response.message +
+                            '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                            '</div>'
+                        );
+                        // Redirect to index after 1.5 seconds
+                        setTimeout(function() {
+                            window.location.href =
+                                "{{ route('admin.customers.index') }}";
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+
+                            // Loop through errors and display them
+                            $.each(errors, function(key, messages) {
+                                var input = $('[name="' + key + '"]');
+                                if (input.length) {
+                                    var formGroup = input.closest('.form-group');
+                                    formGroup.find('.invalid-feedback').remove();
+                                    input.addClass('is-invalid');
+                                    // Append error message right under the input
+                                    formGroup.append(
+                                        '<div class="invalid-feedback" style="display:block;">' +
+                                        messages[0] + '</div>'
+                                    );
+                                } else {
+                                    // If field not found, show in global alert
+                                    $('#global-alert-container').append(
+                                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                        messages[0] +
+                                        '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                                        '</div>'
+                                    );
+                                }
+                            });
+                        } else {
+                            // Server error (500, 404, etc.)
+                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.message :
+                                'Unknown Server Error';
+                            $('#global-alert-container').html(
+                                '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                'Error ' + xhr.status + ': ' + errorMsg +
+                                '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                                '</div>'
+                            );
+                        }
+                    }
                 });
-            }, 500);
+            });
         });
     </script>
 @endsection

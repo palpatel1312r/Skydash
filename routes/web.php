@@ -74,10 +74,8 @@ Route::get('/superadmin/dashboard', function () {
   return view('superadmin.dashboard');
 })->name('superadmin.dashboard')->middleware('auth:admin');
 
-// Roles (Only accessible to Superadmin)
 Route::resource('roles', RoleController::class)->except(['show'])->middleware('auth:admin');
 
-// Admin Dashboard & Profile
 Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard')->middleware('auth:admin');
 Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile')->middleware('auth:admin');
 Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update')->middleware('auth:admin');

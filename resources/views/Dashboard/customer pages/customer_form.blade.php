@@ -196,7 +196,7 @@
                         setTimeout(function() {
                             window.location.href =
                                 "{{ route('admin.customers.index') }}";
-                        }, 1500);
+                        }, 10);
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
