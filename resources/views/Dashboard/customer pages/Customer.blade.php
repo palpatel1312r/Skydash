@@ -213,7 +213,7 @@
                         alert.style.display = 'none';
                     }, 500);
                 });
-            }, 5000);
+            }, 500);
         });
     </script>
 @endsection

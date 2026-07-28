@@ -30,11 +30,73 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
-                            <a href="{{ route('invoices.create') }}" class="btn btn-primary">
-                                <i class="mdi mdi-plus"></i> Create New Invoice
-                            </a>
-                            <br><br>
-                            <p class="card-title mb-0">Invoice List</p>
+
+                            {{-- ✅ HEADER WITH FILTERS AND CREATE BUTTON --}}
+                            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+                                {{-- LEFT: Title & Total Count --}}
+                                <div class="d-flex align-items-center gap-2">
+                                    <h4 class="card-title mb-0">
+                                        <i class="mdi mdi-file-document-outline text-primary"></i> Invoice List
+                                    </h4>
+                                    
+                                </div>
+
+                                {{-- CENTER: Filters --}}
+                                <div class="d-flex align-items gap-2 flex-wrap">
+
+                                    {{-- Customer Filter --}}
+                                    <div class="input-group input-group-sm" style="width: 180px;">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text border-right-0 text-primary bg-light">
+                                                <i class="mdi mdi-account-outline"></i>
+                                            </span>
+                                        </div>
+                                        <select id="filterCustomer"
+                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                            <option value="">All Customers</option>
+                                            @foreach ($customers as $customer)
+                                                <option value="{{ $customer->id }}"
+                                                    {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                    {{ $customer->fullname }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    {{-- Time Filter --}}
+                                    <div class="input-group input-group-sm" style="width: 150px;">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text border-right-0 text-primary bg-light">
+                                                <i class="mdi mdi-calendar-clock"></i>
+                                            </span>
+                                        </div>
+                                        <select id="filterTime"
+                                            class="form-control border-left-0 shadow-sm bg-light text-dark font-weight-bold">
+                                            <option value="">All Time</option>
+                                            <option value="today" {{ request('time') == 'today' ? 'selected' : '' }}>Today
+                                            </option>
+                                            <option value="1_week" {{ request('time') == '1_week' ? 'selected' : '' }}>1
+                                                Week</option>
+                                            <option value="2_week" {{ request('time') == '2_week' ? 'selected' : '' }}>2
+                                                Weeks</option>
+                                            <option value="this_month"
+                                                {{ request('time') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                                            <option value="last_month"
+                                                {{ request('time') == 'last_month' ? 'selected' : '' }}>Last Month</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- RIGHT: Create Button --}}
+                                <div>
+                                    <a href="{{ route('invoices.create') }}" class="btn btn-primary btn-sm shadow-sm">
+                                        <i class="mdi mdi-plus"></i> Create New Invoice
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- TABLE --}}
                             <div class="table-responsive">
                                 <table class="table table-striped table-borderless" id="invoiceTable">
                                     <thead>
@@ -73,9 +135,7 @@
                                                     @endforeach
                                                 </td>
                                                 <td class="text-center">
-                                                    <strong>
-                                                        {{ collect($item->products)->sum('quantity') }}
-                                                    </strong>
+                                                    <strong>{{ collect($item->products)->sum('quantity') }}</strong>
                                                 </td>
                                                 <td>
                                                     @if (isset($item->products[0]))
@@ -97,21 +157,21 @@
                                                         <i class="mdi mdi-eye"></i> View
                                                     </button>
 
-                                                    {{-- ✅ FIXED: This opens the Edit page (invoices_edit.blade.php) --}}
+                                                    <!-- Update Button -->
                                                     <a href="{{ route('invoices.edit', $item->id) }}"
-                                                        class="btn btn-primary btn-sm"></i> Update
+                                                        class="btn btn-primary btn-sm">
+                                                        <i class="mdi mdi-pencil"></i> Update
                                                     </a>
 
                                                     <!-- Delete Button -->
-                                                    <button type="button" class="btn btn-danger"
-                                                        onclick="confirmDelete('{{ $item->id }}')"
-                                                        style="padding: 6px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 5px;">
-                                                        <i class="mdi mdi-delete" style="font-size: 16px;"></i> Delete
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                        onclick="confirmDelete('{{ $item->id }}')">
+                                                        <i class="mdi mdi-delete"></i> Delete
                                                     </button>
 
                                                     <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('admin.invoices.destroy', $item->id) }}"
-                                                        method="POST" style="display: none;">
+                                                        action="{{ route('admin.invoices.destroy', $item->id) }}" method="POST"
+                                                        style="display: none;">
                                                         @csrf
                                                         @method('DELETE')
                                                     </form>
@@ -125,6 +185,14 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- ✅ PAGINATION --}}
+                            @if ($invoices->hasPages())
+                                <div class="d-flex justify-content-center mt-4">
+                                    {{ $invoices->appends(request()->query())->links('pagination::bootstrap-4') }}
+                                </div>
+                            @endif
+
                         </div>
                     </div>
                 </div>
@@ -148,26 +216,9 @@
                                 <div class="col-md-6">
                                     <h6>Customer Information</h6>
                                     <p>
-                                        <strong>Name:</strong>
-                                        @if ($item->customer)
-                                            {{ $item->customer->fullname }}
-                                        @else
-                                            N/A
-                                        @endif
-                                        <br>
-                                        <strong>Email:</strong>
-                                        @if ($item->customer)
-                                            {{ $item->customer->email }}
-                                        @else
-                                            N/A
-                                        @endif
-                                        <br>
-                                        <strong>Phone:</strong>
-                                        @if ($item->customer)
-                                            {{ $item->customer->phone ?? 'N/A' }}
-                                        @else
-                                            N/A
-                                        @endif
+                                        <strong>Name:</strong> {{ $item->customer->fullname ?? 'N/A' }}<br>
+                                        <strong>Email:</strong> {{ $item->customer->email ?? 'N/A' }}<br>
+                                        <strong>Phone:</strong> {{ $item->customer->phone ?? 'N/A' }}
                                     </p>
                                 </div>
                                 <div class="col-md-6 text-right">
@@ -200,7 +251,6 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- ✅ Use the grouped products --}}
                                         @foreach ($item->products as $index => $product)
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
@@ -218,12 +268,11 @@
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            {{-- <td colspan="3" class="text-right"><strong>Subtotal:</strong></td> --}}
+                                            <td colspan="3" class="text-right"><strong>Subtotal:</strong></td>
                                             <td class="text-right">₹{{ number_format($item->subtotal, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3" class="text-right"><strong>Tax
-                                                    ({{ $item->tax_rate }}%)
+                                            <td colspan="3" class="text-right"><strong>Tax ({{ $item->tax_rate }}%)
                                                     :</strong></td>
                                             <td class="text-right">₹{{ number_format($item->tax_amount, 2) }}</td>
                                         </tr>
@@ -246,6 +295,8 @@
         @endforeach
     </div>
 
+    {{-- ✅ SCRIPT FOR FILTERS AND ALERTS --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Confirm Delete
         function confirmDelete(id) {
@@ -254,10 +305,8 @@
             }
         }
 
-        // ==========================================
-        // ✅ Auto-hide alerts after 5 seconds
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
+            // Auto-hide alerts after 5 seconds
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
@@ -267,7 +316,50 @@
                         alert.style.display = 'none';
                     }, 500);
                 });
-            }, 5000);
+            }, 500);
+
+            // ✅ FILTERS REDIRECT LOGIC
+            $('#filterCustomer, #filterTime').on('change', function() {
+                var customer = $('#filterCustomer').val();
+                var time = $('#filterTime').val();
+
+                var url = new URL(window.location.href);
+
+                if (customer) {
+                    url.searchParams.set('customer_id', customer);
+                } else {
+                    url.searchParams.delete('customer_id');
+                }
+
+                if (time) {
+                    url.searchParams.set('time', time);
+                } else {
+                    url.searchParams.delete('time');
+                }
+
+                window.location.href = url.toString();
+            });
         });
     </script>
+
+    {{-- ✅ CSS FOR BOOTSTRAP 4 PAGINATION --}}
+    <style>
+        .pagination {
+            display: flex !important;
+            justify-content: center !important;
+            margin-top: 20px !important;
+        }
+
+        .pagination .page-link {
+            color: #0d6efd !important;
+            background-color: #fff !important;
+            border: 1px solid #dee2e6 !important;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: #fff !important;
+        }
+    </style>
 @endsection

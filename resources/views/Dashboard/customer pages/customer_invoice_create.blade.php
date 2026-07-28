@@ -36,7 +36,7 @@
 
                         <form action="{{ route('customer.invoices.store') }}" method="POST" id="invoiceForm" novalidate>
                             @csrf
-                           
+
                             @if (isset($invoice))
                                 @method('PUT')
                             @endif
@@ -148,9 +148,9 @@
                                             <div class="invalid-feedback"></div>
                                         </div>
 
-                                        <!-- ✅ PERFECTLY ALIGNED Remove Button Column -->
-                                        <!-- pt-2 exactly matches the mb-2 label, pb-1 matches the input margin -->
-                                        <div class="col-md-2 d-flex flex-column pt-2 pb-1">
+
+                                        {{-- Remove Button (Width 2) --}}
+                                        <div class="col-md-2 d-flex align-items-end justify-content-end pb-3">
                                             <button type="button" class="btn btn-danger btn-sm remove-row"
                                                 onclick="removeProductRow(this)"
                                                 style="height: 38px; font-size: 12px; padding: 0 12px; white-space: nowrap;">
@@ -213,6 +213,18 @@
         </div>
     </div>
     </div>
+
+    <style>
+        /* Fix Remove button alignment */
+        .product-row .col-md-2.d-flex {
+            min-height: 79px !important;
+            padding-bottom: 5px !important;
+        }
+
+        .product-row .col-md-2.d-flex .btn {
+            margin-bottom: 0 !important;
+        }
+    </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {

@@ -1,8 +1,10 @@
 <?php
 
 return [
+    'pagination' => [
+        'default' => 'bootstrap-4',
+    ],
 
-  
 
     'name' => env('APP_NAME', 'Laravel'),
 

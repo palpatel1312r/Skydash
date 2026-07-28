@@ -322,25 +322,80 @@ class InvoiceController extends Controller
         return view('Dashboard.customer pages.customer_invoice_create', compact('customer', 'products'));
     }
 
-    public function customerInvoices()
+    public function customerInvoices(Request $request)
     {
         $customer = auth()->guard('customer')->user();
-        $invoices = Invoice::where('customer_id', $customer->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $customers = Customer::all(); // ✅ Pass this for the filter dropdown
 
-        Log::info('Customer invoices loaded', [
-            'customer_id' => $customer->id,
-            'customer_name' => $customer->fullname,
-            'invoice_count' => $invoices->count()
-        ]);
+        $query = Invoice::where('customer_id', $customer->id);
 
-        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer'));
+        // Apply Customer Filter
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        // Apply Time Filter
+        if ($request->filled('time')) {
+            $now = now();
+            switch ($request->time) {
+                case 'today': // ✅ Added 'today' filter
+                    $query->whereDate('invoice_date', $now->toDateString());
+                    break;
+                case '1_week':
+                    $query->where('invoice_date', '>=', $now->copy()->subWeek());
+                    break;
+                case '2_week':
+                    $query->where('invoice_date', '>=', $now->copy()->subWeeks(2));
+                    break;
+                case 'this_month':
+                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
+                    break;
+                case 'last_month':
+                    $lastMonth = $now->copy()->subMonth();
+                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
+                    break;
+            }
+        }
+        $invoices = $query->orderBy('invoice_date', 'desc')->paginate(5);
+
+        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer', 'customers'));
     }
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with('customer')->orderBy('created_at', 'desc')->get();
+        $query = Invoice::with('customer')->orderBy('created_at', 'desc');
 
+        // ✅ Apply Customer Filter
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        // ✅ Apply Time Filter
+        if ($request->filled('time')) {
+            $now = now();
+            switch ($request->time) {
+                case 'today':
+                    $query->whereDate('invoice_date', $now->toDateString());
+                    break;
+                case '1_week':
+                    $query->where('invoice_date', '>=', $now->copy()->subWeek());
+                    break;
+                case '2_week':
+                    $query->where('invoice_date', '>=', $now->copy()->subWeeks(2));
+                    break;
+                case 'this_month':
+                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
+                    break;
+                case 'last_month':
+                    $lastMonth = $now->copy()->subMonth();
+                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
+                    break;
+            }
+        }
+
+        // ✅ Get paginated results (10 per page)
+        $invoices = $query->paginate(5);
+
+        // ✅ Group products logic (kept your existing logic)
         foreach ($invoices as $invoice) {
             $grouped = [];
             if (is_array($invoice->products)) {
@@ -362,7 +417,6 @@ class InvoiceController extends Controller
 
         return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
     }
-
     public function create()
     {
         $customers = Customer::all();
