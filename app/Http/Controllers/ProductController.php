@@ -21,8 +21,19 @@ class ProductController extends Controller
   }
   public function index()
   {
+    // ✅ SECURITY CHECK: Only allow Admin/Super Admin
+    if (auth()->guard('admin')->check()) {
+      $user = auth()->guard('admin')->user();
+      // Only role_id 1 (Super Admin) or 2 (Admin) can access
+      if ($user->role_id != 1 && $user->role_id != 2) {
+        abort(403, 'Unauthorized access.');
+      }
+    } else {
+      // If someone tries to access this while logged in as Customer, block them!
+      abort(403, 'Unauthorized access.');
+    }
 
-
+    // ✅ Fetch and order products correctly
     $products = Product::orderBy('created_at', 'desc')->get();
     Log::info('Products count: ' . $products->count());
 
@@ -31,7 +42,8 @@ class ProductController extends Controller
 
   public function store(Request $request)
   {
-    $request->validate([
+    // 1. CREATE VALIDATOR INSTANCE
+    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
       'title' => 'required|string|max:255',
       'description' => 'nullable|string',
       'price' => 'required|numeric|min:0',
@@ -40,7 +52,6 @@ class ProductController extends Controller
       'type' => 'nullable|string',
       'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ], [
-      // ✅ Custom error messages go here
       'title.required' => 'Please enter the product title.',
       'price.required' => 'Please enter the product price.',
       'price.numeric' => 'Price must be a valid number.',
@@ -52,6 +63,11 @@ class ProductController extends Controller
       'image.image' => 'The file must be a valid image (JPEG, PNG, JPG, GIF).',
       'image.max' => 'The image size must not exceed 2MB.',
     ]);
+
+    // 2. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
 
     $product = new Product();
     $product->title = $request->title;
@@ -73,14 +89,19 @@ class ProductController extends Controller
 
     $product->save();
 
-    return redirect()->route('products')->with('success', 'Product added successfully!');
+    // 3. RETURN 200 JSON SUCCESS
+    return response()->json([
+      'success' => true,
+      'message' => 'Product added successfully!'
+    ]);
   }
 
   public function update(Request $request)
   {
     $product = Product::findOrFail($request->id);
 
-    $request->validate([
+    // 1. CREATE VALIDATOR INSTANCE
+    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
       'title' => 'required|string|max:255',
       'description' => 'nullable|string',
       'price' => 'required|numeric|min:0',
@@ -89,7 +110,6 @@ class ProductController extends Controller
       'type' => 'nullable|string',
       'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ], [
-      // ✅ Custom error messages go here
       'title.required' => 'Please enter the product title.',
       'price.required' => 'Please enter the product price.',
       'price.numeric' => 'Price must be a valid number.',
@@ -101,6 +121,11 @@ class ProductController extends Controller
       'image.image' => 'The file must be a valid image (JPEG, PNG, JPG, GIF).',
       'image.max' => 'The image size must not exceed 2MB.',
     ]);
+
+    // 2. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
 
     $product->title = $request->title;
     $product->description = $request->description;
@@ -121,7 +146,11 @@ class ProductController extends Controller
 
     $product->save();
 
-    return redirect()->route('products')->with('success', 'Product updated successfully!');
+    // 3. RETURN 200 JSON SUCCESS
+    return response()->json([
+      'success' => true,
+      'message' => 'Product updated successfully!'
+    ]);
   }
   /**
    * Delete product

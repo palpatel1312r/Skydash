@@ -55,8 +55,7 @@
                                                 </div>
                                             </div>
                                             @error('current_password')
-                                                <div class="invalid-feedback d-block" style="display: none;">
-                                                    {{ $message }}</div>
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
                                         </div>
 
@@ -75,8 +74,7 @@
                                                 </div>
                                             </div>
                                             @error('new_password')
-                                                <div class="invalid-feedback d-block" style="display: none;">
-                                                    {{ $message }}</div>
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
                                         </div>
 
@@ -96,66 +94,7 @@
                                                 </div>
                                             </div>
                                             @error('new_password')
-                                                <div class="invalid-feedback d-block" style="display: none;">
-       <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Forgot Password | SkyDash</title>
-    <link rel="stylesheet" href="{{ asset('Dashboard/vendors/feather/feather.css') }}">
-    <link rel="stylesheet" href="{{ asset('Dashboard/vendors/ti-icons/css/themify-icons.css') }}">
-    <link rel="stylesheet" href="{{ asset('Dashboard/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('Dashboard/css/vertical-layout-light/style.css') }}">
-</head>
-<body>
-    <div class="container-scroller">
-        <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div class="content-wrapper d-flex align-items-center auth px-0">
-                <div class="row w-100 mx-0">
-                    <div class="col-lg-4 mx-auto">
-                        <div class="auth-form-light text-left py-5 px-4 px-sm-5">
-                            <div class="brand-logo text-center mb-3">
-                                <img src="{{ asset('Dashboard/images/logo.svg') }}" alt="logo" style="max-width: 150px;">
-                            </div>
-                            <h4 class="text-center">Forgot Password?</h4>
-                            <h6 class="font-weight-light text-center mb-4">Enter your email and we'll send you a link to reset it.</h6>
-
-                            @if (session('success'))
-                                <div class="alert alert-success">{{ session('success') }}</div>
-                            @endif
-                            @if (session('error'))
-                                <div class="alert alert-danger">{{ session('error') }}</div>
-                            @endif
-
-                            <form class="pt-3" method="POST" action="{{ route('password.email') }}">
-                                @csrf
-                                <div class="form-group">
-                                    <input type="email" name="email" class="form-control form-control-lg @error('email') is-invalid @enderror" placeholder="Enter your email" value="{{ old('email') }}">
-                                    @error('email')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                <div class="mt-3">
-                                    <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
-                                        Send Reset Link
-                                    </button>
-                                </div>
-
-                                <div class="text-center mt-4 font-weight-light">
-                                    Remembered it? <a href="{{ route('login') }}" class="text-primary">Login</a>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="{{ asset('Dashboard/vendors/js/vendor.bundle.base.js') }}"></script>
-</body>
-</html>                                             {{ $message }}</div>
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
                                         </div>
 
@@ -173,6 +112,18 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* KEEP ONLY THE MINIMUM CSS REQUIRED FOR LARAVEL ERRORS TO SHOW */
+        .form-control.is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .invalid-feedback.d-block {
+            display: block !important;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const currentPasswordInput = document.getElementById('current_password');
@@ -194,6 +145,7 @@
                 }
             });
 
+            // 2. Toggle password visibility
             const togglePasswordButtons = document.querySelectorAll('.toggle-password');
             togglePasswordButtons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -215,38 +167,25 @@
                 });
             });
 
-            // 3. FORCE ERRORS TO SHOW ON PAGE LOAD
+            // 3. ✅ PURE BOOTSTRAP FIX: Hide errors using Bootstrap's d-none class
             const allInputs = document.querySelectorAll('input[type="password"]');
             allInputs.forEach(input => {
-                if (input.classList.contains('is-invalid')) {
-                    const errorDiv = input.closest('.form-group').querySelector(
-                        '.invalid-feedback.d-block');
-                    if (errorDiv) {
-                        errorDiv.classList.remove('hidden-error'); // Just in case
-                    }
-                }
-            });
-
-            // 4. ✅ FINAL FIX: Clear errors by adding a class instead of changing style
-            allInputs.forEach(input => {
                 input.addEventListener('input', function() {
-                    const errorDiv = this.closest('.form-group').querySelector(
-                        '.invalid-feedback.d-block');
-                    if (errorDiv) {
-                        // Add a custom class to hide it. This overrides Bootstrap.
-                        errorDiv.classList.add('hidden-error');
-                    }
+                    // Remove the red border from the input
                     this.classList.remove('is-invalid');
+
+                    // Find the parent input-group div
+                    const inputGroup = this.closest('.input-group');
+                    if (inputGroup) {
+                        // Find the error div which is the NEXT element after the input-group
+                        const errorDiv = inputGroup.nextElementSibling;
+                        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                            // ✅ PURE BOOTSTRAP: Use Bootstrap's d-none utility class to hide it
+                            errorDiv.classList.add('d-none');
+                        }
+                    }
                 });
             });
         });
     </script>
-
-    {{-- ✅ Add this tiny CSS block right above the script --}}
-    <style>
-        /* This custom class completely hides the error, even against Bootstrap's !important */
-        .hidden-error {
-            display: none !important;
-        }
-    </style>
 @endsection

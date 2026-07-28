@@ -29,7 +29,6 @@
                                 </a>
                             </div>
 
-                            {{-- DYNAMIC FORM ACTION --}}
                             <form
                                 action="{{ isset($customer) ? route('admin.customers.update') : route('admin.customers.store') }}"
                                 method="POST" id="customerForm" novalidate>
@@ -39,29 +38,25 @@
                                     <input type="hidden" name="id" value="{{ $customer->id }}">
                                 @endif
 
+                                <div id="global-alert-container" style="min-height: 10px;"></div>
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Full Name</label>
-                                            <input type="text" name="fullname" id="fullname"
-                                                class="form-control @error('fullname') is-invalid @enderror"
+                                            <input type="text" name="fullname" id="fullname" class="form-control"
                                                 value="{{ old('fullname', $customer->fullname ?? '') }}"
                                                 placeholder="Enter customer's full name">
-                                            @error('fullname')
-                                                <div class="invalid-feedback" id="fullname-error">{{ $message }}</div>
-                                            @enderror
+                                            <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input type="email" name="email" id="email"
-                                                class="form-control @error('email') is-invalid @enderror"
+                                            <input type="email" name="email" id="email" class="form-control"
                                                 value="{{ old('email', $customer->email ?? '') }}"
                                                 placeholder="Enter customer's email address">
-                                            @error('email')
-                                                <div class="invalid-feedback" id="email-error">{{ $message }}</div>
-                                            @enderror
+                                            <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -70,8 +65,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Status</label>
-                                            <select name="status" id="status"
-                                                class="form-select @error('status') is-invalid @enderror">
+                                            <select name="status" id="status" class="form-select">
                                                 <option value=""
                                                     {{ old('status', $customer->status ?? '') == '' ? 'selected' : '' }}>
                                                     Select Status
@@ -85,9 +79,7 @@
                                                     Inactive
                                                 </option>
                                             </select>
-                                            @error('status')
-                                                <div class="invalid-feedback" id="status-error">{{ $message }}</div>
-                                            @enderror
+                                            <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -150,43 +142,100 @@
         }
     </style>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function removeFieldError(field) {
-                field.classList.remove('is-invalid');
-                const formGroup = field.closest('.form-group');
-                if (formGroup) {
-                    const errorDiv = formGroup.querySelector('.invalid-feedback');
-                    if (errorDiv) {
-                        // Delete the error entirely
-                        errorDiv.remove();
-                    }
-                }
-            }
-
-            document.querySelectorAll('input, select').forEach(field => {
-                // For text and email inputs - trigger on input
-                if (field.type === 'text' || field.type === 'email') {
-                    field.addEventListener('input', function() {
-                        if (this.value.trim() !== '') {
-                            removeFieldError(this);
-                        }
-                    });
-                }
-
-                // For select dropdowns - trigger on change
-                if (field.tagName === 'SELECT') {
-                    field.addEventListener('change', function() {
-                        if (this.value !== '') {
-                            removeFieldError(this);
-                        }
-                    });
+        $(document).ready(function() {
+            // 1. SETUP CSRF TOKEN
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
 
-            document.querySelectorAll('input, select').forEach(field => {
-                field.addEventListener('focus', function() {
-                    removeFieldError(this);
+            // 2. CLEAR FIELD ERROR HELPER
+            window.clearFieldError = function(field) {
+                var $col = $(field).closest('.form-group');
+                $col.find('.invalid-feedback').remove();
+                $(field).removeClass('is-invalid');
+            };
+
+            // 3. LIVE CLEARING (Input/Change events)
+            $('#customerForm input, #customerForm select').on('input change', function() {
+                if ($(this).val().trim() !== '') {
+                    clearFieldError(this);
+                }
+            });
+
+            // 4. AJAX SUBMISSION
+            $('#customerForm').on('submit', function(e) {
+                e.preventDefault();
+
+                // Clear ALL existing errors
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+                $('#global-alert-container').empty();
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        // Show success alert
+                        $('#global-alert-container').html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            response.message +
+                            '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                            '</div>'
+                        );
+                        // Redirect to index after 1.5 seconds
+                        setTimeout(function() {
+                            window.location.href =
+                                "{{ route('admin.customers.index') }}";
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+
+                            // Loop through errors and display them
+                            $.each(errors, function(key, messages) {
+                                var input = $('[name="' + key + '"]');
+                                if (input.length) {
+                                    var formGroup = input.closest('.form-group');
+                                    formGroup.find('.invalid-feedback').remove();
+                                    input.addClass('is-invalid');
+                                    // Append error message
+                                    formGroup.append(
+                                        '<div class="invalid-feedback" style="display:block;">' +
+                                        messages[0] + '</div>'
+                                    );
+                                } else {
+                                    // If field not found, show in global alert
+                                    $('#global-alert-container').append(
+                                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                        messages[0] +
+                                        '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                                        '</div>'
+                                    );
+                                }
+                            });
+                        } else {
+                            // Server error (500, 404, etc.)
+                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.message :
+                                'Unknown Server Error';
+                            $('#global-alert-container').html(
+                                '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                'Error ' + xhr.status + ': ' + errorMsg +
+                                '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                                '</div>'
+                            );
+                        }
+                    }
                 });
             });
         });

@@ -41,7 +41,7 @@
 
                             {{-- DYNAMIC FORM ACTION & METHOD --}}
                             <form
-                                action="{{ isset($invoice) ? route('admin.invoices.update', $invoice->id) : route('invoices.store') }}"
+                                action="{{ isset($invoice) ? route('admin.invoices.update', $invoice->id) : route('admin.invoices.store') }}"
                                 method="POST" id="invoiceForm" novalidate>
                                 @csrf
                                 @if (isset($invoice))
@@ -180,9 +180,13 @@
                                             <div class="col-md-2">
                                                 <label>Subtotal (₹)</label>
                                                 <input type="text" name="subtotal[]"
-                                                    class="form-control product-subtotal" value="{{ $selectedSubtotal }}"
-                                                    readonly
-                                                    style="background-color: #ffffff !important; text-align: right;">
+                                                    class="form-control product-subtotal @error('subtotal.' . $i) is-invalid @enderror"
+                                                    placeholder="0.00" value="{{ $selectedSubtotal }}"
+                                                    aria-label="Subtotal (Calculated)"
+                                                    oninput="updateSubtotalFromPrice(this)">
+                                                @error('subtotal.' . $i)
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
 
                                             {{-- Remove Button (Width 2) --}}
@@ -276,47 +280,89 @@
             color: #fff !important;
         }
 
-        .form-select.is-invalid,
-        select.is-invalid,
-        .form-control.is-invalid {
+        /* Error styles - using Bootstrap classes */
+        .is-invalid {
             border-color: #dc3545 !important;
             border-width: 1px !important;
             border-style: solid !important;
-            padding-right: calc(0.75em + 2.375rem) !important;
+            padding-right: calc(1.5em + 0.75rem) !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.1h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e") !important;
             background-repeat: no-repeat !important;
             background-position: right calc(0.375em + 0.1875rem) center !important;
             background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
         }
 
+        /* Show invalid feedback - using Bootstrap classes */
         .invalid-feedback {
-            display: none !important;
+            display: block !important;
             color: #dc3545 !important;
             font-size: 80% !important;
             margin-top: 0.25rem !important;
+            width: 100% !important;
         }
 
-        .is-invalid~.invalid-feedback {
-            display: block !important;
+        /* Product row styling */
+        .product-row {
+            display: flex;
+            align-items: flex-start !important;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
         }
 
-        .product-row .col-md-5,
-        .product-row .col-md-1,
+        .product-row .col-md-4,
         .product-row .col-md-2 {
             min-height: 85px !important;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-        }
-
-        .product-row {
-            display: flex;
-            align-items: flex-start !important;
-            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 5px;
         }
 
         .product-row .col-md-2.d-flex {
             min-height: 85px !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+            padding-bottom: 0 !important;
+        }
+
+        .product-row .invalid-feedback {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            right: auto;
+            margin-top: 0.25rem;
+            font-size: 75%;
+        }
+
+        /* Form group styling */
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group .invalid-feedback {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            right: auto;
+            margin-top: 0.25rem;
+        }
+
+        /* Alert messages */
+        .alert {
+            margin-bottom: 20px;
+        }
+
+        /* Hide fields initially */
+        .hide-fields .product-price,
+        .hide-fields .product-quantity,
+        .hide-fields .product-subtotal {
+            display: none;
+        }
+
+        .hide-fields label {
+            opacity: 0.5;
         }
     </style>
 
@@ -324,12 +370,12 @@
         function clearFieldError(field) {
             field.classList.remove('is-invalid');
             field.setCustomValidity('');
-            const column = field.closest('[class*="col-md-"]');
-            if (column) {
-                const errorDiv = column.querySelector('.invalid-feedback');
-                if (errorDiv) {
-                    errorDiv.remove();
-                }
+            // Find and remove existing error message
+            const parent = field.closest('.form-group') || field.closest('.col-md-4') || field.closest('.col-md-2') || field
+                .parentElement;
+            const existingError = parent.querySelector('.invalid-feedback');
+            if (existingError) {
+                existingError.remove();
             }
         }
 
@@ -372,42 +418,65 @@
         }
 
         function updateSubtotalFromPrice(input) {
-            clearFieldError(input);
             const row = input.closest('.product-row');
             const quantityInput = row.querySelector('.product-quantity');
             const subtotalInput = row.querySelector('.product-subtotal');
             const price = parseFloat(input.value) || 0;
             const quantity = parseInt(quantityInput.value) || 1;
             subtotalInput.value = (price * quantity).toFixed(2);
+
+            if (input.value && parseFloat(input.value) > 0) {
+                clearFieldError(input);
+                subtotalInput.classList.remove('is-invalid');
+                const parent = subtotalInput.closest('.form-group') || subtotalInput.closest('.col-md-2') || subtotalInput
+                    .parentElement;
+                const existingError = parent.querySelector('.invalid-feedback');
+                if (existingError) {
+                    existingError.remove();
+                }
+            }
+
             calculateTotal();
         }
 
         function addProductRow() {
-            const row = document.querySelector('.product-row').cloneNode(true);
+            const firstRow = document.querySelector('.product-row');
+            const row = firstRow.cloneNode(true);
             const container = document.getElementById('product-rows');
+
+            // Clear all input values
             row.querySelectorAll('input').forEach(input => {
                 if (input.type !== 'hidden') {
                     input.value = '';
                 }
             });
+
             row.querySelector('.product-subtotal').value = '';
             row.querySelector('.product-quantity').value = '';
+
             const select = row.querySelector('.product-select');
             if (select) select.selectedIndex = 0;
+
+            // Remove all error states
             row.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            row.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
+            row.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
             row.classList.add('hide-fields');
+
+            // Re-attach event listeners
             select.addEventListener('change', function() {
                 updateProductDetails(this);
             });
+
             const qtyInput = row.querySelector('.product-quantity');
             qtyInput.addEventListener('input', function() {
                 updateProductDetailsFromQuantity(this);
             });
+
             const priceInput = row.querySelector('.product-price');
             priceInput.addEventListener('input', function() {
                 updateSubtotalFromPrice(this);
             });
+
             container.appendChild(row);
             document.getElementById('total_rows').value = parseInt(document.getElementById('total_rows').value) + 1;
             calculateTotal();
@@ -458,32 +527,197 @@
             document.getElementById('total_amount').value = total.toFixed(2);
         }
 
+        function showFieldErrors(errors) {
+            // Clear all existing errors
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+            // Show errors for each field
+            for (const [key, messages] of Object.entries(errors)) {
+                let field = null;
+
+                // Handle array fields like quantity_0, price_1, product_id_0, etc.
+                if (key.includes('_')) {
+                    const parts = key.split('_');
+                    const baseName = parts[0];
+                    const index = parseInt(parts[1]);
+
+                    // Find the specific field by index - using the array name without brackets
+                    // Example: quantity_0 -> find [name="quantity[]"] at index 0
+                    const allFields = document.querySelectorAll(`[name="${baseName}[]"]`);
+                    if (allFields.length > index) {
+                        field = allFields[index];
+                    }
+                } else {
+                    // Handle simple fields
+                    field = document.querySelector(`[name="${key}"]`);
+                    if (!field) {
+                        field = document.querySelector(`[name="${key}[]"]`);
+                    }
+
+                    // Special case for customer_id
+                    if (key === 'customer_id') {
+                        field = document.querySelector('[name="customer_id"]');
+                    }
+                }
+
+                if (field) {
+                    // Add error class to field
+                    field.classList.add('is-invalid');
+
+                    // Create error message
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = messages[0];
+
+                    // Insert error message after the field
+                    const parent = field.closest('.form-group') || field.closest('.col-md-4') || field.closest(
+                        '.col-md-2') || field.parentElement;
+                    parent.appendChild(feedback);
+                }
+            }
+
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                firstError.focus();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Calculate initial totals
             calculateTotal();
+
+            // Customer select change handler
             const customerSelect = document.getElementById('customerSelect');
-            customerSelect.addEventListener('change', function() {
-                clearFieldError(this);
-            });
+            if (customerSelect) {
+                customerSelect.addEventListener('change', function() {
+                    clearFieldError(this);
+                });
+            }
+
+            // Product select change handlers
             document.querySelectorAll('.product-select').forEach(select => {
                 select.addEventListener('change', function() {
                     updateProductDetails(this);
                 });
             });
+
+            // Quantity input handlers
             document.querySelectorAll('.product-quantity').forEach(input => {
                 input.addEventListener('input', function() {
                     updateProductDetailsFromQuantity(this);
                 });
             });
+
+            // Price input handlers
             document.querySelectorAll('.product-price').forEach(input => {
                 input.addEventListener('input', function() {
                     updateSubtotalFromPrice(this);
                 });
             });
-            document.getElementById('invoiceForm').addEventListener('submit', function() {
-                document.querySelectorAll('.invalid-feedback').forEach(errorDiv => errorDiv.remove());
-                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            });
-            calculateTotal();
+
+            // Form submission via AJAX
+            const form = document.getElementById('invoiceForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // Clear previous errors and alerts
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove(
+                        'is-invalid'));
+                    document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+                    // Clear any existing error alerts in global-alert-container
+                    const alertContainer = document.getElementById('global-alert-container');
+                    if (alertContainer) {
+                        alertContainer.innerHTML = '';
+                    }
+
+                    const formData = new FormData(this);
+                    const isUpdate = this.querySelector('input[name="_method"]');
+                    if (isUpdate) {
+                        formData.append('_method', isUpdate.value);
+                    }
+
+                    // Show loading state
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="mdi mdi-spin mdi-loading"></i> Saving...';
+
+                    fetch(this.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .content
+                            },
+                            body: formData
+                        })
+                        .then(response => {
+                            const contentType = response.headers.get('content-type');
+                            if (!contentType || !contentType.includes('application/json')) {
+                                throw new Error('Server returned non-JSON response');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+
+                            if (data.success) {
+                                // Show success message in global-alert-container
+                                if (alertContainer) {
+                                    alertContainer.innerHTML = `
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    ${data.message}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            `;
+                                }
+                                setTimeout(() => {
+                                    window.location.href = '{{ route('invoices.index') }}';
+                                }, 2000);
+                            } else if (data.errors) {
+                                // Show field-specific errors only - NO summary alert
+                                showFieldErrors(data.errors);
+                            } else if (data.error) {
+                                if (alertContainer) {
+                                    alertContainer.innerHTML = `
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    ${data.error}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            `;
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                            if (alertContainer) {
+                                alertContainer.innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                An error occurred while saving the invoice. Please try again.
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        `;
+                            }
+                        });
+                });
+            }
         });
     </script>
 @endsection

@@ -37,65 +37,72 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'fullname' => 'required|string|max:255',
-
-            // ✅ CHANGED: Added regex to force ONLY @gmail.com emails
             'email' => [
                 'required',
                 'email',
                 'unique:customer,email',
                 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
             ],
-
             'status' => 'required|string',
         ], [
             'email.email' => 'Please enter a valid email format.',
             'email.unique' => 'This email address is already registered.',
-            'email.regex' => 'Email must be a valid @gmail.com address.', // Custom error for regex failure
+            'email.regex' => 'Email must be a valid @gmail.com address.',
         ]);
 
-        $customerRole = \App\Models\Role::where('name', 'customer')->first();
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
+        $customerRole = \App\Models\Role::where('name', 'customer')->first();
         if (!$customerRole) {
-            return redirect()->back()->with('error', 'Customer role not found. Please create a "customer" role first.');
+            return response()->json(['errors' => ['role' => ['Customer role not found.']]], 422);
         }
 
         Customer::create([
             'fullname' => $request->fullname,
             'email' => $request->email,
             'password' => Hash::make('1234'),
-            'role_id' => $customerRole->id, // Auto-assign customer role
+            'role_id' => $customerRole->id,
             'status' => $request->status,
         ]);
 
-        return redirect()->route('admin.customers.index')->with('success', 'Customer created successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer created successfully!'
+        ]);
     }
 
     public function update(Request $request)
     {
         $customer = Customer::findOrFail($request->id);
 
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'fullname' => 'required|string|max:255',
-
-            // ✅ CHANGED: Added regex to force ONLY @gmail.com emails on update
             'email' => [
                 'required',
                 'email',
                 'unique:customer,email,' . $request->id,
                 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
             ],
-
             'status' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $customer->fullname = $request->fullname;
         $customer->email = $request->email;
         $customer->status = $request->status;
         $customer->save();
 
-        return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer updated successfully!'
+        ]);
     }
 
     public function destroy($id)

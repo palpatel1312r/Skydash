@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Skydash Admin</title>
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('Dashboard/vendors/feather/feather.css') }}">
@@ -40,7 +40,6 @@
                     $dashboardUrl = '#';
                     if (auth()->guard('admin')->check()) {
                         $user = auth()->guard('admin')->user();
-                        // ✅ FIXED: Use role_id instead of role
                         if ($user->role_id == 1) {
                             $dashboardUrl = route('superadmin.dashboard');
                         } else {
@@ -90,7 +89,6 @@
                     <li class="nav-item nav-profile dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
-                                // ✅ FIXED: Re-added the $bgColor and $initial logic
                                 if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
                                     $bgColor = '#4e73df'; // Admin Blue
@@ -182,7 +180,7 @@
                 </div>
             </div>
 
-
+            {{-- ======================= ADMIN SIDEBAR ======================= --}}
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
                     @if (auth()->guard('admin')->check())
@@ -210,12 +208,17 @@
                                 <span class="menu-title">Users</span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.products.index') }}">
-                                <i class="icon-layout menu-icon"></i>
-                                <span class="menu-title">Products</span>
-                            </a>
-                        </li>
+
+                        {{-- ✅ ONLY SHOW PRODUCTS TO ADMIN AND SUPER ADMIN --}}
+                        @if ($user->role_id == 1 || $user->role_id == 2)
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('products') }}">
+                                    <i class="icon-layout menu-icon"></i>
+                                    <span class="menu-title">Products</span>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('invoices.index') }}">
                                 <i class="icon-file menu-icon"></i>
@@ -231,14 +234,14 @@
 
                         @if ($user)
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('superadmin.roles.index') }}">
+                                <a class="nav-link" href="{{ route('roles.index') }}">
                                     <i class="mdi mdi-account-multiple menu-icon"></i>
                                     <span class="menu-title">Manage Roles</span>
                                 </a>
                             </li>
                         @endif
 
-                        {{-- ✅ 2. CUSTOMER SIDEBAR --}}
+                        {{-- ======================= CUSTOMER SIDEBAR ======================= --}}
                     @elseif (auth()->guard('customer')->check())
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('customer.dashboard') }}">
@@ -246,12 +249,12 @@
                                 <span class="menu-title">Dashboard</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a class="nav-link" href="{{ route('customer.products') }}">
                                 <i class="icon-layout menu-icon"></i>
                                 <span class="menu-title">Products</span>
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('customer.invoices') }}">
                                 <i class="icon-file menu-icon"></i>

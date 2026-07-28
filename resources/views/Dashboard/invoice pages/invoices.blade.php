@@ -99,8 +99,7 @@
 
                                                     {{-- ✅ FIXED: This opens the Edit page (invoices_edit.blade.php) --}}
                                                     <a href="{{ route('invoices.edit', $item->id) }}"
-                                                        class="btn btn-primary btn-sm">
-                                                        <i class="mdi mdi-pencil"></i> Update
+                                                        class="btn btn-primary btn-sm"></i> Update
                                                     </a>
 
                                                     <!-- Delete Button -->
@@ -111,8 +110,8 @@
                                                     </button>
 
                                                     <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('invoices.destroy', $item->id) }}" method="POST"
-                                                        style="display: none;">
+                                                        action="{{ route('admin.invoices.destroy', $item->id) }}"
+                                                        method="POST" style="display: none;">
                                                         @csrf
                                                         @method('DELETE')
                                                     </form>
@@ -219,7 +218,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="3" class="text-right"><strong>Subtotal:</strong></td>
+                                            {{-- <td colspan="3" class="text-right"><strong>Subtotal:</strong></td> --}}
                                             <td class="text-right">₹{{ number_format($item->subtotal, 2) }}</td>
                                         </tr>
                                         <tr>

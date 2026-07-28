@@ -28,7 +28,7 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes
+| Authentication Routes (Public)
 |--------------------------------------------------------------------------
 */
 
@@ -42,6 +42,7 @@ Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm']
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes (No middleware)
@@ -60,114 +61,96 @@ Route::get('/contact', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Super Admin Routes (Protected with auth:admin)
+| Super Admin & Admin Routes (Auth: admin)
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
-  Route::get('/dashboard', function () {
-    $user = auth()->guard('admin')->user();
-    if ($user->role_id !== 1) {
-      abort(403, 'Unauthorized access.');
-    }
-    return view('superadmin.dashboard');
-  })->name('dashboard');
-  Route::resource('roles', RoleController::class)->except(['show']);
-});
+// Superadmin Dashboard
+Route::get('/superadmin/dashboard', function () {
+  $user = auth()->guard('admin')->user();
+  if ($user->role_id !== 1) {
+    abort(403, 'Unauthorized access.');
+  }
+  return view('superadmin.dashboard');
+})->name('superadmin.dashboard')->middleware('auth:admin');
+
+// Roles (Only accessible to Superadmin)
+Route::resource('roles', RoleController::class)->except(['show'])->middleware('auth:admin');
+
+// Admin Dashboard & Profile
+Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard')->middleware('auth:admin');
+Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile')->middleware('auth:admin');
+Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update')->middleware('auth:admin');
+Route::post('/admin/password/update', [AuthController::class, 'updatePassword'])->name('admin.password.update')->middleware('auth:admin');
+
+// Admin - Customer Management
+Route::get('/admin/customers', [CustomerController::class, 'index'])->name('admin.customers.index')->middleware('auth:admin');
+Route::post('/admin/customers/store', [CustomerController::class, 'store'])->name('admin.customers.store')->middleware('auth:admin');
+Route::match(['put', 'post'], '/admin/customers/update', [CustomerController::class, 'update'])->name('admin.customers.update')->middleware('auth:admin');
+Route::get('/admin/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('admin.customers.status')->middleware('auth:admin');
+Route::delete('/admin/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('admin.customers.delete')->middleware('auth:admin');
+Route::get('/admin/customers/create', [CustomerController::class, 'create'])->name('admin.customers.create')->middleware('auth:admin');
+Route::get('/admin/customers/edit/{id}', [CustomerController::class, 'edit'])->name('admin.customers.edit')->middleware('auth:admin');
+
+// Admin - User Management
+Route::get('/admin/users', [UserController::class, 'index'])->name('admin.user.index')->middleware('auth:admin');
+Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.user.create')->middleware('auth:admin');
+Route::post('/admin/users', [UserController::class, 'store'])->name('admin.user.store')->middleware('auth:admin');
+Route::get('/admin/users/{id}/{guard}/edit', [UserController::class, 'edit'])->name('admin.user.edit')->middleware('auth:admin');
+Route::put('/admin/users/{id}/{guard}', [UserController::class, 'update'])->name('admin.user.update')->middleware('auth:admin');
+Route::delete('/admin/users/{id}/{guard}', [UserController::class, 'destroy'])->name('admin.user.destroy')->middleware('auth:admin');
+Route::put('/admin/update-role/{id}/{guard}', [UserController::class, 'updateRole'])->name('admin.user.updateRole')->middleware('auth:admin');
+
+// Admin - Product Management
+Route::get('/admin/products', [ProductController::class, 'index'])->name('products')->middleware('auth:admin');
+Route::get('/admin/products/delete/{id}', [ProductController::class, 'destroy'])->name('admin.products.delete')->middleware('auth:admin');
+
+// Admin - Invoice Management
+Route::get('/admin/invoices', [InvoiceController::class, 'index'])->name('invoices')->middleware('auth:admin');
+Route::get('/admin/invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('auth:admin');
+Route::post('/admin/invoices', [InvoiceController::class, 'store'])->name('admin.invoices.store')->middleware('auth:admin');
+Route::put('/admin/invoices/{id}', [InvoiceController::class, 'update'])->name('admin.invoices.update')->middleware('auth:admin');
+Route::get('/admin/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('admin.invoices.status')->middleware('auth:admin');
+Route::delete('/admin/invoices/{id}', [InvoiceController::class, 'destroy'])->name('admin.invoices.destroy')->middleware('auth:admin');
 
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Protected with auth:admin)
+| Product CRUD Routes (Protected by middleware)
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-  // Dashboard & Profile
-  Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-  Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
-  Route::post('/profile/update', [AdminController::class, 'updateProfile'])->name('profile.update');
-  Route::post('/password/update', [AuthController::class, 'updatePassword'])->name('password.update');
-
-  // Customer Management
-  Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-  Route::post('/customers/store', [CustomerController::class, 'store'])->name('customers.store');
-  // Route::post('/customers/update', [CustomerController::class, 'update'])->name('customers.update');
-  Route::match(['put', 'post'], '/customers/update', [CustomerController::class, 'update'])->name('customers.update');
-  Route::get('/customers/status/{status}/{id}', [CustomerController::class, 'changeStatus'])->name('customers.status');
-  Route::delete('/customers/delete/{id}', [CustomerController::class, 'destroy'])->name('customers.delete');
-  Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
-  Route::get('/customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
-
-  // User Management (Combined here)
-  Route::get('/users', [UserController::class, 'index'])->name('user.index');
-  Route::get('/users/create', [UserController::class, 'create'])->name('user.create');
-  Route::post('/users', [UserController::class, 'store'])->name('user.store');
-  Route::get('/users/{id}/{guard}/edit', [UserController::class, 'edit'])->name('user.edit');
-  Route::put('/users/{id}/{guard}', [UserController::class, 'update'])->name('user.update');
-  Route::delete('/users/{id}/{guard}', [UserController::class, 'destroy'])->name('user.destroy');
-  Route::put('/update-role/{id}/{guard}', [UserController::class, 'updateRole'])->name('user.updateRole');
-
-  // Product Management
-  Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-  Route::get('/products/delete/{id}', [ProductController::class, 'destroy'])->name('products.delete');
-
-  // Invoice Management
-  Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
-  Route::put('/invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update');
-  Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
-  Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
-});
+Route::post('/products/add', [ProductController::class, 'store'])->name('products.add')->middleware('auth:admin');
+Route::match(['put', 'post'], '/products/update', [ProductController::class, 'update'])->name('products.update')->middleware('auth:admin');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('auth:admin');
+Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit')->middleware('auth:admin');
 
 
 /*
 |--------------------------------------------------------------------------
-| Global Shared Product Routes (Outside prefixes)
+| Customer Routes (Auth: customer)
 |--------------------------------------------------------------------------
 */
 
-Route::post('/products/add', [ProductController::class, 'store'])->name('products.add');
-Route::match(['put', 'post'], '/products/update', [ProductController::class, 'update'])->name('products.update');
-Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-Route::get('/products/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
-Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form');
-
+Route::get('/customer/dashboard', [CustomerController::class, 'dashboard'])->name('customer.dashboard')->middleware('auth:customer');
+Route::get('/customer/profile', [CustomerController::class, 'profile'])->name('customer.profile')->middleware('auth:customer');
+Route::post('/customer/profile/update', [CustomerController::class, 'updateProfile'])->name('customer.profile.update')->middleware('auth:customer');
+// Route::get('/customer/products', [ProductController::class, 'customerProducts'])->name('customer.products')->middleware('auth:customer');
+Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])->name('customer.invoices')->middleware('auth:customer');
+Route::get('/customer/invoices/create', [InvoiceController::class, 'customerCreate'])->name('customer.invoices.create')->middleware('auth:customer');
+Route::post('/customer/invoices', [InvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
+Route::post('/customer/password/update', [CustomerController::class, 'updatePassword'])->name('customer.password.update')->middleware('auth:customer');
 
 /*
 |--------------------------------------------------------------------------
-| Customer Routes (Protected with auth:customer)
+| Static Pages
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:customer'])->prefix('customer')->name('customer.')->group(function () {
-  Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
-  Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
-  Route::post('/profile/update', [CustomerController::class, 'updateProfile'])->name('profile.update');
-  Route::get('/products', [ProductController::class, 'customerProducts'])->name('products');
-  Route::get('/invoices', [InvoiceController::class, 'customerInvoices'])->name('invoices');
-  Route::post('/password/update', [CustomerController::class, 'updatePassword'])->name('password.update');
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Shared Routes (Accessible by both Admin and Customer)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth:admin'])->group(function () {
-  // These are redundant and should be removed eventually, but kept for now based on your request.
-  Route::get('/products', [ProductController::class, 'index'])->name('products');
-  Route::get('/invoice-list', [InvoiceController::class, 'index'])->name('invoices');
-  Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
-  Route::get('/invoices/status/{id}/{status}', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
-  Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
-  Route::get('/invoices/edit/{id}', [InvoiceController::class, 'edit'])->name('invoices.edit');
-  Route::get('/Customer', [CustomerController::class, 'index'])->name('Customer');
-  Route::get('/adminProducts', [ProductController::class, 'index'])->name('adminProducts');
-});
-
-Route::middleware(['auth:customer'])->group(function () {
-  Route::get('/customer/products', [ProductController::class, 'customerProducts'])->name('customer.products');
-  Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])->name('customer.invoices');
-});
+Route::get('/about', function () {
+  return view('about');
+})->name('about');
+Route::get('/contact', function () {
+  return view('contact');
+})->name('contact');
+Route::get('/admin/password/form', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form')->middleware('auth:admin');

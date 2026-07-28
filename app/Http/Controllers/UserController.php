@@ -64,7 +64,6 @@ class UserController extends Controller
   }
 
   //////////////////////////////////////////////////////
-
   public function store(Request $request)
   {
     $messages = [
@@ -73,39 +72,35 @@ class UserController extends Controller
       'email.email' => 'Please enter a valid email format.',
       'email.unique' => 'This email address is already registered.',
       'email.regex' => 'Email must be a valid @gmail.com address.',
-
-      // ✅ SEPARATE ERRORS FOR BOTH PASSWORD FIELDS
       'password.required' => 'A password is required.',
       'password.min' => 'The password must be at least 4 characters long.',
       'password_confirmation.required' => 'Please confirm your password.',
       'password_confirmation.same' => 'The password confirmation does not match.',
-
       'user_type.required' => 'Please select if this user is an Admin or Customer.',
     ];
 
-    // ✅ SEPARATE VALIDATION FOR PASSWORD AND CONFIRM PASSWORD
-    $request->validate([
+    // 1. CREATE VALIDATOR INSTANCE
+    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
       'name' => 'required|string|max:255',
       'password' => 'required|string|min:4',
       'password_confirmation' => 'required|same:password',
       'user_type' => 'required|in:super_admin,admin,customer',
     ], $messages);
 
-    $emailRules = [
-      'required',
-      'email',
-      'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
-    ];
-
+    // 2. ADD EMAIL RULES DYNAMICALLY
+    $emailRules = ['required', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'];
     if ($request->user_type === 'super_admin' || $request->user_type === 'admin') {
       $emailRules[] = 'unique:admins,email';
     } elseif ($request->user_type === 'customer') {
       $emailRules[] = 'unique:customer,email';
     }
 
-    $request->validate([
-      'email' => $emailRules
-    ], $messages);
+    $validator->addRules(['email' => $emailRules]);
+
+    // 3. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
 
     try {
       $roleIdToAssign = null;
@@ -118,19 +113,12 @@ class UserController extends Controller
         $roleIdToAssign = $adminRole ? $adminRole->id : 2;
       }
 
-      // ✅ EMERGENCY FALLBACK
-      if (!$roleIdToAssign && $request->user_type === 'super_admin') {
-        $roleIdToAssign = 1;
-      } elseif (!$roleIdToAssign && $request->user_type === 'admin') {
-        $roleIdToAssign = 2;
-      }
-
       if ($request->user_type === 'super_admin' || $request->user_type === 'admin') {
         Admin::create([
           'name' => $request->name,
           'email' => $request->email,
           'password' => bcrypt($request->password),
-          'role_id' => $roleIdToAssign, // ✅ Assigns 1 or 2
+          'role_id' => $roleIdToAssign,
           'status' => 'Active',
         ]);
       } elseif ($request->user_type === 'customer') {
@@ -138,26 +126,20 @@ class UserController extends Controller
           'fullname' => $request->name,
           'email' => $request->email,
           'password' => bcrypt($request->password),
-          'role_id' => $request->role_id, // ✅ Use the role picked from the dropdown!
+          'role_id' => $request->role_id,
           'status' => 'Active',
         ]);
       }
 
-      return redirect()->route('admin.user.index')->with('success', 'New user created successfully!');
-    } catch (\Illuminate\Database\QueryException $e) {
-      // 🛑 EXACT FIX: If it's a duplicate entry error, redirect back to the form
-      if ($e->errorInfo[1] == 1062) {
-        return redirect()->back()->withErrors(['email' => 'This email address is already taken.'])->withInput();
-      }
-
-      // For any other database error
-      return redirect()->back()->with('error', 'Database Error: ' . $e->getMessage());
+      // RETURN 200 JSON SUCCESS
+      return response()->json([
+        'success' => true,
+        'message' => 'New user created successfully!'
+      ]);
     } catch (\Exception $e) {
-      return redirect()->back()->with('error', 'Failed to create user: ' . $e->getMessage());
+      return response()->json(['errors' => ['general' => ['Failed to create user: ' . $e->getMessage()]]], 422);
     }
   }
-
-  //////////////////////////////////////////////////////
 
   public function update(Request $request, $id, $guard)
   {
@@ -170,6 +152,8 @@ class UserController extends Controller
       'user_type.required' => 'Please select a User Type.',
       'role_id.required' => 'Please select a role for this user.',
     ];
+
+    // 1. CREATE VALIDATOR INSTANCE
     $rules = [
       'name' => 'required|string|max:255',
       'user_type' => 'required|in:super_admin,admin,customer',
@@ -178,15 +162,13 @@ class UserController extends Controller
       $rules['role_id'] = 'required|exists:roles,id';
     }
 
-    // Email rules (Must be unique in the NEW table)
+    // Email rules
     $emailRules = ['required', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'];
-
     if ($request->user_type === 'super_admin' || $request->user_type === 'admin') {
-      $emailRules[] = 'unique:admins,email,' . $id; // Ignore current ID if already in admins
+      $emailRules[] = 'unique:admins,email,' . $id;
     } else {
-      $emailRules[] = 'unique:customer,email,' . $id; // Ignore current ID if already in customers
+      $emailRules[] = 'unique:customer,email,' . $id;
     }
-
     $rules['email'] = $emailRules;
 
     if ($request->filled('password')) {
@@ -194,23 +176,25 @@ class UserController extends Controller
       $rules['password_confirmation'] = 'required_with:password|same:password';
     }
 
-    $request->validate($rules, $messages);
+    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules, $messages);
+
+    // 2. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
+    if ($validator->fails()) {
+      return response()->json(['errors' => $validator->errors()], 422);
+    }
 
     try {
       $newUserType = $request->user_type;
-
-      // ✅ DEFINE THE ROLE ID FOR ADMIN TRANSITIONS HERE
       $roleIdToAssign = null;
       $adminRole = Role::where('name', 'Admin')->first();
       $superAdminRole = Role::where('name', 'Super Admin')->first();
 
       if ($request->user_type === 'super_admin') {
-        $roleIdToAssign = $superAdminRole ? $superAdminRole->id : 1; // Fallback to 1
+        $roleIdToAssign = $superAdminRole ? $superAdminRole->id : 1;
       } elseif ($request->user_type === 'admin') {
-        $roleIdToAssign = $adminRole ? $adminRole->id : 2; // Fallback to 2
+        $roleIdToAssign = $adminRole ? $adminRole->id : 2;
       }
 
-      // 1. If the user type hasn't changed, just update normally
       if ($guard === $newUserType || ($guard === 'admin' && in_array($newUserType, ['admin', 'super_admin']))) {
         if ($guard === 'admin') {
           $user = Admin::findOrFail($id);
@@ -225,39 +209,39 @@ class UserController extends Controller
         if ($request->filled('password')) {
           $user->password = bcrypt($request->password);
         }
-
-        // ✅ FIX: Allow Admin/Super Admin to change their role
         $user->role_id = ($guard === 'admin') ? $roleIdToAssign : $request->role_id;
         $user->save();
       } else {
         if ($guard === 'customer' && in_array($newUserType, ['super_admin', 'admin'])) {
-          // Moving Customer to Admin
           $customer = Customer::findOrFail($id);
           Admin::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->filled('password') ? bcrypt($request->password) : $customer->password,
-            'role_id' => $roleIdToAssign, // ✅ Assigns 1 or 2
+            'role_id' => $roleIdToAssign,
             'status' => 'Active',
           ]);
           $customer->delete();
         } elseif ($guard === 'admin' && $newUserType === 'customer') {
-          // Moving Admin to Customer
           $admin = Admin::findOrFail($id);
           Customer::create([
             'fullname' => $request->name,
             'email' => $request->email,
             'password' => $request->filled('password') ? bcrypt($request->password) : $admin->password,
-            'role_id' => $request->role_id, // ✅ Use the selected role from the dropdown
+            'role_id' => $request->role_id,
             'status' => 'Active',
           ]);
           $admin->delete();
         }
       }
 
-      return redirect()->route('admin.user.index')->with('success', 'User updated successfully!');
+      // RETURN 200 JSON SUCCESS
+      return response()->json([
+        'success' => true,
+        'message' => 'User updated successfully!'
+      ]);
     } catch (\Exception $e) {
-      return redirect()->back()->with('error', 'Failed to update user: ' . $e->getMessage());
+      return response()->json(['errors' => ['general' => ['Failed to update user: ' . $e->getMessage()]]], 422);
     }
   }
 

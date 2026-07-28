@@ -30,10 +30,18 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
+                            {{-- ✅ FIXED: Clean Button Layout --}}
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <p class="card-title mb-0">My Invoices</p>
-                                <span class="badge badge-info">Total: {{ $invoices->count() }} invoices</span>
+                                <a href="{{ route('customer.invoices.create') }}" class="btn btn-primary">
+                                    <i class="mdi mdi-plus"></i> Create Invoice
+                                </a>
+                                <span class="badge badge-info" style="font-size: 14px; padding: 8px 12px;">
+                                    Total: {{ $invoices->count() }} invoices
+                                </span>
                             </div>
+
+                            <p class="card-title mb-0">My Invoices</p>
+                            <br>
 
                             @if ($invoices->isEmpty())
                                 <div class="text-center py-5">
@@ -50,10 +58,11 @@
                                                 <th>Invoice No</th>
                                                 <th>Date</th>
                                                 <th>Products</th>
+                                                <th>Price</th>
                                                 <th>Subtotal</th>
                                                 <th>Tax</th>
                                                 <th>Total Amount</th>
-                                                <th>Status</th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -70,22 +79,19 @@
                                                                 class="badge badge-info mb-1">{{ $product['product_name'] }}</span>
                                                         @endforeach
                                                     </td>
+                                                    <td>
+                                                        @if (isset($item->products[0]))
+                                                            ₹{{ number_format($item->products[0]['price'], 2) }}
+                                                        @else
+                                                            ₹0.00
+                                                        @endif
+                                                    </td>
                                                     <td>₹{{ number_format($item->subtotal, 2) }}</td>
                                                     <td>₹{{ number_format($item->tax_amount, 2) }}</td>
                                                     <td>
                                                         <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                                     </td>
-                                                    <td>
-                                                        @if ($item->status == 'Paid')
-                                                            <label class="badge badge-success">Paid</label>
-                                                        @elseif ($item->status == 'Unpaid')
-                                                            <label class="badge badge-warning">Unpaid</label>
-                                                        @elseif ($item->status == 'Cancelled')
-                                                            <label class="badge badge-danger">Cancelled</label>
-                                                        @else
-                                                            <label class="badge badge-info">{{ $item->status }}</label>
-                                                        @endif
-                                                    </td>
+
                                                     <td>
                                                         <button type="button" class="btn btn-info btn-sm"
                                                             data-toggle="modal"
@@ -137,14 +143,14 @@
                                         <strong>Invoice #:</strong> {{ $item->invoice_number }}<br>
                                         <strong>Date:</strong>
                                         {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}<br>
-                                        <strong>Status:</strong>
+                                        {{-- <strong>Status:</strong>
                                         @if ($item->status == 'Paid')
                                             <span class="badge badge-success">Paid</span>
                                         @elseif ($item->status == 'Unpaid')
                                             <span class="badge badge-warning">Unpaid</span>
                                         @else
                                             <span class="badge badge-danger">{{ $item->status }}</span>
-                                        @endif
+                                        @endif --}}
                                     </p>
                                 </div>
                             </div>
@@ -210,7 +216,7 @@
                 "ordering": true,
                 "order": [
                     [0, 'desc']
-                ], // ✅ FIXED: removed extra spaces & used single quotes
+                ],
                 "language": {
                     "emptyTable": "No invoices found"
                 }

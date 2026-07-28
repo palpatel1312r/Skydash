@@ -77,7 +77,7 @@
                                 </div>
 
                                 <div class="my-2 d-flex justify-content-between align-items-center">
-                                 <a href="{{ route('password.request') }}" class="auth-link text-black">Forgot password?</a>
+                                    <a href="#" class="auth-link text-black">Forgot password?</a>
                                 </div>
 
                                 <div class="text-center mt-4 font-weight-light">

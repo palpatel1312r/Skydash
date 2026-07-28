@@ -6,172 +6,22 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-// use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
-    public function update(Request $request, $id)
-    {
-        $invoice = Invoice::findOrFail($id);
-
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'invoice_date' => 'required|date',
-            'customer_id'  => 'required|exists:customer,id',
-            'product_id.*' => 'required|exists:product,id',
-            'quantity.*'   => 'required|integer|min:1',
-            'price.*'      => 'required|numeric|min:0',   // ✅ Validate each product's price
-            'tax_rate'     => 'required|numeric|min:0|max:100', // ✅ Validate tax rate
-        ], [
-            'customer_id.required'  => 'Please select a valid Customer from the dropdown.',
-            'product_id.*.required' => 'Please select a valid Product from the dropdown.',
-            'product_id.*.exists'   => 'The selected product does not exist.',
-            'price.*.required'      => 'Please enter a valid price for the product.',
-            'price.*.numeric'       => 'Price must be a valid number.',
-            'tax_rate.required'     => 'Please enter the tax rate.',
-            'tax_rate.numeric'      => 'Tax rate must be a valid number.',
-            'tax_rate.min'          => 'Tax rate cannot be less than 0.',
-            'tax_rate.max'          => 'Tax rate cannot exceed 100.',
-
-            // ✅ ADD THESE LINES FOR QUANTITY ERRORS
-            'quantity.*.required'   => 'Please enter a valid quantity.',
-            'quantity.*.integer'    => 'Quantity must be a whole number.',
-            'quantity.*.min'        => 'Quantity must be at least 1.',
-        ]);
-
-        // 2. If ANY validation fails, redirect back with ALL errors
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // 3. SECURELY PARSE THE DATE AFTER VALIDATION PASSES
-        // (If the user entered 20-07-2026, this safely formats it to 2026-07-20)
-        try {
-            $formattedDate = \Carbon\Carbon::parse($request->invoice_date)->format('Y-m-d');
-        } catch (\Exception $e) {
-            // If parsing fails for some rare reason, fallback to today's date
-            $formattedDate = now()->format('Y-m-d');
-        }
-
-        // If we reach here, everything is 100% valid
-        $customer = Customer::find($request->customer_id);
-
-        // 4. RESTORE OLD STOCK
-        if (!empty($invoice->products)) {
-            foreach ($invoice->products as $oldProductData) {
-                $oldProduct = Product::find($oldProductData['product_id']);
-                if ($oldProduct) {
-                    $oldProduct->increaseStock($oldProductData['quantity']);
-                }
-            }
-        }
-
-        $products = [];
-        $subtotal = 0;
-
-        // 5. DEDUCT NEW STOCK & CALCULATE PRICES
-        foreach ($request->product_id as $key => $productId) {
-            $product = Product::find($productId);
-            $price = $product->price;
-            $quantitySold = $request->quantity[$key] ?? 1;
-            $productSubtotal = $price * $quantitySold;
-
-            if (!$product->hasStock($quantitySold)) {
-                return redirect()->back()->with('error', 'Not enough stock for product: ' . $product->title);
-            }
-
-            $products[] = [
-                'product_id' => $productId,
-                'product_name' => $product->title,
-                'price' => $price,
-                'quantity' => $quantitySold,
-                'subtotal' => $productSubtotal,
-            ];
-
-            $product->decreaseStock($quantitySold);
-            $subtotal += $productSubtotal;
-        }
-
-        $taxRate = floatval($request->tax_rate);
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $totalAmount = $subtotal + $taxAmount;
-
-        // 6. UPDATE THE DATABASE WITH THE SAFELY FORMATTED DATE
-        $invoice->update([
-            'invoice_date' => $formattedDate, // ✅ Use the safe parsed date
-            'customer_id' => $customer->id,
-            'customer_name' => $customer->fullname,
-            'customer_email' => $customer->email,
-            'customer_phone' => $customer->phone ?? 'N/A',
-            'customer_address' => $customer->address ?? 'N/A',
-            'products' => $products,
-            'subtotal' => $subtotal,
-            'tax_rate' => $taxRate,
-            'tax_amount' => $taxAmount,
-            'total_amount' => $totalAmount,
-        ]);
-
-        return redirect()->route('invoices.index')->with('success', 'Invoice updated successfully!');
-    }
-    public function index()
-    {
-        $invoices = Invoice::with('customer')->orderBy('created_at', 'desc')->get();
-
-        // ✅ Loop through invoices to group duplicate products
-        foreach ($invoices as $invoice) {
-            $grouped = [];
-
-            if (is_array($invoice->products)) {
-                foreach ($invoice->products as $product) {
-                    $key = $product['product_id'];
-                    if (!isset($grouped[$key])) {
-                        // First time seeing this product, add it
-                        $grouped[$key] = $product;
-                    } else {
-                        // Product exists, add the quantity and subtotal
-                        $grouped[$key]['quantity'] += $product['quantity'];
-                        $grouped[$key]['subtotal'] += $product['subtotal'];
-                    }
-                }
-                // Re-index the array and assign it back to the object
-                $invoice->products = array_values($grouped);
-            }
-        }
-
-        $customers = Customer::all();
-        $products = Product::all();
-
-        return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
-    }
-    public function create()
-    {
-        $customers = Customer::all();
-        $products = Product::all();
-        return view('Dashboard.invoice pages.invoice_form', compact('customers', 'products'));
-    }
-    public function edit($id)
-    {
-        // ✅ Load the invoice WITH its customer relationship
-        $invoice = Invoice::with('customer')->findOrFail($id);
-
-        // ✅ Load all customers for the dropdown
-        $customers = Customer::all();
-
-        // ✅ Load products for the product rows
-        $products = Product::all();
-
-        // ✅ Pass ALL three variables to the merged view
-        return view('Dashboard.invoice pages.invoice_form', compact('invoice', 'customers', 'products'));
-    }
     public function store(Request $request)
     {
-        $request->validate([
-            'total_rows' => 'required|integer|min:1',
-        ]);
+        // Check if it's an AJAX request
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request method'], 405);
+        }
 
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $request->validate(['total_rows' => 'required|integer|min:1']);
+
+        $validator = Validator::make($request->all(), [
             'invoice_number' => 'required|unique:invoices',
             'invoice_date'    => 'required|date',
             'customer_id'     => 'required|exists:customer,id',
@@ -181,48 +31,31 @@ class InvoiceController extends Controller
             'subtotal.*'      => 'required|numeric|min:0',
             'product_id.*'    => 'required|exists:product,id',
         ], [
-            // ✅ Customer and Product messages
             'customer_id.required'  => 'Please select a valid Customer from the dropdown.',
             'product_id.*.required' => 'Please select a valid Product from the dropdown.',
             'product_id.*.exists'   => 'The selected product does not exist.',
-
-            // ✅ Price error messages
             'price.*.required'      => 'Please enter a valid price for the product.',
             'price.*.numeric'       => 'Price must be a valid number.',
-
-            // ✅ Tax Rate messages
             'tax_rate.required'     => 'Please enter the tax rate.',
             'tax_rate.numeric'      => 'Tax rate must be a valid number.',
             'tax_rate.min'          => 'Tax rate cannot be less than 0.',
-
-            // ✅ INVOICE NUMBER MESSAGES (Add this too)
             'invoice_number.required' => 'The invoice number is required.',
             'invoice_number.unique'   => 'This invoice number has already been taken.',
-
-            // ✅ FIX QUANTITY MESSAGES (These were missing!)
             'quantity.*.required'   => 'Please enter a valid quantity.',
             'quantity.*.integer'    => 'Quantity must be a whole number.',
             'quantity.*.min'        => 'Quantity must be at least 1.',
-
-            // ✅ SUBTOTAL MESSAGES (Add these too)
             'subtotal.*.required'   => 'Subtotal is required.',
             'subtotal.*.numeric'    => 'Subtotal must be a valid number.',
             'subtotal.*.min'        => 'Subtotal cannot be less than 0.',
         ]);
 
-        // 3. If ANY validation fails (Customer OR Products), redirect back with ALL errors
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // ... rest of your store logic below here ...
-        // If we reach here, EVERYTHING (Customer + Products) is 100% valid
         $customer = Customer::find($request->customer_id);
-
         if (!$customer) {
-            return redirect()->back()->with('error', 'Customer not found!');
+            return response()->json(['errors' => ['customer_id' => ['Customer not found!']]], 422);
         }
 
         $products = [];
@@ -230,14 +63,16 @@ class InvoiceController extends Controller
 
         foreach ($request->product_id as $key => $productId) {
             $product = Product::find($productId);
+            if (!$product) {
+                return response()->json(['errors' => ['product_id' => ['Product not found!']]], 422);
+            }
+
             $price = floatval($request->price[$key]);
-
             $quantitySold = $request->quantity[$key] ?? 1;
-
             $productSubtotal = $price * $quantitySold;
 
             if (!$product->hasStock($quantitySold)) {
-                return redirect()->back()->with('error', 'Not enough stock for product: ' . $product->title . ' (Available: ' . $product->quantity . ', Requested: ' . $quantitySold . ')');
+                return response()->json(['errors' => ['stock' => ['Not enough stock for product: ' . $product->title]]], 422);
             }
 
             $products[] = [
@@ -271,22 +106,290 @@ class InvoiceController extends Controller
             'total_amount'      => $totalAmount,
         ]);
 
-        return redirect()->route('invoices.index')->with('success', 'Invoice created successfully! Invoice #' . $invoice->invoice_number);
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice created successfully! Invoice #' . $invoice->invoice_number
+        ]);
     }
+
+    public function update(Request $request, $id)
+    {
+        // Check if it's an AJAX request
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request method'], 405);
+        }
+
+        $invoice = Invoice::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'invoice_date' => 'required|date',
+            'customer_id'  => 'required|exists:customer,id',
+            'product_id.*' => 'required|exists:product,id',
+            'quantity.*'   => 'required|integer|min:1',
+            'price.*'      => 'required|numeric|min:0',
+            'tax_rate'     => 'required|numeric|min:0|max:100',
+        ], [
+            'customer_id.required'  => 'Please select a valid Customer from the dropdown.',
+            'product_id.*.required' => 'Please select a valid Product from the dropdown.',
+            'product_id.*.exists'   => 'The selected product does not exist.',
+            'price.*.required'      => 'Please enter a valid price for the product.',
+            'price.*.numeric'       => 'Price must be a valid number.',
+            'tax_rate.required'     => 'Please enter the tax rate.',
+            'tax_rate.numeric'      => 'Tax rate must be a valid number.',
+            'tax_rate.min'          => 'Tax rate cannot be less than 0.',
+            'tax_rate.max'          => 'Tax rate cannot exceed 100.',
+            'quantity.*.required'   => 'Please enter a valid quantity.',
+            'quantity.*.integer'    => 'Quantity must be a whole number.',
+            'quantity.*.min'        => 'Quantity must be at least 1.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $formattedDate = \Carbon\Carbon::parse($request->invoice_date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            $formattedDate = now()->format('Y-m-d');
+        }
+
+        $customer = Customer::find($request->customer_id);
+
+        // Restore stock for old products
+        if (!empty($invoice->products)) {
+            foreach ($invoice->products as $oldProductData) {
+                $oldProduct = Product::find($oldProductData['product_id']);
+                if ($oldProduct) {
+                    $oldProduct->increaseStock($oldProductData['quantity']);
+                }
+            }
+        }
+
+        $products = [];
+        $subtotal = 0;
+
+        foreach ($request->product_id as $key => $productId) {
+            $product = Product::find($productId);
+            $price = $product->price;
+            $quantitySold = $request->quantity[$key] ?? 1;
+            $productSubtotal = $price * $quantitySold;
+
+            if (!$product->hasStock($quantitySold)) {
+                return response()->json(['errors' => ['stock' => ['Not enough stock for product: ' . $product->title]]], 422);
+            }
+
+            $products[] = [
+                'product_id' => $productId,
+                'product_name' => $product->title,
+                'price' => $price,
+                'quantity' => $quantitySold,
+                'subtotal' => $productSubtotal,
+            ];
+
+            $product->decreaseStock($quantitySold);
+            $subtotal += $productSubtotal;
+        }
+
+        $taxRate = floatval($request->tax_rate);
+        $taxAmount = $subtotal * ($taxRate / 100);
+        $totalAmount = $subtotal + $taxAmount;
+
+        $invoice->update([
+            'invoice_date' => $formattedDate,
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->fullname,
+            'customer_email' => $customer->email,
+            'customer_phone' => $customer->phone ?? 'N/A',
+            'customer_address' => $customer->address ?? 'N/A',
+            'products' => $products,
+            'subtotal' => $subtotal,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
+            'total_amount' => $totalAmount,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice updated successfully!'
+        ]);
+    }
+
+    /////////////////////////////////////////////
+    public function customerStore(Request $request)
+    {
+        // Add this debug line at the start
+        Log::info('=== CUSTOMER STORE REQUEST ===');
+        Log::info('All request data:', $request->all());
+
+        $customer = Auth::guard('customer')->user();
+
+        // PREVENT PAGE EXPIRED ERRORS
+        $request->validate(['total_rows' => 'required|integer|min:1']);
+
+        // 1. CREATE VALIDATOR INSTANCE FIRST
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'invoice_date'    => 'required|date',
+            'tax_rate'        => 'required|numeric|min:0',
+            'quantity.*'      => 'required|integer|min:1',
+            'price.*'         => 'required|numeric|min:0',
+            'subtotal.*'      => 'required|numeric|min:0',
+            'product_id.*'    => 'required|exists:product,id',
+        ], [
+            // ✅ CUSTOM VALIDATION MESSAGES
+            'product_id.*.required' => 'Please select a valid Product from the dropdown.',
+            'product_id.*.exists'   => 'The selected product does not exist.',
+            'price.*.required'      => 'Please enter a valid price for the product.',
+            'price.*.numeric'       => 'Price must be a valid number.',
+            'subtotal.*.required'   => 'Please enter a valid subtotal for the product.',
+            'subtotal.*.numeric'    => 'Subtotal must be a valid number.',
+            'subtotal.*.min'        => 'Subtotal cannot be less than 0.',
+            'tax_rate.required'     => 'Please enter the tax rate.',
+            'tax_rate.numeric'      => 'Tax rate must be a valid number.',
+            'tax_rate.min'          => 'Tax rate cannot be less than 0.',
+            'quantity.*.required'   => 'Please enter a valid quantity.',
+            'quantity.*.integer'    => 'Quantity must be a whole number.',
+            'quantity.*.min'        => 'Quantity must be at least 1.',
+        ]);
+
+        // 2. CHECK FAILURE FIRST AND RETURN 422 JSON
+        if ($validator->fails()) {
+            Log::info('=== VALIDATION FAILED ===');
+            Log::info('Validation errors:', $validator->errors()->toArray());
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $products = [];
+        $subtotal = 0;
+
+        foreach ($request->product_id as $key => $productId) {
+            $product = Product::find($productId);
+            $price = floatval($request->price[$key]);
+            $quantitySold = $request->quantity[$key] ?? 1;
+            $productSubtotal = $price * $quantitySold;
+
+            if (!$product->hasStock($quantitySold)) {
+                return response()->json([
+                    'errors' => [
+                        'stock' => ['Not enough stock for product: ' . $product->title]
+                    ]
+                ], 422);
+            }
+
+            $products[] = [
+                'product_id'    => $productId,
+                'product_name'  => $product->title,
+                'price'         => $price,
+                'quantity'      => $quantitySold,
+                'subtotal'      => $productSubtotal,
+            ];
+
+            $product->decreaseStock($quantitySold);
+            $subtotal += $productSubtotal;
+        }
+
+        $taxRate = floatval($request->tax_rate);
+        $taxAmount = $subtotal * ($taxRate / 100);
+        $totalAmount = $subtotal + $taxAmount;
+        $invoiceNumber = 'INV-CUST-' . date('Ymd') . '-' . rand(100, 999);
+
+        Invoice::create([
+            'invoice_number'    => $invoiceNumber,
+            'invoice_date'      => $request->invoice_date,
+            'customer_id'       => $customer->id,
+            'customer_name'     => $customer->fullname,
+            'customer_email'    => $customer->email,
+            'customer_phone'    => $customer->phone ?? 'N/A',
+            'customer_address'  => $customer->address ?? 'N/A',
+            'products'          => $products,
+            'subtotal'          => $subtotal,
+            'tax_rate'          => $taxRate,
+            'tax_amount'        => $taxAmount,
+            'total_amount'      => $totalAmount,
+        ]);
+
+        // ✅ Return 200 JSON Success
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice created successfully!'
+        ]);
+    }
+    /////////////////////////////////////
+    public function customerCreate()
+    {
+        $customer = Auth::guard('customer')->user();
+        $products = Product::all(); // ✅ MUST FETCH PRODUCTS HERE!
+
+        return view('Dashboard.customer pages.customer_invoice_create', compact('customer', 'products'));
+    }
+
+    public function customerInvoices()
+    {
+        $customer = auth()->guard('customer')->user();
+        $invoices = Invoice::where('customer_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        Log::info('Customer invoices loaded', [
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->fullname,
+            'invoice_count' => $invoices->count()
+        ]);
+
+        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer'));
+    }
+    public function index()
+    {
+        $invoices = Invoice::with('customer')->orderBy('created_at', 'desc')->get();
+
+        foreach ($invoices as $invoice) {
+            $grouped = [];
+            if (is_array($invoice->products)) {
+                foreach ($invoice->products as $product) {
+                    $key = $product['product_id'];
+                    if (!isset($grouped[$key])) {
+                        $grouped[$key] = $product;
+                    } else {
+                        $grouped[$key]['quantity'] += $product['quantity'];
+                        $grouped[$key]['subtotal'] += $product['subtotal'];
+                    }
+                }
+                $invoice->products = array_values($grouped);
+            }
+        }
+
+        $customers = Customer::all();
+        $products = Product::all();
+
+        return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
+    }
+
+    public function create()
+    {
+        $customers = Customer::all();
+        $products = Product::all();
+        return view('Dashboard.invoice pages.invoice_form', compact('customers', 'products'));
+    }
+
+    public function edit($id)
+    {
+        $invoice = Invoice::with('customer')->findOrFail($id);
+        $customers = Customer::all();
+        $products = Product::all();
+
+        return view('Dashboard.invoice pages.invoice_form', compact('invoice', 'customers', 'products'));
+    }
+
     public function updateStatus($id, $status)
     {
         $validStatuses = ['Paid', 'Unpaid', 'Cancelled'];
-
         if (!in_array($status, $validStatuses)) {
             return redirect()->route('invoices')->with('error', 'Invalid status value.');
         }
-
         $invoice = Invoice::findOrFail($id);
         $oldStatus = $invoice->status;
         $invoice->status = $status;
         $invoice->save();
 
-        // ✅ Notify customer about status change
         $customer = Customer::find($invoice->customer_id);
         if ($customer) {
             $this->sendInvoiceStatusNotification($invoice, $customer, $oldStatus);
@@ -299,42 +402,17 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::findOrFail($id);
         $invoice->delete();
-
         return redirect()->route('invoices')->with('success', 'Invoice deleted successfully!');
     }
 
-    public function customerInvoices()
-    {
-        $customer = auth()->guard('customer')->user();
-
-        // Get all invoices for this customer
-        $invoices = Invoice::where('customer_id', $customer->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Debug - Log the invoices
-        Log::info('Customer invoices loaded', [
-            'customer_id' => $customer->id,
-            'customer_name' => $customer->fullname,
-            'invoice_count' => $invoices->count()
-        ]);
-
-        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer'));
-    }
-
-    /**
-     * Send invoice notification to customer
-     */
     private function sendInvoiceNotification($invoice, $customer)
     {
         try {
-
             Log::info('Invoice notification sent to customer', [
                 'customer_id' => $customer->id,
                 'customer_email' => $customer->email,
                 'invoice_number' => $invoice->invoice_number
             ]);
-
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send invoice notification: ' . $e->getMessage());
@@ -342,9 +420,6 @@ class InvoiceController extends Controller
         }
     }
 
-    /**
-     * Send invoice status notification to customer
-     */
     private function sendInvoiceStatusNotification($invoice, $customer, $oldStatus)
     {
         try {
@@ -355,7 +430,6 @@ class InvoiceController extends Controller
                 'old_status' => $oldStatus,
                 'new_status' => $invoice->status
             ]);
-
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send invoice status notification: ' . $e->getMessage());
@@ -366,15 +440,12 @@ class InvoiceController extends Controller
     public function show($id)
     {
         $invoice = Invoice::with('customer')->findOrFail($id);
-
-        // Check if the customer is viewing their own invoice
         if (auth()->guard('customer')->check()) {
             $customer = auth()->guard('customer')->user();
             if ($invoice->customer_id !== $customer->id) {
                 abort(403, 'Unauthorized access to this invoice.');
             }
         }
-
         return view('Dashboard.invoice_view', compact('invoice'));
     }
 }

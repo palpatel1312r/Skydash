@@ -115,7 +115,7 @@
 
             {{-- 3. Detailed Action Cards --}}
             <div class="row">
-                <div class="col-md-4 grid-margin stretch-card">
+                {{-- <div class="col-md-4 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm rounded-lg h-100">
                         <div class="card-body text-center d-flex flex-column justify-content-between">
                             <div>
@@ -128,7 +128,7 @@
                             </a>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="col-md-4 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm rounded-lg h-100">
