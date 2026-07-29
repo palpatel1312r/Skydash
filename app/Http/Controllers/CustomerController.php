@@ -16,23 +16,23 @@ class CustomerController extends Controller
         $roles = \App\Models\Role::all();
         Log::info('Customers found: ' . $customers->count());
 
-        return view('Dashboard.customer pages.Customer', compact('customers', 'roles'));
+        return view('Admin.Admin_Customer_Pages.Customer', compact('customers', 'roles'));
     }
 
     public function create()
     {
         $roles = \App\Models\Role::all();
-        return view('Dashboard.customer pages.customer_form', compact('roles'));
+        return view('Admin.Admin_Customer_Pages.Customer_form', compact('roles'));
     }
     public function edit($id)
     {
         $customer = Customer::findOrFail($id);
-        return view('Dashboard.customer pages.customer_form', compact('customer'));
+        return view('Admin.Admin_Customer_Pages.Customer_form', compact('customer'));
     }
     public function dashboard()
     {
         $customer = Auth::guard('customer')->user();
-        return view('Dashboard.customer pages.customer_dashboard', compact('customer'));
+        return view('Customer_Pages.Customer_dashboard', compact('customer'));
     }
     public function store(Request $request)
     {
@@ -140,7 +140,7 @@ class CustomerController extends Controller
     public function profile()
     {
         $customer = Auth::guard('customer')->user();
-        return view('components.Profile', compact('customer'));
+        return view('Components.Profile', compact('customer'));
     }
 
     public function updateProfile(Request $request)

@@ -1,4 +1,4 @@
-@extends('components.adminheader')
+@extends('Components.adminheader')
 
 @section('content')
     <!-- partial -->
@@ -38,6 +38,9 @@
 
                                 {{-- ✅ FIXED FILTERS SECTION --}}
                                 <div class="d-flex align-items-center flex-wrap gap-2">
+                                    <div>
+                                        <h4 class="card-title mr-2 mt-3 fw-bold text-dark">Filter By</h4>
+                                    </div>
 
                                     {{-- Customer Filter --}}
                                     <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
@@ -55,13 +58,9 @@
                                             @endforeach
                                         </select>
                                     </div>
-
-                                    {{-- Date Range Dropdown (Rounded Pill) --}}
-                                    {{-- REMOVED input-group-prepend --}}
-                                    <div class="input-group input-group-sm shadow rounded-pill"
-                                        style="width: 180px; overflow: hidden;">
-                                        <span class="input-group-text bg-primary text-white border-0 px-3">
-                                            <i class="mdi mdi-calendar-range"></i>
+                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
+                                        <span class="input-group-text bg-primary text-white border-primary px-3">
+                                            <i class="mdi mdi-account-outline"></i>
                                         </span>
                                         <select id="dateRange" class="form-select border-0 bg-white text-dark fw-bold">
                                             <option value="">All Time</option>
@@ -88,13 +87,10 @@
                                         </select>
                                     </div>
 
-                                    {{-- ✅ CUSTOM DATE RANGE INPUTS (Rounded Pills) --}}
                                     <div id="customDateContainer" style="display: none;">
-                                        <div class="input-group input-group-sm shadow rounded-pill"
-                                            style="width: 145px; overflow: hidden;">
-                                            <span class="input-group-text bg-primary text-white border-0 px-3"
-                                                style="border-radius: 0;">
-                                                <i class="mdi mdi-calendar-start"></i>
+                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
+                                            <span class="input-group-text bg-primary text-white border-primary px-3">
+                                                <i class="mdi mdi-account-outline"></i>
                                             </span>
                                             <input type="date" id="customStartDate"
                                                 class="form-control border-0 bg-white text-dark fw-bold shadow-none"
@@ -103,11 +99,9 @@
 
                                         <span class="mx-1 text-primary fw-bold">to</span>
 
-                                        <div class="input-group input-group-sm shadow rounded-pill"
-                                            style="width: 145px; overflow: hidden;">
-                                            <span class="input-group-text bg-primary text-white border-0 px-3"
-                                                style="border-radius: 0;">
-                                                <i class="mdi mdi-calendar-end"></i>
+                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
+                                            <span class="input-group-text bg-primary text-white border-primary px-3">
+                                                <i class="mdi mdi-account-outline"></i>
                                             </span>
                                             <input type="date" id="customEndDate"
                                                 class="form-control border-0 bg-white text-dark fw-bold shadow-none"
@@ -130,6 +124,7 @@
                             </div>
 
                             {{-- TABLE --}}
+
                             <div class="table-responsive">
                                 <table class="table table-striped table-borderless" id="invoiceTable">
                                     <thead>
@@ -219,6 +214,13 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- REMOVE THIS PAGINATION SECTION --}}
+                            {{-- @if ($invoices->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $invoices->appends(request()->query())->links() }}
+    </div>
+@endif --}}
 
                             {{-- ✅ BOOTSTRAP 5 PAGINATION --}}
                             @if ($invoices->hasPages())
@@ -331,61 +333,82 @@
     </div>
 
     <style>
-        /* --- MODERN GLOWING PILL PAGINATION (Bootstrap 5 Compatible) --- */
-        .pagination {
-            display: flex !important;
-            justify-content: center !important;
-            margin-top: 30px !important;
-            gap: 8px !important;
-            /* Adds spacing between buttons */
-            padding-bottom: 20px !important;
+        /* DataTables Custom Styling */
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
+            margin-bottom: 15px;
         }
 
-        .pagination .page-item {
-            margin: 0 !important;
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 0.5em;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            min-width: 200px;
         }
 
-        .pagination .page-link {
+        .dataTables_wrapper .dataTables_length {
+            float: left;
+            margin-bottom: 15px;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            background-color: #fff;
+            min-width: 80px;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            clear: both;
+            float: left;
+            padding-top: 0.755em;
+            color: #6c757d;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            float: right;
+            text-align: right;
+            padding-top: 0.25em;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            box-sizing: border-box;
+            display: inline-block;
+            min-width: 1.5em;
+            padding: 0.5em 1em;
+            margin-left: 2px;
+            text-align: center;
+            text-decoration: none !important;
+            cursor: pointer;
             color: #4a4a4a !important;
-            /* Dark gray text */
             background: #ffffff !important;
-            /* Pure white background */
             border: 1px solid #e2e8f0 !important;
-            /* Soft gray border */
             border-radius: 50px !important;
-            /* FULLY ROUNDED PILL SHAPE */
-            padding: 10px 18px !important;
             font-weight: 600 !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
         }
 
-        /* Hover Effect: Electric Blue */
-        .pagination .page-link:hover {
-            background: #0d6efd !important;
-            /* Primary Blue */
-            color: #ffffff !important;
-            border-color: #0d6efd !important;
-            transform: translateY(-3px) !important;
-            /* Lifts up */
-            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3) !important;
-            /* Blue glow */
-            z-index: 2 !important;
-        }
-
-        /* Active State: Bright Cyan-Blue Gradient */
-        .pagination .page-item.active .page-link {
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
             background: linear-gradient(145deg, #0d6efd 0%, #0dcaf0 100%) !important;
-            /* Blue to Cyan */
             border-color: #0d6efd !important;
             color: #ffffff !important;
             box-shadow: 0 6px 18px rgba(13, 110, 253, 0.4) !important;
             transform: scale(1.05) !important;
-            /* Slight zoom */
         }
 
-        /* Disabled State */
-        .pagination .page-item.disabled .page-link {
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #0d6efd !important;
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
             color: #adb5bd !important;
             background: #f8f9fa !important;
             border-color: #dee2e6 !important;
@@ -394,26 +417,115 @@
             cursor: not-allowed !important;
         }
 
-        /* --- RESPONSIVENESS --- */
-        @media (max-width: 576px) {
-            .pagination .page-link {
-                padding: 8px 14px !important;
-                font-size: 14px !important;
+        /* Table styling */
+        #invoiceTable {
+            width: 100% !important;
+        }
+
+        #invoiceTable tbody tr:hover {
+            background-color: #f8f9fa !important;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dataTables_wrapper .dataTables_filter {
+                float: left;
+                width: 100%;
+                text-align: left;
+                margin-top: 10px;
+            }
+
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .dataTables_wrapper .dataTables_length {
+                width: 100%;
+            }
+
+            .dataTables_wrapper .dataTables_info {
+                float: none;
+                text-align: center;
+            }
+
+            .dataTables_wrapper .dataTables_paginate {
+                float: none;
+                text-align: center;
+                margin-top: 10px;
             }
         }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Confirm Delete
-        function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this invoice?')) {
-                document.getElementById('delete-form-' + id).submit();
-            }
-        }
-
         $(document).ready(function() {
-            // Auto-hide alerts after 5 seconds
+            // Initialize DataTable
+            if ($.fn.DataTable.isDataTable('#invoiceTable')) {
+                $('#invoiceTable').DataTable().destroy();
+            }
+
+            var table = $('#invoiceTable').DataTable({
+                responsive: true,
+                processing: true,
+                serverSide: false, // Set to true if you want server-side processing
+                pageLength: 10,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
+                ],
+                order: [
+                    [0, 'asc']
+                ],
+                columnDefs: [{
+                        orderable: false,
+                        targets: [3, 10]
+                    }, // Disable sorting on Products and Actions columns
+                    {
+                        searchable: false,
+                        targets: [3, 10]
+                    } // Disable search on Products and Actions columns
+                ],
+                language: {
+                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search invoices...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ invoices",
+                    infoEmpty: "Showing 0 to 0 of 0 invoices",
+                    infoFiltered: "(filtered from _MAX_ total invoices)",
+                    zeroRecords: "No matching invoices found",
+                    emptyTable: "No invoices available",
+                    paginate: {
+                        first: '<i class="mdi mdi-chevron-double-left"></i>',
+                        previous: '<i class="mdi mdi-chevron-left"></i>',
+                        next: '<i class="mdi mdi-chevron-right"></i>',
+                        last: '<i class="mdi mdi-chevron-double-right"></i>'
+                    }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                    '<"row"<"col-sm-12"tr>>' +
+                    '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                drawCallback: function() {
+                    // Re-initialize any Bootstrap tooltips or popovers if needed
+                    // Handle any custom styling after draw
+                }
+            });
+
+            // Apply existing filters to DataTable
+            var filterCustomer = $('#filterCustomer').val();
+            var dateRange = $('#dateRange').val();
+
+            // If there are server-side filters, reload the page
+            // Since you're using server-side filters, we keep the existing redirect logic
+            // and the DataTable will just display the filtered results
+
+            // Optional: Add custom styling to DataTables elements
+            $('#invoiceTable_wrapper .dataTables_filter input').addClass('form-control form-control-sm');
+            $('#invoiceTable_wrapper .dataTables_length select').addClass('form-select form-select-sm');
+
+            // Auto-hide alerts after 5 seconds (existing code)
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
@@ -425,7 +537,7 @@
                 });
             }, 500);
 
-            // 1. Show/Hide Custom Date Inputs when 'Custom Range' is selected
+            // Show/Hide Custom Date Inputs when 'Custom Range' is selected
             $('#dateRange').on('change', function() {
                 if ($(this).val() === 'custom') {
                     $('#customDateContainer').fadeIn(200);
@@ -436,35 +548,53 @@
                 }
             });
 
-            // Trigger the check on page load (if 'custom' is already selected from URL)
+            // Trigger the check on page load
             if ($('#dateRange').val() === 'custom') {
                 $('#customDateContainer').show();
             }
 
-            // 2. FILTERS REDIRECT LOGIC (Triggers when Customer OR Date Range changes)
+            // Filter handlers (existing code)
             $('#filterCustomer, #dateRange, #customStartDate, #customEndDate').on('change', function() {
                 var customer = $('#filterCustomer').val();
                 var dateRange = $('#dateRange').val();
                 var startDate = $('#customStartDate').val();
                 var endDate = $('#customEndDate').val();
 
+                $('#global-alert-container').empty();
+
+                if (dateRange === 'custom' && startDate && endDate) {
+                    if (new Date(startDate) > new Date(endDate)) {
+                        $('#global-alert-container').html(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error!</strong> Start date cannot be after End date. Please adjust your date range.
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    `);
+                        $('#customStartDate').addClass('is-invalid');
+                        $('#customEndDate').addClass('is-invalid');
+                        return;
+                    } else {
+                        $('#customStartDate').removeClass('is-invalid');
+                        $('#customEndDate').removeClass('is-invalid');
+                    }
+                }
+
                 var url = new URL(window.location.href);
 
-                // Set or remove Customer filter
                 if (customer) {
                     url.searchParams.set('customer_id', customer);
                 } else {
                     url.searchParams.delete('customer_id');
                 }
 
-                // Set or remove Date Range filter
                 if (dateRange) {
                     url.searchParams.set('date_range', dateRange);
                 } else {
                     url.searchParams.delete('date_range');
                 }
 
-                // Only send start_date and end_date if the range is 'custom'
                 if (dateRange === 'custom') {
                     if (startDate) {
                         url.searchParams.set('start_date', startDate);
@@ -477,13 +607,19 @@
                         url.searchParams.delete('end_date');
                     }
                 } else {
-                    // Remove custom date params if not in custom mode
                     url.searchParams.delete('start_date');
                     url.searchParams.delete('end_date');
                 }
 
                 window.location.href = url.toString();
             });
+
+            // Confirm Delete function
+            window.confirmDelete = function(id) {
+                if (confirm('Are you sure you want to delete this invoice?')) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            };
         });
     </script>
 @endsection

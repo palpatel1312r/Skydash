@@ -14,7 +14,7 @@ class ProductController extends Controller
   {
     $products = Product::all();  // Add this line
     $customers = Customer::all();  // Keep if you need customers
-    return view('Dashboard.product pages.product_form', compact('products', 'customers'));
+    return view('Admin.Product_Pages.product_form', compact('products', 'customers'));
   }
 
   public function edit($id)
@@ -22,7 +22,7 @@ class ProductController extends Controller
     $product = Product::findOrFail($id);
     $products = Product::all();  // Add this line
     $customers = Customer::all();  // Keep if you need customers
-    return view('Dashboard.product pages.product_form', compact('product', 'products', 'customers'));
+    return view('Admin.Product_Pages.product_form', compact('product', 'products', 'customers'));
   }
   public function index()
   {
@@ -42,7 +42,7 @@ class ProductController extends Controller
     $products = Product::orderBy('created_at', 'desc')->get();
     Log::info('Products count: ' . $products->count());
 
-    return view('Dashboard.product pages.products', compact('products'));
+    return view('Admin.Product_Pages.products', compact('products'));
   }
 
   public function store(Request $request)
@@ -177,6 +177,6 @@ class ProductController extends Controller
   public function customerProducts()
   {
     $products = Product::all();
-    return view('Dashboard.product pages.products', compact('products'));
+    return view('Admin.Product_Pages.products', compact('products'));
   }
 }

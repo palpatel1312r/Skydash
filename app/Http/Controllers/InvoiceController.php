@@ -319,33 +319,34 @@ class InvoiceController extends Controller
         $customer = Auth::guard('customer')->user();
         $products = Product::all(); // ✅ MUST FETCH PRODUCTS HERE!
 
-        return view('Dashboard.customer pages.customer_invoice_create', compact('customer', 'products'));
+        return view('Customer_Pages.customer_invoice_create', compact('customer', 'products'));
     }
-
     public function customerInvoices(Request $request)
     {
+        // 1. Get the currently logged-in customer
         $customer = auth()->guard('customer')->user();
-        $customers = Customer::all(); // ✅ Pass this for the filter dropdown
+        $customers = Customer::all(); // Kept for the layout (even though we removed the dropdown)
 
+        // 2. Start the query ALWAYS scoped to this specific customer
         $query = Invoice::where('customer_id', $customer->id);
 
-        // Apply Customer Filter
-        if ($request->filled('customer_id')) {
-            $query->where('customer_id', $request->customer_id);
-        }
-
-        // Apply Time Filter
-        if ($request->filled('time')) {
+        // ✅ Apply Date Range Filter
+        if ($request->filled('date_range')) {
             $now = now();
-            switch ($request->time) {
-                case 'today': // ✅ Added 'today' filter
+            switch ($request->date_range) {
+                case 'today':
                     $query->whereDate('invoice_date', $now->toDateString());
                     break;
-                case '1_week':
-                    $query->where('invoice_date', '>=', $now->copy()->subWeek());
+                case 'yesterday':
+                    $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
                     break;
-                case '2_week':
-                    $query->where('invoice_date', '>=', $now->copy()->subWeeks(2));
+                case 'this_week':
+                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+                    break;
+                case 'last_week':
+                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
+                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
+                    $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
                     break;
                 case 'this_month':
                     $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
@@ -354,11 +355,17 @@ class InvoiceController extends Controller
                     $lastMonth = $now->copy()->subMonth();
                     $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
                     break;
+                case 'custom':
+                    if ($request->filled('start_date') && $request->filled('end_date')) {
+                        $query->whereBetween('invoice_date', [$request->start_date, $request->end_date]);
+                    }
+                    break;
             }
         }
+
         $invoices = $query->orderBy('invoice_date', 'desc')->paginate(2);
 
-        return view('Dashboard.customer pages.customer_invoices', compact('invoices', 'customer', 'customers'));
+        return view('Customer_Pages.customer_invoices', compact('invoices', 'customer', 'customers'));
     }
     public function index(Request $request)
     {
@@ -424,14 +431,14 @@ class InvoiceController extends Controller
         $customers = Customer::all();
         $products = Product::all();
 
-        return view('Dashboard.invoice pages.invoices', compact('invoices', 'customers', 'products'));
+        return view('Admin.Invoice pages.invoices', compact('invoices', 'customers', 'products'));
     }
 
     public function create()
     {
         $customers = Customer::all();
         $products = Product::all();
-        return view('Dashboard.invoice pages.invoice_form', compact('customers', 'products'));
+        return view('Admin.Invoice pages.admin_invoice_form', compact('customers', 'products'));
     }
 
     public function edit($id)
@@ -440,7 +447,7 @@ class InvoiceController extends Controller
         $customers = Customer::all();
         $products = Product::all();
 
-        return view('Dashboard.invoice pages.invoice_form', compact('invoice', 'customers', 'products'));
+        return view('Admin.Invoice pages.admin_invoice_form', compact('invoice', 'customers', 'products'));
     }
 
     public function updateStatus($id, $status)
@@ -467,49 +474,5 @@ class InvoiceController extends Controller
         $invoice = Invoice::findOrFail($id);
         $invoice->delete();
         return redirect()->route('invoices')->with('success', 'Invoice deleted successfully!');
-    }
-
-    private function sendInvoiceNotification($invoice, $customer)
-    {
-        try {
-            Log::info('Invoice notification sent to customer', [
-                'customer_id' => $customer->id,
-                'customer_email' => $customer->email,
-                'invoice_number' => $invoice->invoice_number
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to send invoice notification: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    private function sendInvoiceStatusNotification($invoice, $customer, $oldStatus)
-    {
-        try {
-            Log::info('Invoice status update notification sent to customer', [
-                'customer_id' => $customer->id,
-                'customer_email' => $customer->email,
-                'invoice_number' => $invoice->invoice_number,
-                'old_status' => $oldStatus,
-                'new_status' => $invoice->status
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to send invoice status notification: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function show($id)
-    {
-        $invoice = Invoice::with('customer')->findOrFail($id);
-        if (auth()->guard('customer')->check()) {
-            $customer = auth()->guard('customer')->user();
-            if ($invoice->customer_id !== $customer->id) {
-                abort(403, 'Unauthorized access to this invoice.');
-            }
-        }
-        return view('Dashboard.invoice_view', compact('invoice'));
     }
 }

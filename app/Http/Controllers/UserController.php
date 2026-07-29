@@ -11,7 +11,7 @@ class UserController extends Controller
 {
   public function create()
   {
-    return view('Dashboard.User_form');
+    return view('Admin.User Pages.User_form');
   }
 
   public function edit($id, $guard)
@@ -27,7 +27,7 @@ class UserController extends Controller
       return redirect()->back()->with('error', 'Invalid user type provided.');
     }
 
-    return view('Dashboard.User_form', compact('user'));
+    return view('Admin.User Pages.User_form', compact('user'));
   }
 
   public function index()
@@ -60,7 +60,7 @@ class UserController extends Controller
 
     $users = $admins->merge($customers)->sortByDesc('created_at');
 
-    return view('Dashboard.User', compact('users'));
+    return view('Admin.User Pages.User', compact('users'));
   }
 
   //////////////////////////////////////////////////////

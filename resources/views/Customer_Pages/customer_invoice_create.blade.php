@@ -1,5 +1,4 @@
-@extends('components.adminheader')
-
+@extends('Components.customerheader')
 @section('content')
     <div class="main-panel">
         <div class="content-wrapper">
@@ -32,7 +31,7 @@
                             </a>
                         </div>
 
-                        <div id="global-alert-container" style="min-height: 10px; margin-bottom: 15px;"></div>
+                        <div id="global-alert-container" style="min-height: 15px; margin-bottom: 15px;"></div>
 
                         <form action="{{ route('customer.invoices.store') }}" method="POST" id="invoiceForm" novalidate>
                             @csrf
@@ -65,7 +64,7 @@
                             <hr>
 
                             <h5>Products</h5>
-                            <div id="global-alert-container" style="min-height: 10px;"></div>
+                            <div id="global-alert-container" style="min-height: 10px; margin-bottom: 15px;"></div>
                             <div id="product-rows">
                                 @php
                                     $rowCount = old('total_rows', isset($invoice) ? count($invoice->products) : 1);
@@ -98,7 +97,7 @@
                                         <div class="col-md-4 d-flex flex-column">
                                             <label class="mb-2">Select Product</label>
                                             <div class="input-group" id="product-group-{{ $i }}">
-                                                <select name="product_id[]" class="form-control product-select"
+                                                <select name="product_id[]" class="form-select product-select"
                                                     onchange="updateProductDetails(this)" style="color: #333;">
                                                     <option value="">-- Select Product --</option>
                                                     @foreach ($products as $product)
@@ -224,7 +223,27 @@
         .product-row .col-md-2.d-flex .btn {
             margin-bottom: 0 !important;
         }
+
+        /* ✅ FIX RED BORDER FOR BOOTSTRAP 5 SELECTS */
+        .form-select.is-invalid {
+            border-color: #dc3545 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.1h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e') !important;
+     background-repeat: no-repeat !important;
+                    background-position: right calc(0.75em + 0.1875rem) center !important;
+                    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
+                    padding-right: calc(1.5em + 0.75rem) !important;
+            }
+
+            .form-control.is-invalid {
+                border-color: #dc3545 !important;
+            }
+
+            .is-invalid ~ .invalid-feedback {
+                display: block !important;
+            }
     </style>
+
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {

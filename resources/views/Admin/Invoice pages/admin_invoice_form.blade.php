@@ -1,5 +1,4 @@
-@extends('components.adminheader')
-
+@extends('Components.superadminheader')
 @section('content')
     <div class="main-panel">
         <div class="content-wrapper">
@@ -633,7 +632,7 @@
                         );
                         setTimeout(function() {
                             window.location.href = "{{ route('invoices.index') }}";
-                        }, 1500);
+                        }, 10);
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {

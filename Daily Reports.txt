@@ -1,0 +1,69 @@
+17-07-2026
+#3735 
+Invoice validation
+
+\\\\\\\\\\\\\\\\\\
+
+18-07-2026
+##3738 
+creating Invoice update page to edit invoices after creating
+
+18-07-2026
+#3740
+updating Profile settings and adding change password feature
+
+\\\\\\\\\\\\\\\\\\\
+
+20-07-2026
+#3747
+solving minor error's
+
+20-07-2026
+#3749 
+solving problems in edit pages of all menu
+
+\\\\\\\\\\\\\\\\\\\\\
+
+21-07-2026
+#3753
+Creating user master menu with custom error messages
+
+21-07-2026
+#3754 
+Updating User Role assigning in User page 
+
+//////////////////////
+
+23-07-2026
+ #3764 
+Updating User Role assigning for admin and super admin
+
+//////////////////////
+
+27-07-2026
+ #3771
+Creating invoice menu for customers
+
+\\\\\\\\\\\\\\\\\\\\\
+
+28-07-2026
+#3778
+adding pagination and filter to invoice list 
+
+28-07-2026
+#3779
+adding features to show errors without reloading page using AJAX
+
+//////////////////////
+
+29-07-2026
+#3784 
+fixing folder structure and routes managing
+
+29-07-2026
+ #3786
+ Updating invoices Tables to Detatable 
+
+
+
+

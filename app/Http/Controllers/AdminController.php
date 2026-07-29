@@ -11,12 +11,12 @@ class AdminController extends Controller
 {
     public function index()
     {
-        return view('Dashboard.admin_dashboard');
+        return view('Admin.Dashboard.Admin_Dashboard');
     }
     public function profile()
     {
         $admin = Auth::guard('admin')->user();
-        return view('components.Profile', compact('admin'));
+        return view('Components.Profile', compact('admin'));
     }
 
     public function updateProfile(Request $request)

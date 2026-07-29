@@ -1,4 +1,4 @@
-@extends('components.adminheader')
+@extends('Components.adminheader')
 
 @section('content')
     <!-- partial -->

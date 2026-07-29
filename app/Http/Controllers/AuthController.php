@@ -13,19 +13,18 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('components.Login');
+        return view('Components.Login');
     }
     public function showRegisterForm()
     {
-        return view('components.Register');
+        return view('Components.Register');
     }
     public function showChangePasswordForm()
     {
-        return view('components.change_password');
+        return view('Components.change_password');
     }
     public function updatePassword(Request $request)
     {
-        // ✅ 1. DETECT IF ADMIN OR CUSTOMER IS LOGGED IN
         $user = null;
         $guard = null;
 
@@ -36,11 +35,11 @@ class AuthController extends Controller
             $user = Auth::guard('customer')->user();
             $guard = 'customer';
         } else {
-            return redirect()->route('login')->with('error', 'You must be logged in to change your password.');
+            return response()->json(['errors' => ['general' => ['You must be logged in to change your password.']]], 422);
         }
 
-        // ✅ 2. VALIDATE (Including the custom "Not same as current" rule)
-        $request->validate([
+        // 1. VALIDATE
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'current_password' => 'required',
             'new_password' => [
                 'required',
@@ -52,6 +51,7 @@ class AuthController extends Controller
                     }
                 },
             ],
+            // ✅ FIX: 'messages' was moved OUT of the rules array, into the 3rd argument below
         ], [
             'current_password.required' => 'Please enter your current password.',
             'new_password.required' => 'Please enter a new password.',
@@ -59,22 +59,29 @@ class AuthController extends Controller
             'new_password.confirmed' => 'The password confirmation does not match.',
         ]);
 
-        // ✅ 3. CRITICAL FIX: CHECK CURRENT PASSWORD EARLY AND RETURN IF INCORRECT
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->with('error', 'Current password is incorrect.');
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // ✅ 4. Update the password
+        // 2. CHECK CURRENT PASSWORD
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['errors' => ['current_password' => ['Current password is incorrect.']]], 422);
+        }
+
+        // 3. Update the password
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        // ✅ 5. LOGOUT THE USER ONLY AFTER SUCCESSFUL UPDATE
+        // 4. LOGOUT THE USER
         Auth::guard($guard)->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // ✅ 6. Redirect to Login page with success message
-        return redirect()->route('login')->with('success', 'Password changed successfully! Please login with your new credentials.');
+        // 5. RETURN JSON SUCCESS
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully! Please login with your new credentials.'
+        ]);
     }
     public function register(Request $request)
     {
@@ -128,7 +135,7 @@ class AuthController extends Controller
             // ✅ FIXED: Redirect based on role_id instead of string 'role'
             if ($user->role_id == 1) { // Super Admin has role_id = 1
                 Log::info('Superadmin login successful', ['email' => $email]);
-                return redirect()->route('superadmin.dashboard');
+                return redirect()->route('Superadmin.Superadmin_Dashboard');
             }
 
             Log::info('Admin login successful', ['email' => $email]);

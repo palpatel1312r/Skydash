@@ -1,5 +1,4 @@
-@extends('components.adminheader')
-
+@extends('Components.customerheader')
 @section('content')
     <div class="main-panel">
         <div class="content-wrapper">

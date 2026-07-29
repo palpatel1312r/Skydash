@@ -42,6 +42,9 @@ Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm']
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+Route::post('/admin/password/update', [AuthController::class, 'updatePassword'])->name('admin.password.update')->middleware('auth:admin');
+Route::get('/admin/password/form', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form')->middleware('auth:admin');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -71,15 +74,15 @@ Route::get('/superadmin/dashboard', function () {
   if ($user->role_id !== 1) {
     abort(403, 'Unauthorized access.');
   }
-  return view('superadmin.dashboard');
-})->name('superadmin.dashboard')->middleware('auth:admin');
+  return view('Superadmin.Superadmin_Dashboard');
+})->name('Superadmin.Superadmin_Dashboard')->middleware('auth:admin');
 
 Route::resource('roles', RoleController::class)->except(['show'])->middleware('auth:admin');
 
 Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard')->middleware('auth:admin');
 Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile')->middleware('auth:admin');
 Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update')->middleware('auth:admin');
-Route::post('/admin/password/update', [AuthController::class, 'updatePassword'])->name('admin.password.update')->middleware('auth:admin');
+
 
 // Admin - Customer Management
 Route::get('/admin/customers', [CustomerController::class, 'index'])->name('admin.customers.index')->middleware('auth:admin');
@@ -151,4 +154,3 @@ Route::get('/about', function () {
 Route::get('/contact', function () {
   return view('contact');
 })->name('contact');
-Route::get('/admin/password/form', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form')->middleware('auth:admin');

@@ -1,4 +1,4 @@
-@extends('components.adminheader')
+@extends('Components.superadminheader')
 
 @section('content')
     <div class="main-panel">
@@ -83,7 +83,7 @@
                     </div>
                 </div>
 
-                {{-- Add Role Modal (Bootstrap 5) --}}
+                {{-- Add Role Modal (Bootstrap 5 - AJAX Enabled) --}}
                 <div class="modal fade" id="addRoleModal" tabindex="-1" role="dialog">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-0 shadow-lg">
@@ -91,17 +91,16 @@
                                 <h5 class="modal-title"><i class="mdi mdi-plus-circle-outline"></i> Add Role</h5>
                                 <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                             </div>
-                            <form action="{{ route('roles.store') }}" method="POST" novalidate>
+                            <form id="addRoleForm">
                                 @csrf
                                 <div class="modal-body p-4">
+                                    <div id="addRoleAlert" style="min-height: 10px; margin-bottom: 10px;"></div>
                                     <div class="form-group">
                                         <label class="font-weight-bold">Role Name</label>
-                                        <input type="text" name="name"
-                                            class="form-control form-control-lg @error('name') is-invalid @enderror"
-                                            placeholder="e.g. Manager, Editor, Support" value="{{ old('name') }}">
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" name="name" id="addRoleName"
+                                            class="form-control form-control-lg"
+                                            placeholder="e.g. Manager, Editor, Support">
+                                        <div class="invalid-feedback"></div>
                                     </div>
                                 </div>
                                 <div class="modal-footer bg-light">
@@ -113,7 +112,7 @@
                     </div>
                 </div>
 
-                {{-- Edit Role Modals (Bootstrap 5) --}}
+                {{-- Edit Role Modals (Bootstrap 5 - AJAX Enabled) --}}
                 @foreach ($roles as $role)
                     <div class="modal fade" id="editRoleModal{{ $role->id }}" tabindex="-1" role="dialog">
                         <div class="modal-dialog modal-dialog-centered">
@@ -122,23 +121,24 @@
                                     <h5 class="modal-title"><i class="mdi mdi-pencil-outline"></i> Edit Role</h5>
                                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                                 </div>
-                                <form action="{{ route('roles.update', $role->id) }}" method="POST" novalidate>
-                                    @csrf @method('PUT')
+                                <form class="editRoleForm" data-role-id="{{ $role->id }}">
+                                    @csrf
+                                    @method('PUT')
                                     <div class="modal-body p-4">
+                                        <div id="editRoleAlert{{ $role->id }}"
+                                            style="min-height: 10px; margin-bottom: 10px;"></div>
                                         <div class="form-group">
                                             <label class="font-weight-bold">Role Name</label>
                                             <input type="text" name="name" value="{{ $role->name }}"
-                                                class="form-control form-control-lg @error('name') is-invalid @enderror"
-                                                oninput="removeFieldError(this)" onfocus="removeFieldError(this)">
-                                            @error('name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                                class="form-control form-control-lg role-name-input">
+                                            <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
                                     <div class="modal-footer bg-light">
                                         <button type="button" class="btn btn-secondary"
                                             data-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-secondary">Update Role</button>
+                                        {{-- ✅ FIXED: Changed to btn-primary --}}
+                                        <button type="submit" class="btn btn-primary">Update Role</button>
                                     </div>
                                 </form>
                             </div>
@@ -179,6 +179,7 @@
         }
     </style>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Delete confirmation
         function confirmDelete(id) {
@@ -187,44 +188,140 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // ✅ FUNCTION: Instantly remove the red border & error message
-            function removeFieldError(field) {
-                field.classList.remove('is-invalid');
-                const formGroup = field.closest('.form-group');
-                if (formGroup) {
-                    const errorDiv = formGroup.querySelector('.invalid-feedback');
-                    if (errorDiv) {
-                        errorDiv.remove(); // Permanently delete the error from DOM
-                    }
+        $(document).ready(function() {
+            // 1. SETUP CSRF TOKEN
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
-            }
+            });
 
-            // ✅ LOOP: Attach event listeners to all inputs inside modals
-            document.querySelectorAll('.modal input, .modal select').forEach(field => {
-                field.addEventListener('input', function() {
-                    if (this.value.trim() !== '') {
-                        removeFieldError(this);
+            // 2. CLEAR FIELD ERROR HELPER
+            window.clearFieldError = function(field) {
+                $(field).removeClass('is-invalid');
+                $(field).closest('.form-group').find('.invalid-feedback').remove();
+            };
+
+            // 3. LIVE CLEARING
+            $('.modal input').on('input', function() {
+                if ($(this).val().trim() !== '') {
+                    clearFieldError(this);
+                }
+            });
+
+            // 4. AJAX SUBMISSION FOR ADD ROLE
+            $('#addRoleForm').on('submit', function(e) {
+                e.preventDefault();
+
+                $('#addRoleAlert').empty();
+                clearFieldError($('#addRoleName'));
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "{{ route('roles.store') }}",
+                    type: 'POST',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $('#addRoleAlert').html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            response.message +
+                            '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                            '</div>'
+                        );
+                        setTimeout(function() {
+                            location.reload(); // Reload to show new role in table
+                        }, 10);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, messages) {
+                                var input = $('[name="' + key + '"]', '#addRoleForm');
+                                if (input.length) {
+                                    input.addClass('is-invalid');
+                                    input.closest('.form-group').append(
+                                        '<div class="invalid-feedback" style="display:block;">' +
+                                        messages[0] + '</div>'
+                                    );
+                                } else {
+                                    $('#addRoleAlert').html(
+                                        '<div class="alert alert-danger">' +
+                                        messages[0] + '</div>'
+                                    );
+                                }
+                            });
+                        } else {
+                            $('#addRoleAlert').html(
+                                '<div class="alert alert-danger">Error: ' + xhr.status +
+                                '</div>'
+                            );
+                        }
                     }
-                });
-                field.addEventListener('change', function() {
-                    if (this.value !== '') {
-                        removeFieldError(this);
-                    }
-                });
-                field.addEventListener('focus', function() {
-                    removeFieldError(this);
                 });
             });
 
-            // ✅ RE-OPEN MODAL IF PAGE RELOADS WITH ERRORS
-            if (document.querySelector('.is-invalid')) {
-                const invalidInput = document.querySelector('.is-invalid');
-                const modalElement = invalidInput.closest('.modal');
-                if (modalElement) {
-                    $(modalElement).modal('show');
-                }
-            }
+            // 5. AJAX SUBMISSION FOR EDIT ROLE
+            $('.editRoleForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var roleId = $(this).data('role-id');
+                var alertDiv = $('#editRoleAlert' + roleId);
+                alertDiv.empty();
+                clearFieldError($(this).find('.role-name-input'));
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "{{ url('/roles') }}/" + roleId,
+                    type: 'POST', // Laravel uses POST for form submissions with PUT method spoofing
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        alertDiv.html(
+                            // '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            // response.message +
+                            '<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>' +
+                            '</div>'
+                        );
+                        setTimeout(function() {
+                            location
+                        .reload(); // Reload to show updated role name in table
+                        }, 10);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, messages) {
+                                var input = $('[name="' + key + '"]',
+                                    '.editRoleForm[data-role-id="' + roleId + '"]');
+                                if (input.length) {
+                                    input.addClass('is-invalid');
+                                    input.closest('.form-group').append(
+                                        '<div class="invalid-feedback" style="display:block;">' +
+                                        messages[0] + '</div>'
+                                    );
+                                } else {
+                                    alertDiv.html(
+                                        '<div class="alert alert-danger">' +
+                                        messages[0] + '</div>'
+                                    );
+                                }
+                            });
+                        } else {
+                            alertDiv.html(
+                                '<div class="alert alert-danger">Error: ' + xhr.status +
+                                '</div>'
+                            );
+                        }
+                    }
+                });
+            });
         });
     </script>
 @endsection
