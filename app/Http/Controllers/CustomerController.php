@@ -46,7 +46,6 @@ class CustomerController extends Controller
             ],
             'status' => 'required|string',
         ], [
-            // ✅ ADDED MISSING CUSTOM MESSAGES HERE
             'fullname.required' => 'Please enter the customer\'s full name.',
             'status.required' => 'Please select a status for the customer.',
 
@@ -94,7 +93,6 @@ class CustomerController extends Controller
             ],
             'status' => 'required|string',
         ], [
-            // ✅ ADDED MISSING CUSTOM MESSAGES HERE
             'fullname.required' => 'Please enter the customer\'s full name.',
             'status.required' => 'Please select a status for the customer.',
 

@@ -12,6 +12,93 @@ use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
+    public function index(Request $request)
+    {
+        // Start the query
+        $query = Invoice::with('customer')->orderBy('created_at', 'desc');
+
+        // ✅ Apply Date Range Filter
+        if ($request->filled('date_range')) {
+            $now = now();
+            switch ($request->date_range) {
+                case 'today':
+                    $query->whereDate('invoice_date', $now->toDateString());
+                    break;
+                case 'yesterday':
+                    $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+                    break;
+                case 'last_week':
+                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
+                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
+                    $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
+                    break;
+                case 'last_month':
+                    $lastMonth = $now->copy()->subMonth();
+                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
+                    break;
+                case 'custom':
+                    // ✅ FIX: Catch start/end dates from the modal
+                    if ($request->filled('start_date') && $request->filled('end_date')) {
+                        // Add 1 day to end date to include the full day
+                        $endDate = \Carbon\Carbon::parse($request->end_date)->addDay()->format('Y-m-d');
+                        $query->whereBetween('invoice_date', [$request->start_date, $endDate]);
+                    }
+                    break;
+            }
+        }
+
+        // ✅ Apply Customer Filter
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        $invoices = $query->get();
+
+        // Group products logic (Your existing code)
+        foreach ($invoices as $invoice) {
+            $grouped = [];
+            if (is_array($invoice->products)) {
+                foreach ($invoice->products as $product) {
+                    $key = $product['product_id'];
+                    if (!isset($grouped[$key])) {
+                        $grouped[$key] = $product;
+                    } else {
+                        $grouped[$key]['quantity'] += $product['quantity'];
+                        $grouped[$key]['subtotal'] += $product['subtotal'];
+                    }
+                }
+                $invoice->products = array_values($grouped);
+            }
+        }
+
+        $customers = Customer::all();
+        $products = Product::all();
+
+        return view('Admin.Invoice pages.invoices', compact('invoices', 'customers', 'products'));
+    }
+
+    public function create()
+    {
+        $customers = Customer::all();
+        $products = Product::all();
+        return view('Admin.Invoice pages.admin_invoice_form', compact('customers', 'products'));
+    }
+
+    public function edit($id)
+    {
+        $invoice = Invoice::with('customer')->findOrFail($id);
+        $customers = Customer::all();
+        $products = Product::all();
+
+        return view('Admin.Invoice pages.admin_invoice_form', compact('invoice', 'customers', 'products'));
+    }
+
     public function store(Request $request)
     {
         // Check if it's an AJAX request
@@ -366,88 +453,6 @@ class InvoiceController extends Controller
         $invoices = $query->orderBy('invoice_date', 'desc')->paginate(2);
 
         return view('Customer_Pages.customer_invoices', compact('invoices', 'customer', 'customers'));
-    }
-    public function index(Request $request)
-    {
-        $query = Invoice::with('customer')->orderBy('created_at', 'desc');
-
-        // ✅ Apply Customer Filter
-        if ($request->filled('customer_id')) {
-            $query->where('customer_id', $request->customer_id);
-        }
-
-        // ✅ Apply Date Range Filter
-        if ($request->filled('date_range')) {
-            $now = now();
-            switch ($request->date_range) {
-                case 'today':
-                    $query->whereDate('invoice_date', $now->toDateString());
-                    break;
-                case 'yesterday':
-                    $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
-                    break;
-                case 'last_week':
-                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
-                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
-                    $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
-                    break;
-                case 'this_month':
-                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
-                    break;
-                case 'last_month':
-                    $lastMonth = $now->copy()->subMonth();
-                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
-                    break;
-                case 'custom':
-                    if ($request->filled('start_date') && $request->filled('end_date')) {
-                        $query->whereBetween('invoice_date', [$request->start_date, $request->end_date]);
-                    }
-                    break;
-            }
-        }
-
-        $invoices = $query->paginate(5);
-
-        // ✅ Group products logic (Keep your existing logic)
-        foreach ($invoices as $invoice) {
-            $grouped = [];
-            if (is_array($invoice->products)) {
-                foreach ($invoice->products as $product) {
-                    $key = $product['product_id'];
-                    if (!isset($grouped[$key])) {
-                        $grouped[$key] = $product;
-                    } else {
-                        $grouped[$key]['quantity'] += $product['quantity'];
-                        $grouped[$key]['subtotal'] += $product['subtotal'];
-                    }
-                }
-                $invoice->products = array_values($grouped);
-            }
-        }
-
-        $customers = Customer::all();
-        $products = Product::all();
-
-        return view('Admin.Invoice pages.invoices', compact('invoices', 'customers', 'products'));
-    }
-
-    public function create()
-    {
-        $customers = Customer::all();
-        $products = Product::all();
-        return view('Admin.Invoice pages.admin_invoice_form', compact('customers', 'products'));
-    }
-
-    public function edit($id)
-    {
-        $invoice = Invoice::with('customer')->findOrFail($id);
-        $customers = Customer::all();
-        $products = Product::all();
-
-        return view('Admin.Invoice pages.admin_invoice_form', compact('invoice', 'customers', 'products'));
     }
 
     public function updateStatus($id, $status)

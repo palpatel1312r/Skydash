@@ -10,11 +10,54 @@
                 </div>
             </div>
 
-            {{-- ✅ EXTERNAL TOP RIGHT HEADER --}}
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
-                    <i class="mdi mdi-plus me-1"></i>Create New Invoice
-                </a>
+            {{-- Filters + Create Button Row --}}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+                        {{-- LEFT: All Filters --}}
+
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted fw-bold small me-1">Filter By:</span>
+
+                            {{-- ✅ NEW: Customer Filter (Like Date Picker Button) --}}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
+                                    type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-account-outline me-1"></i>
+                                    <span id="customerLabel">All Customers</span>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm" aria-labelledby="customerDropdown"
+                                    style="min-width: 200px; max-height: 300px; overflow-y: auto;">
+                                    <li><a class="dropdown-item customer-option" href="#" data-id="">All
+                                            Customers</a></li>
+                                    @foreach ($customers as $customer)
+                                        <li><a class="dropdown-item customer-option" href="#"
+                                                data-id="{{ $customer->id }}">{{ $customer->fullname }}</a></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
+                            <button type="button" id="dateRangeBtn"
+                                class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3" data-bs-toggle="modal"
+                                data-bs-target="#dateRangeModal">
+                                <i class="mdi mdi-calendar-outline me-1"></i>
+                                <span id="dateRangeLabel">All Time</span>
+                            </button>
+
+                            {{-- Clear Filters Button --}}
+                            <a href="{{ route('invoices.index') }}"
+                                class="btn btn-sm shadow-sm rounded-pill px-3 
+                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                                <i class="mdi mdi-close me-1"></i> Clear
+                            </a>
+                        </div>
+                        {{-- RIGHT: Create Button --}}
+                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
+                            <i class="mdi mdi-plus me-1"></i>Create New Invoice
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -22,109 +65,52 @@
                     <div class="card">
                         <div class="card-body">
 
+                            {{-- Combined Header with Show Entries + Title + Search --}}
                             <div
                                 class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
 
-                                {{-- LEFT: Title & Stats --}}
-                                <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
-                                        <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                {{-- LEFT: Title, Stats & Show Entries --}}
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    {{-- Title --}}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
+                                            <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="card-title mb-0 fw-bold text-dark">Invoice List</h4>
+                                            <small class="text-muted">Manage your invoices</small>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 class="card-title mb-0 fw-bold text-dark">Invoice List</h4>
-                                        <small class="text-muted">Manage your invoices</small>
+
+                                    {{-- Show Entries Dropdown --}}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-muted small">Show</span>
+                                        <select id="dtLength" class="form-select form-select-sm shadow-sm"
+                                            style="width: 70px;">
+                                            <option value="5">5</option>
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="-1">All</option>
+                                        </select>
+                                        <span class="text-muted small">entries</span>
                                     </div>
                                 </div>
 
-                                {{-- ✅ FIXED FILTERS SECTION --}}
-                                <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <div>
-                                        <h4 class="card-title mr-2 mt-3 fw-bold text-dark">Filter By</h4>
-                                    </div>
-
-                                    {{-- Customer Filter --}}
-                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                        <span class="input-group-text bg-primary text-white border-primary px-3">
-                                            <i class="mdi mdi-account-outline"></i>
+                                {{-- RIGHT: Search Bar --}}
+                                <div class="d-flex align-items-center">
+                                    <div class="input-group input-group-sm shadow-sm rounded" style="width: 250px;">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="mdi mdi-magnify text-muted"></i>
                                         </span>
-                                        <select id="filterCustomer"
-                                            class="form-select border-start-0 border-primary bg-white text-dark fw-bold">
-                                            <option value="">All Customers</option>
-                                            @foreach ($customers as $customer)
-                                                <option value="{{ $customer->id }}"
-                                                    {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                                                    {{ $customer->fullname }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <input type="text" id="dtSearch" class="form-control border-start-0 bg-white"
+                                            placeholder="Search invoices...">
                                     </div>
-                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                        <span class="input-group-text bg-primary text-white border-primary px-3">
-                                            <i class="mdi mdi-account-outline"></i>
-                                        </span>
-                                        <select id="dateRange" class="form-select border-0 bg-white text-dark fw-bold">
-                                            <option value="">All Time</option>
-                                            <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>
-                                                Today</option>
-                                            <option value="yesterday"
-                                                {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday
-                                            </option>
-                                            <option value="this_week"
-                                                {{ request('date_range') == 'this_week' ? 'selected' : '' }}>This Week
-                                            </option>
-                                            <option value="last_week"
-                                                {{ request('date_range') == 'last_week' ? 'selected' : '' }}>Last Week
-                                            </option>
-                                            <option value="this_month"
-                                                {{ request('date_range') == 'this_month' ? 'selected' : '' }}>This Month
-                                            </option>
-                                            <option value="last_month"
-                                                {{ request('date_range') == 'last_month' ? 'selected' : '' }}>Last Month
-                                            </option>
-                                            <option value="custom"
-                                                {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    <div id="customDateContainer" style="display: none;">
-                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                            <span class="input-group-text bg-primary text-white border-primary px-3">
-                                                <i class="mdi mdi-account-outline"></i>
-                                            </span>
-                                            <input type="date" id="customStartDate"
-                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
-                                                value="{{ request('start_date') }}" style="border-radius: 0;">
-                                        </div>
-
-                                        <span class="mx-1 text-primary fw-bold">to</span>
-
-                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                            <span class="input-group-text bg-primary text-white border-primary px-3">
-                                                <i class="mdi mdi-account-outline"></i>
-                                            </span>
-                                            <input type="date" id="customEndDate"
-                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
-                                                value="{{ request('end_date') }}" style="border-radius: 0;">
-                                        </div>
-                                    </div>
-
-                                    {{-- ✅ CLEAR FILTER BUTTON (Pill Shape) --}}
-                                    @if (request()->has('customer_id') ||
-                                            request()->has('date_range') ||
-                                            request()->has('start_date') ||
-                                            request()->has('end_date'))
-                                        <a href="{{ route('invoices.index') }}"
-                                            class="btn btn-outline-danger btn-sm shadow-sm rounded-pill px-3"
-                                            title="Clear Filters">
-                                            <i class="mdi mdi-close me-1"></i> Clear
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
 
                             {{-- TABLE --}}
-
                             <div class="table-responsive">
                                 <table class="table table-striped table-borderless" id="invoiceTable">
                                     <thead>
@@ -179,25 +165,19 @@
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
                                                 <td>
-                                                    <!-- View Invoice Button -->
                                                     <button type="button" class="btn btn-info btn-sm"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#viewInvoiceModal{{ $item->id }}">
                                                         <i class="mdi mdi-eye"></i> View
                                                     </button>
-
-                                                    <!-- Update Button -->
                                                     <a href="{{ route('invoices.edit', $item->id) }}"
                                                         class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-pencil"></i> Update
                                                     </a>
-
-                                                    <!-- Delete Button -->
                                                     <button type="button" class="btn btn-danger btn-sm"
                                                         onclick="confirmDelete('{{ $item->id }}')">
                                                         <i class="mdi mdi-delete"></i> Delete
                                                     </button>
-
                                                     <form id="delete-form-{{ $item->id }}"
                                                         action="{{ route('admin.invoices.destroy', $item->id) }}"
                                                         method="POST" style="display: none;">
@@ -215,20 +195,6 @@
                                 </table>
                             </div>
 
-                            {{-- REMOVE THIS PAGINATION SECTION --}}
-                            {{-- @if ($invoices->hasPages())
-    <div class="d-flex justify-content-center mt-4">
-        {{ $invoices->appends(request()->query())->links() }}
-    </div>
-@endif --}}
-
-                            {{-- ✅ BOOTSTRAP 5 PAGINATION --}}
-                            @if ($invoices->hasPages())
-                                <div class="d-flex justify-content-center mt-4">
-                                    {{ $invoices->appends(request()->query())->links() }}
-                                </div>
-                            @endif
-
                         </div>
                     </div>
                 </div>
@@ -236,6 +202,97 @@
         </div>
     </div>
     <!-- content-wrapper ends -->
+
+    <!-- ✅ NEW: Date Range Picker Modal -->
+    <div class="modal fade" id="dateRangeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-body p-0">
+                    <div class="d-flex" style="min-height: 420px;">
+
+                        {{-- LEFT SIDEBAR: Presets --}}
+                        <div class="p-3 border-end" style="width: 190px; background: #f8f9fa;">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3"
+                                style="font-size: 0.7rem; letter-spacing: 0.05em;">Quick Select</h6>
+                            <div class="preset-list d-flex flex-column gap-1">
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="today">Today</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="yesterday">Yesterday</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="last7">Past 7 days</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="last30">Past 30 days</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="thisMonth">This month</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="lastMonth">Previous month</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="thisYear">This year</button>
+                                <div class="border-top my-2"></div>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm active"
+                                    data-range="custom">Custom range</button>
+                            </div>
+                        </div>
+
+                        {{-- RIGHT: Dual Calendar --}}
+                        <div class="flex-grow-1 p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calPrev"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-chevron-left"></i>
+                                </button>
+                                <div class="d-flex gap-5">
+                                    <strong id="month1Label" class="fs-6 text-dark">January 2026</strong>
+                                    <strong id="month2Label" class="fs-6 text-dark">February 2026</strong>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calNext"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="d-flex gap-4 flex-grow-1">
+                                {{-- Calendar 1 --}}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                        <div class="flex-grow-1 py-1">Su</div>
+                                        <div class="flex-grow-1 py-1">Mo</div>
+                                        <div class="flex-grow-1 py-1">Tu</div>
+                                        <div class="flex-grow-1 py-1">We</div>
+                                        <div class="flex-grow-1 py-1">Th</div>
+                                        <div class="flex-grow-1 py-1">Fr</div>
+                                        <div class="flex-grow-1 py-1">Sa</div>
+                                    </div>
+                                    <div id="calendar1" class="calendar-grid"></div>
+                                </div>
+                                {{-- Calendar 2 --}}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                        <div class="flex-grow-1 py-1">Su</div>
+                                        <div class="flex-grow-1 py-1">Mo</div>
+                                        <div class="flex-grow-1 py-1">Tu</div>
+                                        <div class="flex-grow-1 py-1">We</div>
+                                        <div class="flex-grow-1 py-1">Th</div>
+                                        <div class="flex-grow-1 py-1">Fr</div>
+                                        <div class="flex-grow-1 py-1">Sa</div>
+                                    </div>
+                                    <div id="calendar2" class="calendar-grid"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                                <button type="button" class="btn btn-light btn-sm px-3 rounded-pill"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" id="applyDateRange"
+                                    class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold">Apply dates</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- View Invoice Modals -->
     @foreach ($invoices as $item)
@@ -275,7 +332,6 @@
                                 </p>
                             </div>
                         </div>
-
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead class="table-light">
@@ -309,7 +365,8 @@
                                         <td class="text-end">₹{{ number_format($item->subtotal, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td colspan="3" class="text-end"><strong>Tax ({{ $item->tax_rate }}%)
+                                        <td colspan="3" class="text-end"><strong>Tax
+                                                ({{ $item->tax_rate }}%)
                                                 :</strong></td>
                                         <td class="text-end">₹{{ number_format($item->tax_amount, 2) }}</td>
                                     </tr>
@@ -330,94 +387,9 @@
             </div>
         </div>
     @endforeach
-    </div>
 
     <style>
-        /* DataTables Custom Styling */
-        .dataTables_wrapper .dataTables_filter {
-            float: right;
-            text-align: right;
-            margin-bottom: 15px;
-        }
-
-        .dataTables_wrapper .dataTables_filter input {
-            margin-left: 0.5em;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            border: 1px solid #e2e8f0;
-            min-width: 200px;
-        }
-
-        .dataTables_wrapper .dataTables_length {
-            float: left;
-            margin-bottom: 15px;
-        }
-
-        .dataTables_wrapper .dataTables_length select {
-            padding: 0.5rem 2rem 0.5rem 1rem;
-            border-radius: 50px;
-            border: 1px solid #e2e8f0;
-            background-color: #fff;
-            min-width: 80px;
-        }
-
-        .dataTables_wrapper .dataTables_info {
-            clear: both;
-            float: left;
-            padding-top: 0.755em;
-            color: #6c757d;
-        }
-
-        .dataTables_wrapper .dataTables_paginate {
-            float: right;
-            text-align: right;
-            padding-top: 0.25em;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            box-sizing: border-box;
-            display: inline-block;
-            min-width: 1.5em;
-            padding: 0.5em 1em;
-            margin-left: 2px;
-            text-align: center;
-            text-decoration: none !important;
-            cursor: pointer;
-            color: #4a4a4a !important;
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 50px !important;
-            font-weight: 600 !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: linear-gradient(145deg, #0d6efd 0%, #0dcaf0 100%) !important;
-            border-color: #0d6efd !important;
-            color: #ffffff !important;
-            box-shadow: 0 6px 18px rgba(13, 110, 253, 0.4) !important;
-            transform: scale(1.05) !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: #0d6efd !important;
-            color: #ffffff !important;
-            border-color: #0d6efd !important;
-            transform: translateY(-3px) !important;
-            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3) !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-            color: #adb5bd !important;
-            background: #f8f9fa !important;
-            border-color: #dee2e6 !important;
-            box-shadow: none !important;
-            transform: none !important;
-            cursor: not-allowed !important;
-        }
-
-        /* Table styling */
+        /* Table Styling */
         #invoiceTable {
             width: 100% !important;
         }
@@ -427,53 +399,170 @@
             transition: background-color 0.3s ease;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .dataTables_wrapper .dataTables_filter {
-                float: left;
-                width: 100%;
-                text-align: left;
-                margin-top: 10px;
-            }
+        #invoiceTable tbody tr td {
+            vertical-align: middle;
+        }
 
-            .dataTables_wrapper .dataTables_filter input {
-                width: 100%;
-                min-width: unset;
-            }
+        .badge-info {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            padding: 4px 8px;
+            margin: 2px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
 
-            .dataTables_wrapper .dataTables_length {
-                width: 100%;
-            }
+        /* ✅ Date Range Picker Styles */
+        .preset-btn {
+            color: #495057;
+            background: transparent;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
 
-            .dataTables_wrapper .dataTables_info {
-                float: none;
-                text-align: center;
-            }
+        .preset-btn:hover {
+            background: #e9ecef;
+            color: #212529;
+        }
 
-            .dataTables_wrapper .dataTables_paginate {
-                float: none;
-                text-align: center;
-                margin-top: 10px;
-            }
+        .preset-btn.active {
+            background: #0d6efd;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .cal-day:hover:not(.empty):not(.disabled) {
+            background: #e9ecef;
+        }
+
+        .cal-day.other-month {
+            color: #ced4da;
+            pointer-events: none;
+        }
+
+        .cal-day.in-range {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border-radius: 0;
+        }
+
+        .cal-day.in-range.start-date {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .cal-day.in-range.end-date {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .cal-day.selected-start,
+        .cal-day.selected-end {
+            background: #0d6efd !important;
+            color: #fff !important;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.35);
+        }
+
+        .cal-day.selected-start {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .cal-day.selected-end {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .cal-day.selected-both {
+            border-radius: 8px !important;
+        }
+
+        .cal-day.empty {
+            pointer-events: none;
+        }
+
+        .cal-nav {
+            transition: all 0.2s;
+        }
+
+        .cal-nav:hover {
+            background: #e9ecef !important;
+        }
+
+        #dateRangeBtn {
+            border-color: #dee2e6;
+            font-weight: 500;
+        }
+
+        #dateRangeBtn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        /* ✅ Centered Pagination Fix */
+        .dataTables_wrapper .dataTables_paginate {
+            float: none !important;
+            text-align: center !important;
+            padding-top: 1em !important;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            float: none !important;
+            text-align: center !important;
+            padding-top: 0.5em !important;
+            padding-bottom: 0.5em !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            margin: 0 2px !important;
+            /* Spacing between buttons */
+            display: inline-block !important;
         }
     </style>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include DataTables CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Initialize DataTable
-            if ($.fn.DataTable.isDataTable('#invoiceTable')) {
-                $('#invoiceTable').DataTable().destroy();
-            }
 
             var table = $('#invoiceTable').DataTable({
                 responsive: true,
                 processing: true,
-                serverSide: false, // Set to true if you want server-side processing
-                pageLength: 10,
+                serverSide: false,
+                pageLength: 5,
                 lengthMenu: [
-                    [10, 25, 50, 100, -1],
-                    [10, 25, 50, 100, "All"]
+                    [5, 10, 25, 50, 100, -1],
+                    [5, 10, 25, 50, 100, "All"]
                 ],
                 order: [
                     [0, 'asc']
@@ -481,15 +570,19 @@
                 columnDefs: [{
                         orderable: false,
                         targets: [3, 10]
-                    }, // Disable sorting on Products and Actions columns
+                    },
                     {
                         searchable: false,
                         targets: [3, 10]
-                    } // Disable search on Products and Actions columns
+                    },
+                    {
+                        className: 'text-center',
+                        targets: [4]
+                    }
                 ],
                 language: {
                     processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
-                    search: "_INPUT_",
+                    search: "",
                     searchPlaceholder: "Search invoices...",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ invoices",
@@ -504,28 +597,325 @@
                         last: '<i class="mdi mdi-chevron-double-right"></i>'
                     }
                 },
-                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                    '<"row"<"col-sm-12"tr>>' +
-                    '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+
+                dom: '<"row"<"col-12"t>>' +
+                    '<"row"<"col-12 text-center"i>>' +
+                    '<"row"<"col-12 text-center"p>>',
                 drawCallback: function() {
-                    // Re-initialize any Bootstrap tooltips or popovers if needed
-                    // Handle any custom styling after draw
+                    // Add standard bootstrap styling to pagination buttons
+                    $('.dataTables_paginate .paginate_button').addClass('btn btn-sm');
                 }
             });
 
-            // Apply existing filters to DataTable
-            var filterCustomer = $('#filterCustomer').val();
-            var dateRange = $('#dateRange').val();
+            $('#dtLength').on('change', function() {
+                table.page.len($(this).val()).draw();
+            });
+            $('#dtSearch').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
 
-            // If there are server-side filters, reload the page
-            // Since you're using server-side filters, we keep the existing redirect logic
-            // and the DataTable will just display the filtered results
+            // ===================== CUSTOMER FILTER (Dropdown) =====================
+            // Set initial label from URL params
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialCustomerId = urlParams.get('customer_id');
+            if (initialCustomerId) {
+                var customerName = $('.customer-option[data-id="' + initialCustomerId + '"]').text();
+                $('#customerLabel').text(customerName);
+            }
 
-            // Optional: Add custom styling to DataTables elements
-            $('#invoiceTable_wrapper .dataTables_filter input').addClass('form-control form-control-sm');
-            $('#invoiceTable_wrapper .dataTables_length select').addClass('form-select form-select-sm');
+            // On click, update label and reload page
+            $('.customer-option').on('click', function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+                var name = $(this).text();
 
-            // Auto-hide alerts after 5 seconds (existing code)
+                $('#customerLabel').text(name);
+
+                var url = new URL(window.location.href);
+                if (id) {
+                    url.searchParams.set('customer_id', id);
+                } else {
+                    url.searchParams.delete('customer_id');
+                }
+                window.location.href = url.toString();
+            });
+
+            // ===================== CUSTOM DATE RANGE PICKER (KEEP YOUR LAYOUT) =====================
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August",
+                "September", "October", "November", "December"
+            ];
+            let currentMonth = new Date();
+            currentMonth.setDate(1);
+            let selectedStart = null;
+            let selectedEnd = null;
+            let activePreset = 'custom';
+
+            // Parse existing URL params
+            const existingStart = urlParams.get('start_date');
+            const existingEnd = urlParams.get('end_date');
+
+            if (existingStart && existingEnd) {
+                selectedStart = new Date(existingStart + 'T00:00:00');
+                selectedEnd = new Date(existingEnd + 'T00:00:00');
+                currentMonth = new Date(selectedStart);
+                currentMonth.setDate(1);
+                updateButtonLabelFromDates();
+            }
+
+            // ✅ FIX: Format Date to YYYY-MM-DD (always 2 digits for month and day)
+            function formatDate(d) {
+                var year = d.getFullYear();
+                var month = String(d.getMonth() + 1).padStart(2, '0');
+                var day = String(d.getDate()).padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            }
+
+            function formatDisplay(d) {
+                return monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+            }
+
+            function isSameDay(d1, d2) {
+                return d1 && d2 && d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1
+                    .getDate() === d2.getDate();
+            }
+
+            function isBetween(target, d1, d2) {
+                if (!d1 || !d2) return false;
+                const start = d1 < d2 ? d1 : d2;
+                const end = d1 < d2 ? d2 : d1;
+                const t = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+                return t > start && t < end;
+            }
+
+            function getPresetRange(range) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                let start, end;
+                switch (range) {
+                    case 'today':
+                        start = new Date(today);
+                        end = new Date(today);
+                        break;
+                    case 'yesterday':
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 1);
+                        end = new Date(start);
+                        break;
+                    case 'last7':
+                        end = new Date(today);
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 6);
+                        break;
+                    case 'last30':
+                        end = new Date(today);
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 29);
+                        break;
+                    case 'thisMonth':
+                        start = new Date(today.getFullYear(), today.getMonth(), 1);
+                        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        break;
+                    case 'lastMonth':
+                        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        end = new Date(today.getFullYear(), today.getMonth(), 0);
+                        break;
+                    case 'thisYear':
+                        start = new Date(today.getFullYear(), 0, 1);
+                        end = new Date(today.getFullYear(), 11, 31);
+                        break;
+                    default:
+                        return null;
+                }
+                return {
+                    start,
+                    end
+                };
+            }
+
+            function renderCalendar() {
+                const m1 = new Date(currentMonth);
+                const m2 = new Date(currentMonth);
+                m2.setMonth(m2.getMonth() + 1);
+
+                $('#month1Label').text(monthNames[m1.getMonth()] + ' ' + m1.getFullYear());
+                $('#month2Label').text(monthNames[m2.getMonth()] + ' ' + m2.getFullYear());
+
+                renderMonthGrid('calendar1', m1);
+                renderMonthGrid('calendar2', m2);
+            }
+
+            function renderMonthGrid(containerId, date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const grid = $('#' + containerId);
+                grid.empty();
+
+                // Empty cells before start
+                for (let i = 0; i < firstDay; i++) {
+                    grid.append('<div class="cal-day empty"></div>');
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const cellDate = new Date(year, month, d);
+                    let classes = 'cal-day';
+                    let inRange = false;
+                    let isStart = false;
+                    let isEnd = false;
+
+                    if (selectedStart && selectedEnd) {
+                        isStart = isSameDay(cellDate, selectedStart);
+                        isEnd = isSameDay(cellDate, selectedEnd);
+                        inRange = isBetween(cellDate, selectedStart, selectedEnd);
+                    } else if (selectedStart && !selectedEnd) {
+                        isStart = isSameDay(cellDate, selectedStart);
+                    }
+
+                    if (isStart && isEnd) {
+                        classes += ' selected-both selected-start selected-end';
+                    } else if (isStart) {
+                        classes += ' selected-start';
+                        if (selectedEnd) classes += ' in-range';
+                    } else if (isEnd) {
+                        classes += ' selected-end in-range';
+                    } else if (inRange) {
+                        classes += ' in-range';
+                    }
+
+                    const btn = $('<div class="' + classes + '">' + d + '</div>');
+                    btn.on('click', function() {
+                        onDayClick(cellDate);
+                    });
+                    grid.append(btn);
+                }
+
+                // Fill remaining to complete 6 rows (42 cells)
+                const totalCells = firstDay + daysInMonth;
+                const remaining = 42 - totalCells;
+                for (let i = 0; i < remaining; i++) {
+                    grid.append('<div class="cal-day empty"></div>');
+                }
+            }
+
+            function onDayClick(date) {
+                activePreset = 'custom';
+                $('.preset-btn').removeClass('active');
+                $('.preset-btn[data-range="custom"]').addClass('active');
+
+                if (!selectedStart || (selectedStart && selectedEnd)) {
+                    selectedStart = date;
+                    selectedEnd = null;
+                } else {
+                    if (date < selectedStart) {
+                        selectedEnd = selectedStart;
+                        selectedStart = date;
+                    } else {
+                        selectedEnd = date;
+                    }
+                }
+                renderCalendar();
+            }
+
+            function applyPreset(range) {
+                const r = getPresetRange(range);
+                if (!r) return;
+                selectedStart = r.start;
+                selectedEnd = r.end;
+                activePreset = range;
+                renderCalendar();
+            }
+
+            function updateButtonLabelFromDates() {
+                if (!selectedStart || !selectedEnd) {
+                    $('#dateRangeLabel').text('All Time');
+                    return;
+                }
+                const s = formatDate(selectedStart);
+                const e = formatDate(selectedEnd);
+                const now = new Date();
+                const today = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+                const yesterday = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+
+                if (s === today && e === today) $('#dateRangeLabel').text('Today');
+                else if (s === yesterday && e === yesterday) $('#dateRangeLabel').text('Yesterday');
+                else if (s === e) $('#dateRangeLabel').text(formatDisplay(selectedStart));
+                else $('#dateRangeLabel').text(formatDisplay(selectedStart) + ' - ' + formatDisplay(selectedEnd));
+            }
+
+            // Navigation
+            $('#calPrev').on('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() - 1);
+                renderCalendar();
+            });
+            $('#calNext').on('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // Preset clicks
+            $('.preset-btn').on('click', function() {
+                const range = $(this).data('range');
+                $('.preset-btn').removeClass('active');
+                $(this).addClass('active');
+                if (range === 'custom') {
+                    activePreset = 'custom';
+                    // Don't clear dates, let user pick
+                } else {
+                    applyPreset(range);
+                }
+            });
+
+            // ✅ FIX: Apply dates using the corrected formatDate()
+            $('#applyDateRange').on('click', function() {
+                if (!selectedStart || !selectedEnd) {
+                    if (activePreset !== 'custom') {
+                        const r = getPresetRange(activePreset);
+                        if (r) {
+                            selectedStart = r.start;
+                            selectedEnd = r.end;
+                        }
+                    }
+                }
+
+                if (selectedStart && selectedEnd) {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('date_range', 'custom');
+                    url.searchParams.set('start_date', formatDate(selectedStart));
+                    url.searchParams.set('end_date', formatDate(selectedEnd));
+                    window.location.href = url.toString();
+                } else {
+                    $('#dateRangeModal').modal('hide');
+                }
+            });
+
+            // Reset local variables when the clear button is clicked
+            $(document).on('click', 'a[href*="invoices.index"]', function() {
+                selectedStart = null;
+                selectedEnd = null;
+                activePreset = 'custom';
+            });
+
+            // When opening the modal, sync the picker with the URL parameters
+            $('#dateRangeModal').on('shown.bs.modal', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const startParam = urlParams.get('start_date');
+                const endParam = urlParams.get('end_date');
+
+                if (startParam && endParam) {
+                    selectedStart = new Date(startParam + 'T00:00:00');
+                    selectedEnd = new Date(endParam + 'T00:00:00');
+                    currentMonth = new Date(selectedStart);
+                    currentMonth.setDate(1);
+                    renderCalendar();
+                }
+            });
+
+            // Initialize
+            renderCalendar();
+            updateButtonLabelFromDates();
+
+            // ===================== DELETE & ALERTS =====================
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
@@ -537,84 +927,6 @@
                 });
             }, 500);
 
-            // Show/Hide Custom Date Inputs when 'Custom Range' is selected
-            $('#dateRange').on('change', function() {
-                if ($(this).val() === 'custom') {
-                    $('#customDateContainer').fadeIn(200);
-                } else {
-                    $('#customDateContainer').hide();
-                    $('#customStartDate').val('');
-                    $('#customEndDate').val('');
-                }
-            });
-
-            // Trigger the check on page load
-            if ($('#dateRange').val() === 'custom') {
-                $('#customDateContainer').show();
-            }
-
-            // Filter handlers (existing code)
-            $('#filterCustomer, #dateRange, #customStartDate, #customEndDate').on('change', function() {
-                var customer = $('#filterCustomer').val();
-                var dateRange = $('#dateRange').val();
-                var startDate = $('#customStartDate').val();
-                var endDate = $('#customEndDate').val();
-
-                $('#global-alert-container').empty();
-
-                if (dateRange === 'custom' && startDate && endDate) {
-                    if (new Date(startDate) > new Date(endDate)) {
-                        $('#global-alert-container').html(`
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Error!</strong> Start date cannot be after End date. Please adjust your date range.
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    `);
-                        $('#customStartDate').addClass('is-invalid');
-                        $('#customEndDate').addClass('is-invalid');
-                        return;
-                    } else {
-                        $('#customStartDate').removeClass('is-invalid');
-                        $('#customEndDate').removeClass('is-invalid');
-                    }
-                }
-
-                var url = new URL(window.location.href);
-
-                if (customer) {
-                    url.searchParams.set('customer_id', customer);
-                } else {
-                    url.searchParams.delete('customer_id');
-                }
-
-                if (dateRange) {
-                    url.searchParams.set('date_range', dateRange);
-                } else {
-                    url.searchParams.delete('date_range');
-                }
-
-                if (dateRange === 'custom') {
-                    if (startDate) {
-                        url.searchParams.set('start_date', startDate);
-                    } else {
-                        url.searchParams.delete('start_date');
-                    }
-                    if (endDate) {
-                        url.searchParams.set('end_date', endDate);
-                    } else {
-                        url.searchParams.delete('end_date');
-                    }
-                } else {
-                    url.searchParams.delete('start_date');
-                    url.searchParams.delete('end_date');
-                }
-
-                window.location.href = url.toString();
-            });
-
-            // Confirm Delete function
             window.confirmDelete = function(id) {
                 if (confirm('Are you sure you want to delete this invoice?')) {
                     document.getElementById('delete-form-' + id).submit();
