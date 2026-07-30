@@ -48,8 +48,6 @@ class CustomerController extends Controller
         ], [
             'fullname.required' => 'Please enter the customer\'s full name.',
             'status.required' => 'Please select a status for the customer.',
-
-            // Your existing email messages
             'email.required' => 'Please enter the customer\'s email address.',
             'email.email' => 'Please enter a valid email format.',
             'email.unique' => 'This email address is already registered.',
@@ -95,8 +93,6 @@ class CustomerController extends Controller
         ], [
             'fullname.required' => 'Please enter the customer\'s full name.',
             'status.required' => 'Please select a status for the customer.',
-
-            // Your existing email messages
             'email.required' => 'Please enter the customer\'s email address.',
             'email.email' => 'Please enter a valid email format.',
             'email.unique' => 'This email address is already registered.',

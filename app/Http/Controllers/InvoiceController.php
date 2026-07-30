@@ -14,10 +14,9 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        // Start the query
         $query = Invoice::with('customer')->orderBy('created_at', 'desc');
 
-        // ✅ Apply Date Range Filter
+        // Date Range Filter
         if ($request->filled('date_range')) {
             $now = now();
             switch ($request->date_range) {
@@ -43,27 +42,29 @@ class InvoiceController extends Controller
                     $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
                     break;
                 case 'custom':
-                    // ✅ FIX: Catch start/end dates from the modal
+                    // ✅ FIX: Use startOfDay() and endOfDay() to precisely capture the range
                     if ($request->filled('start_date') && $request->filled('end_date')) {
-                        // Add 1 day to end date to include the full day
-                        $endDate = \Carbon\Carbon::parse($request->end_date)->addDay()->format('Y-m-d');
-                        $query->whereBetween('invoice_date', [$request->start_date, $endDate]);
+                        $startDateTime = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+                        $endDateTime = \Carbon\Carbon::parse($request->end_date)->endOfDay();
+
+                        $query->whereBetween('invoice_date', [$startDateTime, $endDateTime]);
                     }
                     break;
             }
         }
 
-        // ✅ Apply Customer Filter
+        // Customer Filter
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);
         }
 
+        // ✅ Get ALL invoices, do NOT paginate. DataTables handles pagination on the frontend.
         $invoices = $query->get();
 
-        // Group products logic (Your existing code)
-        foreach ($invoices as $invoice) {
-            $grouped = [];
+        // Group products for display
+        $invoices->transform(function ($invoice) {
             if (is_array($invoice->products)) {
+                $grouped = [];
                 foreach ($invoice->products as $product) {
                     $key = $product['product_id'];
                     if (!isset($grouped[$key])) {
@@ -75,12 +76,27 @@ class InvoiceController extends Controller
                 }
                 $invoice->products = array_values($grouped);
             }
-        }
+            return $invoice;
+        });
 
-        $customers = Customer::all();
-        $products = Product::all();
+        // Calculate dashboard stats
+        $stats = $this->getInvoiceStats($query);
 
-        return view('Admin.Invoice pages.invoices', compact('invoices', 'customers', 'products'));
+        $customers = Customer::orderBy('fullname')->get();
+        $products = Product::orderBy('title')->get();
+
+        return view('Admin.Invoice pages.invoices', compact('invoices', 'customers', 'products', 'stats'));
+    }
+    private function getInvoiceStats($baseQuery)
+    {
+        $clone = clone $baseQuery;
+        return [
+            'total_invoices' => (clone $clone)->count(),
+            'total_revenue' => (clone $clone)->sum('total_amount'),
+            'paid_count' => (clone $clone)->where('status', 'Paid')->count(),
+            'unpaid_count' => (clone $clone)->where('status', 'Unpaid')->count(),
+            'total_tax' => (clone $clone)->sum('tax_amount'),
+        ];
     }
 
     public function create()
@@ -412,7 +428,7 @@ class InvoiceController extends Controller
     {
         // 1. Get the currently logged-in customer
         $customer = auth()->guard('customer')->user();
-        $customers = Customer::all(); // Kept for the layout (even though we removed the dropdown)
+        $customers = Customer::all();
 
         // 2. Start the query ALWAYS scoped to this specific customer
         $query = Invoice::where('customer_id', $customer->id);
@@ -444,17 +460,20 @@ class InvoiceController extends Controller
                     break;
                 case 'custom':
                     if ($request->filled('start_date') && $request->filled('end_date')) {
-                        $query->whereBetween('invoice_date', [$request->start_date, $request->end_date]);
+                        $startDateTime = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+                        $endDateTime = \Carbon\Carbon::parse($request->end_date)->endOfDay();
+
+                        $query->whereBetween('invoice_date', [$startDateTime, $endDateTime]);
                     }
                     break;
             }
         }
 
-        $invoices = $query->orderBy('invoice_date', 'desc')->paginate(2);
+        // ✅ FIX: GET ALL RECORDS. Do NOT use paginate(2) because DataTables handles pagination on the frontend!
+        $invoices = $query->orderBy('invoice_date', 'desc')->get();
 
         return view('Customer_Pages.customer_invoices', compact('invoices', 'customer', 'customers'));
     }
-
     public function updateStatus($id, $status)
     {
         $validStatuses = ['Paid', 'Unpaid', 'Cancelled'];

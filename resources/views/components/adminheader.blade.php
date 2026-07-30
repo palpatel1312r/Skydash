@@ -95,12 +95,18 @@
                                 <i class="ti-key text-primary"></i> Change Password
                             </a>
                             <div class="dropdown-divider"></div>
-                            <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+
+                            {{-- ✅ FIXED: Pop-up confirmation now works --}}
+                            <a class="dropdown-item" href="#"
+                                onclick="event.preventDefault(); 
+                                         if(confirm('Are you sure you want to logout?')) {
+                                             document.getElementById('logout-form-dropdown').submit();
+                                         }">
+                                <i class="ti-power-off text-primary"></i> Logout
+                            </a>
+                            <form id="logout-form-dropdown" action="{{ route('logout') }}" method="POST"
+                                class="d-none">
                                 @csrf
-                                <button type="submit" class="dropdown-item"
-                                    style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
-                                    <i class="ti-power-off text-primary"></i> Logout
-                                </button>
                             </form>
                         </div>
                     </li>
@@ -243,7 +249,21 @@
                             </a>
                         </li>
                     @endif
-
+                    {{-- LOGOUT BUTTON --}}
+                    <li class="nav-item mt-auto" style="margin-top: auto;">
+                        <a class="nav-link" href="#"
+                            onclick="event.preventDefault(); 
+                                     if(confirm('Are you sure you want to logout?')) {
+                                         document.getElementById('logout-form').submit();
+                                     }"
+                            style="cursor: pointer;">
+                            <i class="mdi mdi-logout menu-icon"></i>
+                            <span class="menu-title" style="color: inherit;">Logout</span>
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                    </li>
                 </ul>
             </nav>
 

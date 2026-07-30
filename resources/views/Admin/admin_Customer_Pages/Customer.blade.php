@@ -30,14 +30,15 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
-                            <!-- Button to Open the Modal -->
-                            <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">
-                                <i class="mdi mdi-plus"></i> Add New Customer
-                            </a>
+                            <!-- ✅ Fixed: Flexbox Header with Title Left, Button Right -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                                <h4 class="card-title mb-0">Customer List</h4>
 
-                            <br><br>
-                            <p class="card-title mb-0">Customer List</p>
-                            <br>
+                                <a href="{{ route('admin.customers.create') }}" class="btn btn-primary shadow px-4 py-2">
+                                    <i class="mdi mdi-plus me-1"></i> Add New Customer
+                                </a>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-striped table-borderless" id="customerTable">
                                     <thead>
@@ -48,7 +49,6 @@
                                             <th>Role</th>
                                             <th>Created At</th>
                                             <th>Status</th>
-                                            {{-- <th>Action</th> --}}
                                             <th>Update</th>
                                         </tr>
                                     </thead>
@@ -59,7 +59,6 @@
                                                 <td>{{ $item->fullname }}</td>
                                                 <td>{{ $item->email }}</td>
                                                 <td>
-                                                    {{-- ✅ FIXED: Shows the role name cleanly --}}
                                                     @if ($item->role)
                                                         <span class="badge badge-primary">{{ $item->role->name }}</span>
                                                     @else
@@ -76,21 +75,6 @@
                                                         <label class="badge badge-warning">{{ $item->status }}</label>
                                                     @endif
                                                 </td>
-                                                {{-- <td>
-                                                    @if ($item->status == 'Active')
-                                                        <a class="btn btn-sm btn-danger"
-                                                            href="{{ route('admin.customers.status', ['status' => 'Inactive', 'id' => $item->id]) }}"
-                                                            onclick="return confirm('Are you sure you want to block this user?')">
-                                                            <i class="mdi mdi-block"></i> Active
-                                                        </a>
-                                                    @else
-                                                        <a class="btn btn-sm btn-success"
-                                                            href="{{ route('admin.customers.status', ['status' => 'Active', 'id' => $item->id]) }}"
-                                                            onclick="return confirm('Are you sure you want to unblock this user?')">
-                                                            <i class="mdi mdi-check"></i> Inactive
-                                                        </a>
-                                                    @endif
-                                                </td> --}}
                                                 <td>
                                                     <!-- Added d-inline-block to align horizontally -->
                                                     <a href="{{ route('admin.customers.edit', $item->id) }}"

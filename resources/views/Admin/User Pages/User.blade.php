@@ -31,14 +31,14 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
-                            {{-- REDIRECT TO USER FORM PAGE --}}
-                            <a href="{{ route('admin.user.create') }}" class="btn btn-primary">
-                                <i class="mdi mdi-plus"></i> Add New User
-                            </a>
+                            {{-- ✅ FIXED: Flexbox Header with Title Left, Button Right --}}
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                                <h4 class="card-title mb-0">User List</h4>
 
-                            <br><br>
-                            <h4 class="card-title">User List</h4>
-                            <br>
+                                <a href="{{ route('admin.user.create') }}" class="btn btn-primary shadow px-4 py-2">
+                                    <i class="mdi mdi-plus me-1"></i> Add New User
+                                </a>
+                            </div>
 
                             <div class="table-responsive">
                                 <table class="table table-striped table-borderless" id="userTable">

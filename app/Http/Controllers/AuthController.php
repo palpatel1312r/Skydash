@@ -13,15 +13,15 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('Components.Login');
+        return view('Auth.Login');
     }
     public function showRegisterForm()
     {
-        return view('Components.Register');
+        return view('Auth.Register');
     }
     public function showChangePasswordForm()
     {
-        return view('Components.change_password');
+        return view('Auth.change_password');
     }
     public function updatePassword(Request $request)
     {
@@ -89,6 +89,15 @@ class AuthController extends Controller
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email',
             'password' => 'required|min:4|confirmed',
+        ], [
+            // ✅ Custom Validation Messages
+            'fullname.required' => 'The full name field is required.',
+            'email.required'    => 'The email field is required.',
+            'email.email'       => 'Please enter a valid email address.',
+            'email.unique'      => 'This email is already registered.',
+            'password.required' => 'The password field is required.',
+            'password.min'      => 'The password must be at least 4 characters.',
+            'password.confirmed' => 'The password confirmation does not match.',
         ]);
 
         $customer = Customer::create([
@@ -111,6 +120,11 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+        ], [
+            // ✅ Custom Validation Messages
+            'email.required' => 'The email field is required.',
+            'email.email'    => 'Please enter a valid email address.',
+            'password.required' => 'The password field is required.',
         ]);
 
         $email = $request->email;
@@ -165,7 +179,6 @@ class AuthController extends Controller
             'email' => 'Invalid credentials. Please check your email and password.',
         ])->withInput($request->except('password'));
     }
-
     public function logout(Request $request)
     {
         $guard = 'customer';

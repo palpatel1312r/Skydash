@@ -64,6 +64,12 @@ fixing folder structure and routes managing
  #3786
  Updating invoices Tables to Detatable 
 
+//////////////////////////
 
+30-07-2026
+#3791
+Updating Customer tables And Products table to Detatable
+
+//////////////////////////
 
 

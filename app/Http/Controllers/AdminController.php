@@ -31,16 +31,16 @@ class AdminController extends Controller
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // 1. Update the main Admin table (Name & Email)
+        // 1. Update the main Admin table
         $admin->name = $request->name;
         $admin->email = $request->email;
         $admin->save();
 
-        // 2. Find or Create the Profile record (Linked to Admin)
+        // 2. Find or Create the Profile record
         $profile = $admin->profile;
         if (!$profile) {
             $profile = new \App\Models\Profile();
-            $profile->profileable_type = get_class($admin); // Automatically sets to 'App\Models\Admin'
+            $profile->profileable_type = get_class($admin);
             $profile->profileable_id = $admin->id;
         }
 
@@ -48,12 +48,12 @@ class AdminController extends Controller
         $profile->address = $request->address;
 
         if ($request->hasFile('profile_image')) {
-            // ✅ FIXED: Correctly check and delete the old image path
-            if ($profile->profile_image && file_exists(storage_path('app/public/profile_images/' . $profile->profile_image))) {
-                unlink(storage_path('app/public/profile_images/' . $profile->profile_image));
+            // ✅ FIXED: Correctly delete the old image path
+            if ($profile->profile_image && file_exists(storage_path('app/public/' . $profile->profile_image))) {
+                unlink(storage_path('app/public/' . $profile->profile_image));
             }
 
-            // ✅ FIXED: Store correctly inside 'profile_images'
+            // ✅ Store correctly
             $path = $request->file('profile_image')->store('profile_images', 'public');
             $profile->profile_image = $path;
         }

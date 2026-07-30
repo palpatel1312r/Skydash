@@ -6,21 +6,30 @@
         <div class="content-wrapper">
             <div class="row">
                 <div class="col-md-12 grid-margin">
-                    {{-- Alert code --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
-
-            {{-- Filters + Create Button Row --}}
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-
-                        {{-- LEFT: All Filters --}}
-
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <span class="text-muted fw-bold small me-1">Filter By:</span>
-
-                            {{-- ✅ NEW: Customer Filter (Like Date Picker Button) --}}
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
                                     type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -44,16 +53,13 @@
                                 <i class="mdi mdi-calendar-outline me-1"></i>
                                 <span id="dateRangeLabel">All Time</span>
                             </button>
-
-                            {{-- Clear Filters Button --}}
                             <a href="{{ route('invoices.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
                                {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
                                 <i class="mdi mdi-close me-1"></i> Clear
                             </a>
                         </div>
-                        {{-- RIGHT: Create Button --}}
-                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
+                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-8 py-2 md-12">
                             <i class="mdi mdi-plus me-1"></i>Create New Invoice
                         </a>
                     </div>
@@ -64,142 +70,144 @@
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
+                            <div class="row align-items-center mb-4 pb-3 border-bottom">
 
-                            {{-- Combined Header with Show Entries + Title + Search --}}
-                            <div
-                                class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                                <!-- Left -->
+                                <div class="col-lg-8 col-md-7">
+                                    <div class="d-flex align-items-center gap-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                                style="width:48px;height:48px;">
+                                                <i class="mdi mdi-file-document-outline fs-3"></i>
+                                            </div>
 
-                                {{-- LEFT: Title, Stats & Show Entries --}}
-                                <div class="d-flex flex-wrap align-items-center gap-3">
-                                    {{-- Title --}}
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
-                                            <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                            <div>
+                                                <h4 class="card-title mb-0 fw-bold">Invoice List</h4>
+                                                <small class="text-muted">Manage your invoices</small>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="card-title mb-0 fw-bold text-dark">Invoice List</h4>
-                                            <small class="text-muted">Manage your invoices</small>
-                                        </div>
-                                    </div>
 
-                                    {{-- Show Entries Dropdown --}}
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">Show</span>
-                                        <select id="dtLength" class="form-select form-select-sm shadow-sm"
-                                            style="width: 70px;">
-                                            <option value="5">5</option>
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                            <option value="-1">All</option>
-                                        </select>
-                                        <span class="text-muted small">entries</span>
+                                        <div class="vr d-none d-md-block"></div>
+
+                                        <div class="d-flex align-items-center gap-2 bg-light rounded-pill px-3 py-1 border">
+                                            <span>Show</span>
+
+                                            <select id="dtLength"
+                                                class="form-select form-select-sm border-0 bg-transparent"
+                                                style="width:65px;">
+                                                <option>10</option>
+                                                <option>25</option>
+                                                <option>50</option>
+                                                <option>100</option>
+                                            </select>
+
+                                            <span>Rows</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {{-- RIGHT: Search Bar --}}
-                                <div class="d-flex align-items-center">
-                                    <div class="input-group input-group-sm shadow-sm rounded" style="width: 250px;">
-                                        <span class="input-group-text bg-white border-end-0">
-                                            <i class="mdi mdi-magnify text-muted"></i>
+                                <!-- Right -->
+                                <div class="col-lg-4 col-md-5 text-end">
+                                    <div class="input-group input-group-sm ms-auto" style="width:250px;">
+                                        <span class="input-group-text bg-white">
+                                            <i class="mdi mdi-magnify"></i>
                                         </span>
-                                        <input type="text" id="dtSearch" class="form-control border-start-0 bg-white"
-                                            placeholder="Search invoices...">
+
+                                        <input id="dtSearch" class="form-control" placeholder="Search invoices">
                                     </div>
                                 </div>
-                            </div>
 
-                            {{-- TABLE --}}
-                            <div class="table-responsive">
-                                <table class="table table-striped table-borderless" id="invoiceTable">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Invoice No</th>
-                                            <th>Customer</th>
-                                            <th>Products</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Subtotal</th>
-                                            <th>Tax</th>
-                                            <th>Grand Total</th>
-                                            <th>Date</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($invoices as $item)
-                                            <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td><strong>{{ $item->invoice_number }}</strong></td>
-                                                <td>
-                                                    {{ $item->customer_name }}
-                                                    <br>
-                                                    <small class="text-muted">{{ $item->customer_email }}</small>
-                                                </td>
-                                                <td>
-                                                    @foreach ($item->products as $product)
-                                                        <span class="badge badge-info">
-                                                            {{ $product['product_name'] }}
-                                                            @if (isset($product['quantity']) && $product['quantity'] > 1)
-                                                                (x{{ $product['quantity'] }})
-                                                            @endif
-                                                        </span>
-                                                    @endforeach
-                                                </td>
-                                                <td class="text-center">
-                                                    <strong>{{ collect($item->products)->sum('quantity') }}</strong>
-                                                </td>
-                                                <td>
-                                                    @if (isset($item->products[0]))
-                                                        ₹{{ number_format($item->products[0]['price'], 2) }}
-                                                    @else
-                                                        ₹0.00
-                                                    @endif
-                                                </td>
-                                                <td>₹{{ number_format($item->subtotal, 2) }}</td>
-                                                <td>₹{{ number_format($item->tax_amount, 2) }}</td>
-                                                <td>
-                                                    <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
-                                                </td>
-                                                <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-info btn-sm"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#viewInvoiceModal{{ $item->id }}">
-                                                        <i class="mdi mdi-eye"></i> View
-                                                    </button>
-                                                    <a href="{{ route('invoices.edit', $item->id) }}"
-                                                        class="btn btn-primary btn-sm">
-                                                        <i class="mdi mdi-pencil"></i> Update
-                                                    </a>
-                                                    <button type="button" class="btn btn-danger btn-sm"
-                                                        onclick="confirmDelete('{{ $item->id }}')">
-                                                        <i class="mdi mdi-delete"></i> Delete
-                                                    </button>
-                                                    <form id="delete-form-{{ $item->id }}"
-                                                        action="{{ route('admin.invoices.destroy', $item->id) }}"
-                                                        method="POST" style="display: none;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="11" class="text-center">No invoices found.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
                             </div>
-
                         </div>
+                        {{-- TABLE --}}
+                    <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+    <table class="table table-striped table-borderless" id="invoiceTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Invoice No</th>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+                <th>Tax</th>
+                <th>Grand Total</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+                                    @forelse ($invoices as $item)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td><strong>{{ $item->invoice_number }}</strong></td>
+                                            <td>
+                                                {{ $item->customer_name }}
+                                                <br>
+                                                <small class="text-muted">{{ $item->customer_email }}</small>
+                                            </td>
+                                            <td>
+                                                @foreach ($item->products as $product)
+                                                    <span class="badge badge-info">
+                                                        {{ $product['product_name'] }}
+                                                        @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                            (x{{ $product['quantity'] }})
+                                                        @endif
+                                                    </span>
+                                                @endforeach
+                                            </td>
+                                            <td class="text-center">
+                                                <strong>{{ collect($item->products)->sum('quantity') }}</strong>
+                                            </td>
+                                            <td>
+                                                @if (isset($item->products[0]))
+                                                    ₹{{ number_format($item->products[0]['price'], 2) }}
+                                                @else
+                                                    ₹0.00
+                                                @endif
+                                            </td>
+                                            <td>₹{{ number_format($item->subtotal, 2) }}</td>
+                                            <td>₹{{ number_format($item->tax_amount, 2) }}</td>
+                                            <td>
+                                                <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
+                                            </td>
+                                            <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#viewInvoiceModal{{ $item->id }}">
+                                                    <i class="mdi mdi-eye"></i> View
+                                                </button>
+                                                <a href="{{ route('invoices.edit', $item->id) }}"
+                                                    class="btn btn-primary btn-sm">
+                                                    <i class="mdi mdi-pencil"></i> Update
+                                                </a>
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                    onclick="confirmDelete('{{ $item->id }}')">
+                                                    <i class="mdi mdi-delete"></i> Delete
+                                                </button>
+                                                <form id="delete-form-{{ $item->id }}"
+                                                    action="{{ route('admin.invoices.destroy', $item->id) }}"
+                                                    method="POST" style="display: none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="11" class="text-center">No invoices found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <!-- content-wrapper ends -->
 
@@ -559,10 +567,10 @@
                 responsive: true,
                 processing: true,
                 serverSide: false,
-                pageLength: 5,
+                pageLength: 10,
                 lengthMenu: [
-                    [5, 10, 25, 50, 100, -1],
-                    [5, 10, 25, 50, 100, "All"]
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
                 ],
                 order: [
                     [0, 'asc']

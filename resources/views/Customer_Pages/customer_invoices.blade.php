@@ -1,199 +1,243 @@
 @extends('Components.customerheader')
+
 @section('content')
     <!-- partial -->
     <div class="main-panel">
         <div class="content-wrapper">
-            {{-- ✅ EXTERNAL TOP RIGHT HEADER --}}
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('customer.invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
-                    <i class="mdi mdi-plus me-1"></i> Create Invoice
-                </a>
-            </div>
-
             <div class="row">
                 <div class="col-md-12 grid-margin">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
 
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
                 </div>
             </div>
 
+                      {{-- ✅ FILTER ROW --}}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted fw-bold small me-1">Filter By:</span>
+
+                            <button type="button" id="dateRangeBtn"
+                                class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3" data-bs-toggle="modal"
+                                data-bs-target="#dateRangeModal">
+                                <i class="mdi mdi-calendar-outline me-1"></i>
+                                <span id="dateRangeLabel">All Time</span>
+                            </button>
+
+                            {{-- ✅ FIX: Change route to customer.invoices --}}
+                            <a href="{{ route('customer.invoices') }}"
+                                class="btn btn-sm shadow-sm rounded-pill px-3 
+                               {{ request()->has('start_date') || request()->has('end_date') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                                <i class="mdi mdi-close me-1"></i> Clear
+                            </a>
+                        </div>
+
+                        {{-- ✅ FIX: Change route to customer.invoices.create --}}
+                        <a href="{{ route('customer.invoices.create') }}" class="btn btn-primary shadow px-8 py-2 md-12">
+                            <i class="mdi mdi-plus me-1"></i>Create New Invoice
+                        </a>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
                         <div class="card-body">
 
-                            {{-- ✅ MODERN HEADER WITH TITLE AND FILTERS --}}
+                            {{-- ✅ HEADER: Title + Show Entries + Search --}}
                             <div
                                 class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
 
-                                {{-- LEFT: Title --}}
-                                <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
-                                        <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                {{-- LEFT: Title, Stats & Show Entries --}}
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    {{-- Title --}}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary">
+                                            <i class="mdi mdi-file-document-outline" style="font-size: 24px;"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="card-title mb-0 fw-bold text-dark">My Invoices</h4>
+                                            <small class="text-muted">Manage your invoices</small>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 class="card-title mb-0 fw-bold text-dark">My Invoices</h4>
-                                        <small class="text-muted">Manage your invoices</small>
+
+                                    {{-- Show Entries Dropdown --}}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-muted small">Show</span>
+                                        <select id="dtLength" class="form-select form-select-sm shadow-sm"
+                                            style="width: 70px;">
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="-1">All</option>
+                                        </select>
+                                        <span class="text-muted small">Rows</span>
                                     </div>
                                 </div>
 
-                                {{-- ✅ FIXED FILTERS SECTION --}}
-                                <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                        <span class="input-group-text bg-primary text-white border-primary px-3">
-                                            <i class="mdi mdi-account-outline"></i>
+                                {{-- RIGHT: Search Bar --}}
+                                <div class="d-flex align-items-center">
+                                    <div class="input-group input-group-sm shadow-sm rounded" style="width: 250px;">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="mdi mdi-magnify text-muted"></i>
                                         </span>
-                                        <select id="dateRange" class="form-select border-0 bg-white text-dark fw-bold">
-                                            <option value="">All Time</option>
-                                            <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>
-                                                Today</option>
-                                            <option value="yesterday"
-                                                {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday
-                                            </option>
-                                            <option value="this_week"
-                                                {{ request('date_range') == 'this_week' ? 'selected' : '' }}>This Week
-                                            </option>
-                                            <option value="last_week"
-                                                {{ request('date_range') == 'last_week' ? 'selected' : '' }}>Last Week
-                                            </option>
-                                            <option value="this_month"
-                                                {{ request('date_range') == 'this_month' ? 'selected' : '' }}>This Month
-                                            </option>
-                                            <option value="last_month"
-                                                {{ request('date_range') == 'last_month' ? 'selected' : '' }}>Last Month
-                                            </option>
-                                            <option value="custom"
-                                                {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range
-                                            </option>
-                                        </select>
+                                        <input type="text" id="dtSearch" class="form-control border-start-0 bg-white"
+                                            placeholder="Search invoices...">
                                     </div>
-
-                                    <div id="customDateContainer" style="display: none;">
-                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                            <span class="input-group-text bg-primary text-white border-primary px-3">
-                                                <i class="mdi mdi-account-outline"></i>
-                                            </span>
-                                            <input type="date" id="customStartDate"
-                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
-                                                value="{{ request('start_date') }}" style="border-radius: 0;">
-                                        </div>
-
-                                        <span class="mx-1 text-primary fw-bold">to</span>
-
-                                        <div class="input-group input-group-sm shadow rounded" style="width: 180px;">
-                                            <span class="input-group-text bg-primary text-white border-primary px-3">
-                                                <i class="mdi mdi-account-outline"></i>
-                                            </span>
-                                            <input type="date" id="customEndDate"
-                                                class="form-control border-0 bg-white text-dark fw-bold shadow-none"
-                                                value="{{ request('end_date') }}" style="border-radius: 0;">
-                                        </div>
-                                    </div>
-
-                                    {{-- ✅ CLEAR FILTER BUTTON (Pill Shape) --}}
-                                    @if (request()->has('customer_id') ||
-                                            request()->has('date_range') ||
-                                            request()->has('start_date') ||
-                                            request()->has('end_date'))
-                                        <a href="{{ route('customer.invoices') }}"
-                                            class="btn btn-outline-danger btn-sm shadow-sm rounded-pill px-3"
-                                            title="Clear Filters">
-                                            <i class="mdi mdi-close me-1"></i> Clear
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
 
-                            @if ($invoices->isEmpty())
-                                <div class="text-center py-5">
-                                    <i class="mdi mdi-file-document-outline" style="font-size: 64px; color: #ddd;"></i>
-                                    <h4 class="mt-3 text-muted">No invoices found</h4>
-                                    <p class="text-muted">You don't have any invoices yet.</p>
-                                </div>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-borderless">
-                                        <thead>
+                            {{-- ✅ TABLE --}}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-borderless" id="invoiceTable">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Invoice No</th>
+                                            <th>Products</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Subtotal</th>
+                                            <th>Tax</th>
+                                            <th>Total Amount</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($invoices as $item)
                                             <tr>
-                                                <th>#</th>
-                                                <th>Invoice No</th>
-                                                <th>Products</th>
-                                                <th>Quantity</th>
-                                                <th>Price</th>
-                                                <th>Subtotal</th>
-                                                <th>Tax</th>
-                                                <th>Total Amount</th>
-                                                <th>Date</th>
-                                                <th>Actions</th>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td><strong>{{ $item->invoice_number }}</strong></td>
+                                                <td>
+                                                    @foreach ($item->products as $product)
+                                                        <span
+                                                            class="badge badge-info mb-1">{{ $product['product_name'] }}</span>
+                                                    @endforeach
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ collect($item->products)->sum('quantity') }}</strong>
+                                                </td>
+                                                <td>
+                                                    @if (isset($item->products[0]))
+                                                        ₹{{ number_format($item->products[0]['price'], 2) }}
+                                                    @else
+                                                        ₹0.00
+                                                    @endif
+                                                </td>
+                                                <td>₹{{ number_format($item->subtotal, 2) }}</td>
+                                                <td>₹{{ number_format($item->tax_amount, 2) }}</td>
+                                                <td>
+                                                    <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-info btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#viewInvoiceModal{{ $item->id }}">
+                                                        <i class="mdi mdi-eye"></i> View
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($invoices as $item)
-                                                <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td><strong>{{ $item->invoice_number }}</strong></td>
-                                                    <td>
-                                                        @foreach ($item->products as $product)
-                                                            <span
-                                                                class="badge badge-info mb-1">{{ $product['product_name'] }}</span>
-                                                        @endforeach
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <strong>{{ collect($item->products)->sum('quantity') }}</strong>
-                                                    </td>
-                                                    <td>
-                                                        @if (isset($item->products[0]))
-                                                            ₹{{ number_format($item->products[0]['price'], 2) }}
-                                                        @else
-                                                            ₹0.00
-                                                        @endif
-                                                    </td>
-                                                    <td>₹{{ number_format($item->subtotal, 2) }}</td>
-                                                    <td>₹{{ number_format($item->tax_amount, 2) }}</td>
-                                                    <td>
-                                                        <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
-                                                    </td>
-                                                    <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}
-                                                    </td>
-                                                    <td>
-                                                        <button type="button" class="btn btn-info btn-sm"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#viewInvoiceModal{{ $item->id }}">
-                                                            <i class="mdi mdi-eye"></i> View
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="10" class="text-center">No invoices found.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
+                                        @empty
+                                            <tr>
+                                                <td colspan="10" class="text-center">No invoices found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
 
-                            {{-- ✅ PAGINATION --}}
-                            @if ($invoices->hasPages())
-                                <div class="d-flex justify-content-center mt-4">
-                                    {{ $invoices->appends(request()->query())->links() }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="dateRangeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-body p-0">
+                    <div class="d-flex" style="min-height: 420px;">
+
+                        {{-- LEFT SIDEBAR: Presets --}}
+                        <div class="p-3 border-end" style="width: 190px; background: #f8f9fa;">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3"
+                                style="font-size: 0.7rem; letter-spacing: 0.05em;">Quick Select</h6>
+                            <div class="preset-list d-flex flex-column gap-1">
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="today">Today</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="yesterday">Yesterday</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="last7">Past 7 days</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="last30">Past 30 days</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="thisMonth">This month</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="lastMonth">Previous month</button>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
+                                    data-range="thisYear">This year</button>
+                                <div class="border-top my-2"></div>
+                                <button type="button" class="preset-btn w-100 text-start btn btn-sm active"
+                                    data-range="custom">Custom range</button>
+                            </div>
+                        </div>
+
+                        {{-- RIGHT: Dual Calendar --}}
+                        <div class="flex-grow-1 p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calPrev"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-chevron-left"></i>
+                                </button>
+                                <div class="d-flex gap-5">
+                                    <strong id="month1Label" class="fs-6 text-dark">January 2026</strong>
+                                    <strong id="month2Label" class="fs-6 text-dark">February 2026</strong>
                                 </div>
-                            @endif
+                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calNext"
+                                    style="width: 32px; height: 32px;">
+                                    <i class="mdi mdi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="d-flex gap-4 flex-grow-1">
+                                {{-- Calendar 1 --}}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                        <div class="flex-grow-1 py-1">Su</div>
+                                        <div class="flex-grow-1 py-1">Mo</div>
+                                        <div class="flex-grow-1 py-1">Tu</div>
+                                        <div class="flex-grow-1 py-1">We</div>
+                                        <div class="flex-grow-1 py-1">Th</div>
+                                        <div class="flex-grow-1 py-1">Fr</div>
+                                        <div class="flex-grow-1 py-1">Sa</div>
+                                    </div>
+                                    <div id="calendar1" class="calendar-grid"></div>
+                                </div>
+                                {{-- Calendar 2 --}}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                        <div class="flex-grow-1 py-1">Su</div>
+                                        <div class="flex-grow-1 py-1">Mo</div>
+                                        <div class="flex-grow-1 py-1">Tu</div>
+                                        <div class="flex-grow-1 py-1">We</div>
+                                        <div class="flex-grow-1 py-1">Th</div>
+                                        <div class="flex-grow-1 py-1">Fr</div>
+                                        <div class="flex-grow-1 py-1">Sa</div>
+                                    </div>
+                                    <div id="calendar2" class="calendar-grid"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                                <button type="button" class="btn btn-light btn-sm px-3 rounded-pill"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" id="applyDateRange"
+                                    class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold">Apply dates</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -201,7 +245,7 @@
         </div>
     </div>
 
-    <!-- View Invoice Modals -->
+    {{-- View Invoice Modals --}}
     @foreach ($invoices as $item)
         <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg" role="document">
@@ -284,83 +328,497 @@
     @endforeach
 
     <style>
-        .filter-input,
-        .custom-date-input {
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
-            min-width: 140px;
-            max-width: 100%;
+        /* Table Styling */
+        #invoiceTable {
+            width: 100% !important;
         }
 
-        .filter-input:hover,
-        .custom-date-input:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-            transform: translateY(-1px);
+        #invoiceTable tbody tr:hover {
+            background-color: #f8f9fa !important;
+            transition: background-color 0.3s ease;
         }
 
-        .pagination {
-            display: flex !important;
-            justify-content: center !important;
-            margin-top: 30px !important;
-            gap: 6px !important;
-            padding-bottom: 20px !important;
+        #invoiceTable tbody tr td {
+            vertical-align: middle;
         }
 
-        .pagination .page-item {
-            margin: 0 !important;
+        .badge-info {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            padding: 4px 8px;
+            margin: 2px;
+            font-weight: 500;
+            border-radius: 4px;
         }
 
-        .pagination .page-link {
-            background: #ffffff !important;
-            border: 1px solid #e0e0e0 !important;
-            border-radius: 50px !important;
-            padding: 8px 16px !important;
-            font-weight: 500 !important;
-            color: #555555 !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-            text-decoration: none !important;
+        /* ✅ Date Range Picker Styles */
+        .preset-btn {
+            color: #495057;
+            background: transparent;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
         }
 
-        .pagination .page-link:hover {
-            background: #f0f7ff !important;
-            border-color: #0d6efd !important;
-            color: #0d6efd !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15) !important;
-            z-index: 2 !important;
+        .preset-btn:hover {
+            background: #e9ecef;
+            color: #212529;
         }
 
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(145deg, #0d6efd 0%, #0dcaf0 100%) !important;
-            border-color: transparent !important;
-            color: #ffffff !important;
-            box-shadow: 0 6px 20px rgba(13, 110, 253, 0.45) !important;
-            transform: scale(1.05) !important;
+        .preset-btn.active {
+            background: #0d6efd;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
         }
 
-        .pagination .page-item.disabled .page-link {
-            color: #adb5bd !important;
-            background: #ffffff !important;
-            border-color: #e0e0e0 !important;
-            box-shadow: none !important;
-            transform: none !important;
-            cursor: not-allowed !important;
-            opacity: 0.6 !important;
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
         }
 
-        @media (max-width: 576px) {
-            .pagination .page-link {
-                padding: 6px 12px !important;
-                font-size: 14px !important;
-            }
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .cal-day:hover:not(.empty):not(.disabled) {
+            background: #e9ecef;
+        }
+
+        .cal-day.other-month {
+            color: #ced4da;
+            pointer-events: none;
+        }
+
+        .cal-day.in-range {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border-radius: 0;
+        }
+
+        .cal-day.in-range.start-date {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .cal-day.in-range.end-date {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .cal-day.selected-start,
+        .cal-day.selected-end {
+            background: #0d6efd !important;
+            color: #fff !important;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.35);
+        }
+
+        .cal-day.selected-start {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .cal-day.selected-end {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .cal-day.selected-both {
+            border-radius: 8px !important;
+        }
+
+        .cal-day.empty {
+            pointer-events: none;
+        }
+
+        .cal-nav {
+            transition: all 0.2s;
+        }
+
+        .cal-nav:hover {
+            background: #e9ecef !important;
+        }
+
+        #dateRangeBtn {
+            border-color: #dee2e6;
+            font-weight: 500;
+        }
+
+        #dateRangeBtn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        /* ✅ Centered Pagination Fix */
+        .dataTables_wrapper .dataTables_paginate {
+            float: none !important;
+            text-align: center !important;
+            padding-top: 1em !important;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            float: none !important;
+            text-align: center !important;
+            padding-top: 0.5em !important;
+            padding-bottom: 0.5em !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            margin: 0 2px !important;
+            display: inline-block !important;
         }
     </style>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include DataTables CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
     <script>
         $(document).ready(function() {
 
-            // Auto-hide alerts after 5 seconds
+            // ===================== DATATABLES =====================
+            var table = $('#invoiceTable').DataTable({
+                responsive: true,
+                processing: true,
+                serverSide: false,
+                pageLength: 10,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
+                ],
+                order: [
+                    [0, 'asc']
+                ],
+                columnDefs: [{
+                        orderable: false,
+                        targets: [2, 9]
+                    },
+                    {
+                        searchable: false,
+                        targets: [2, 9]
+                    },
+                    {
+                        className: 'text-center',
+                        targets: [3]
+                    }
+                ],
+                language: {
+                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
+                    search: "",
+                    searchPlaceholder: "Search invoices...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ invoices",
+                    infoEmpty: "Showing 0 to 0 of 0 invoices",
+                    infoFiltered: "(filtered from _MAX_ total invoices)",
+                    zeroRecords: "No matching invoices found",
+                    emptyTable: "No invoices available",
+                    paginate: {
+                        first: '<i class="mdi mdi-chevron-double-left"></i>',
+                        previous: '<i class="mdi mdi-chevron-left"></i>',
+                        next: '<i class="mdi mdi-chevron-right"></i>',
+                        last: '<i class="mdi mdi-chevron-double-right"></i>'
+                    }
+                },
+                dom: '<"row"<"col-12"t>>' +
+                    '<"row"<"col-12 text-center"i>>' +
+                    '<"row"<"col-12 text-center"p>>',
+                drawCallback: function() {
+                    $('.dataTables_paginate .paginate_button').addClass('btn btn-sm');
+                }
+            });
+
+            // Sync custom dropdowns with DataTables
+            $('#dtLength').on('change', function() {
+                table.page.len($(this).val()).draw();
+            });
+            $('#dtSearch').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
+
+            // ===================== CUSTOM DATE RANGE PICKER =====================
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August",
+                "September", "October", "November", "December"
+            ];
+            let currentMonth = new Date();
+            currentMonth.setDate(1);
+            let selectedStart = null;
+            let selectedEnd = null;
+            let activePreset = 'custom';
+
+            // Parse existing URL params
+            var urlParams = new URLSearchParams(window.location.search);
+            const existingStart = urlParams.get('start_date');
+            const existingEnd = urlParams.get('end_date');
+
+            if (existingStart && existingEnd) {
+                selectedStart = new Date(existingStart + 'T00:00:00');
+                selectedEnd = new Date(existingEnd + 'T00:00:00');
+                currentMonth = new Date(selectedStart);
+                currentMonth.setDate(1);
+                updateButtonLabelFromDates();
+            }
+
+            function formatDate(d) {
+                var year = d.getFullYear();
+                var month = String(d.getMonth() + 1).padStart(2, '0');
+                var day = String(d.getDate()).padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            }
+
+            function formatDisplay(d) {
+                return monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+            }
+
+            function isSameDay(d1, d2) {
+                return d1 && d2 && d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1
+                    .getDate() === d2.getDate();
+            }
+
+            function isBetween(target, d1, d2) {
+                if (!d1 || !d2) return false;
+                const start = d1 < d2 ? d1 : d2;
+                const end = d1 < d2 ? d2 : d1;
+                const t = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+                return t > start && t < end;
+            }
+
+            function getPresetRange(range) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                let start, end;
+                switch (range) {
+                    case 'today':
+                        start = new Date(today);
+                        end = new Date(today);
+                        break;
+                    case 'yesterday':
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 1);
+                        end = new Date(start);
+                        break;
+                    case 'last7':
+                        end = new Date(today);
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 6);
+                        break;
+                    case 'last30':
+                        end = new Date(today);
+                        start = new Date(today);
+                        start.setDate(start.getDate() - 29);
+                        break;
+                    case 'thisMonth':
+                        start = new Date(today.getFullYear(), today.getMonth(), 1);
+                        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        break;
+                    case 'lastMonth':
+                        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        end = new Date(today.getFullYear(), today.getMonth(), 0);
+                        break;
+                    case 'thisYear':
+                        start = new Date(today.getFullYear(), 0, 1);
+                        end = new Date(today.getFullYear(), 11, 31);
+                        break;
+                    default:
+                        return null;
+                }
+                return {
+                    start,
+                    end
+                };
+            }
+
+            function renderCalendar() {
+                const m1 = new Date(currentMonth);
+                const m2 = new Date(currentMonth);
+                m2.setMonth(m2.getMonth() + 1);
+
+                $('#month1Label').text(monthNames[m1.getMonth()] + ' ' + m1.getFullYear());
+                $('#month2Label').text(monthNames[m2.getMonth()] + ' ' + m2.getFullYear());
+
+                renderMonthGrid('calendar1', m1);
+                renderMonthGrid('calendar2', m2);
+            }
+
+            function renderMonthGrid(containerId, date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const grid = $('#' + containerId);
+                grid.empty();
+
+                for (let i = 0; i < firstDay; i++) {
+                    grid.append('<div class="cal-day empty"></div>');
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const cellDate = new Date(year, month, d);
+                    let classes = 'cal-day';
+                    let inRange = false;
+                    let isStart = false;
+                    let isEnd = false;
+
+                    if (selectedStart && selectedEnd) {
+                        isStart = isSameDay(cellDate, selectedStart);
+                        isEnd = isSameDay(cellDate, selectedEnd);
+                        inRange = isBetween(cellDate, selectedStart, selectedEnd);
+                    } else if (selectedStart && !selectedEnd) {
+                        isStart = isSameDay(cellDate, selectedStart);
+                    }
+
+                    if (isStart && isEnd) {
+                        classes += ' selected-both selected-start selected-end';
+                    } else if (isStart) {
+                        classes += ' selected-start';
+                        if (selectedEnd) classes += ' in-range';
+                    } else if (isEnd) {
+                        classes += ' selected-end in-range';
+                    } else if (inRange) {
+                        classes += ' in-range';
+                    }
+
+                    const btn = $('<div class="' + classes + '">' + d + '</div>');
+                    btn.on('click', function() {
+                        onDayClick(cellDate);
+                    });
+                    grid.append(btn);
+                }
+
+                const totalCells = firstDay + daysInMonth;
+                const remaining = 42 - totalCells;
+                for (let i = 0; i < remaining; i++) {
+                    grid.append('<div class="cal-day empty"></div>');
+                }
+            }
+
+            function onDayClick(date) {
+                activePreset = 'custom';
+                $('.preset-btn').removeClass('active');
+                $('.preset-btn[data-range="custom"]').addClass('active');
+
+                if (!selectedStart || (selectedStart && selectedEnd)) {
+                    selectedStart = date;
+                    selectedEnd = null;
+                } else {
+                    if (date < selectedStart) {
+                        selectedEnd = selectedStart;
+                        selectedStart = date;
+                    } else {
+                        selectedEnd = date;
+                    }
+                }
+                renderCalendar();
+            }
+
+            function applyPreset(range) {
+                const r = getPresetRange(range);
+                if (!r) return;
+                selectedStart = r.start;
+                selectedEnd = r.end;
+                activePreset = range;
+                renderCalendar();
+            }
+
+            function updateButtonLabelFromDates() {
+                if (!selectedStart || !selectedEnd) {
+                    $('#dateRangeLabel').text('All Time');
+                    return;
+                }
+                const s = formatDate(selectedStart);
+                const e = formatDate(selectedEnd);
+                const now = new Date();
+                const today = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+                const yesterday = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+
+                if (s === today && e === today) $('#dateRangeLabel').text('Today');
+                else if (s === yesterday && e === yesterday) $('#dateRangeLabel').text('Yesterday');
+                else if (s === e) $('#dateRangeLabel').text(formatDisplay(selectedStart));
+                else $('#dateRangeLabel').text(formatDisplay(selectedStart) + ' - ' + formatDisplay(selectedEnd));
+            }
+
+            $('#calPrev').on('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() - 1);
+                renderCalendar();
+            });
+            $('#calNext').on('click', function() {
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                renderCalendar();
+            });
+
+            $('.preset-btn').on('click', function() {
+                const range = $(this).data('range');
+                $('.preset-btn').removeClass('active');
+                $(this).addClass('active');
+                if (range === 'custom') {
+                    activePreset = 'custom';
+                } else {
+                    applyPreset(range);
+                }
+            });
+
+            $('#applyDateRange').on('click', function() {
+                if (!selectedStart || !selectedEnd) {
+                    if (activePreset !== 'custom') {
+                        const r = getPresetRange(activePreset);
+                        if (r) {
+                            selectedStart = r.start;
+                            selectedEnd = r.end;
+                        }
+                    }
+                }
+
+                if (selectedStart && selectedEnd) {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('date_range', 'custom');
+                    url.searchParams.set('start_date', formatDate(selectedStart));
+                    url.searchParams.set('end_date', formatDate(selectedEnd));
+                    window.location.href = url.toString();
+                } else {
+                    $('#dateRangeModal').modal('hide');
+                }
+            });
+
+            $(document).on('click', 'a[href*="customer.invoices"]', function() {
+                selectedStart = null;
+                selectedEnd = null;
+                activePreset = 'custom';
+            });
+
+            $('#dateRangeModal').on('shown.bs.modal', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const startParam = urlParams.get('start_date');
+                const endParam = urlParams.get('end_date');
+
+                if (startParam && endParam) {
+                    selectedStart = new Date(startParam + 'T00:00:00');
+                    selectedEnd = new Date(endParam + 'T00:00:00');
+                    currentMonth = new Date(selectedStart);
+                    currentMonth.setDate(1);
+                    renderCalendar();
+                }
+            });
+
+            renderCalendar();
+            updateButtonLabelFromDates();
+
+            // ===================== DELETE & ALERTS =====================
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
@@ -371,83 +829,6 @@
                     }, 500);
                 });
             }, 500);
-
-            // 1. Show/Hide Custom Date Inputs when 'Custom Range' is selected
-            const dateRangeSelect = document.getElementById('dateRange');
-            const customDateContainer = document.getElementById('customDateContainer');
-
-            function toggleCustomDate() {
-                if (dateRangeSelect.value === 'custom') {
-                    $(customDateContainer).fadeIn(200).removeClass('d-none');
-                } else {
-                    $(customDateContainer).hide().addClass('d-none');
-                    $('#customStartDate').val('');
-                    $('#customEndDate').val('');
-                }
-            }
-
-            // Run toggle on page load
-            toggleCustomDate();
-
-            // 2. FILTERS REDIRECT LOGIC (With Date Validation)
-            $('#dateRange, #customStartDate, #customEndDate').on('change', function() {
-                // ✅ REMOVED customer variable since there is no customer dropdown
-                var dateRange = $('#dateRange').val();
-                var startDate = $('#customStartDate').val();
-                var endDate = $('#customEndDate').val();
-
-                // Clear previous error messages first
-                $('#global-alert-container').empty();
-
-                // Validate Custom Dates
-                if (dateRange === 'custom' && startDate && endDate) {
-                    if (new Date(startDate) > new Date(endDate)) {
-                        $('#global-alert-container').html(`
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Error!</strong> Start date cannot be after End date. Please adjust your date range.
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    `);
-                        $('#customStartDate').addClass('is-invalid');
-                        $('#customEndDate').addClass('is-invalid');
-                        return; // stop redirect
-                    } else {
-                        $('#customStartDate').removeClass('is-invalid');
-                        $('#customEndDate').removeClass('is-invalid');
-                    }
-                }
-
-                var url = new URL(window.location.href);
-
-                // ✅ REMOVED customer search param logic
-                url.searchParams.delete('customer_id');
-
-                if (dateRange) {
-                    url.searchParams.set('date_range', dateRange);
-                } else {
-                    url.searchParams.delete('date_range');
-                }
-
-                if (dateRange === 'custom') {
-                    if (startDate) {
-                        url.searchParams.set('start_date', startDate);
-                    } else {
-                        url.searchParams.delete('start_date');
-                    }
-                    if (endDate) {
-                        url.searchParams.set('end_date', endDate);
-                    } else {
-                        url.searchParams.delete('end_date');
-                    }
-                } else {
-                    url.searchParams.delete('start_date');
-                    url.searchParams.delete('end_date');
-                }
-
-                window.location.href = url.toString();
-            });
         });
     </script>
 @endsection
