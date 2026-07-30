@@ -9,27 +9,29 @@
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
 
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             {{ session('error') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                 </div>
             </div>
+
+            {{-- FILTERS + CREATE BUTTON ROW --}}
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+                        {{-- LEFT: Filters --}}
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <span class="text-muted fw-bold small me-1">Filter By:</span>
+
+                            {{-- Customer Filter --}}
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
                                     type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -47,262 +49,268 @@
                                 </ul>
                             </div>
 
-                            <button type="button" id="dateRangeBtn"
-                                class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3" data-bs-toggle="modal"
-                                data-bs-target="#dateRangeModal">
-                                <i class="mdi mdi-calendar-outline me-1"></i>
-                                <span id="dateRangeLabel">All Time</span>
-                            </button>
+                            {{-- Date Range Dropdown --}}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
+                                    type="button" id="dateRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-calendar-outline me-1"></i>
+                                    <span id="dateRangeLabel">All Time</span>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm" aria-labelledby="dateRangeDropdown"
+                                    style="min-width: 200px;">
+                                    <li><a class="dropdown-item date-preset-option" href="#" data-range="all">All
+                                            Time</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="today">Today</a></li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="yesterday">Yesterday</a></li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="this_week">This Week</a></li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="last_week">Last Week</a></li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="this_month">This Month</a></li>
+                                    <li><a class="dropdown-item date-preset-option" href="#"
+                                            data-range="last_month">Last Month</a></li>
+                                    <li>
+                                    <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#dateRangeModal">Custom Range</a></li>
+                                </ul>
+                            </div>
+
+                            {{-- Clear Filters Button --}}
                             <a href="{{ route('invoices.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
                                 <i class="mdi mdi-close me-1"></i> Clear
                             </a>
                         </div>
-                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-8 py-2 md-12">
+
+                        {{-- RIGHT: Create Button --}}
+                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
                             <i class="mdi mdi-plus me-1"></i>Create New Invoice
                         </a>
                     </div>
                 </div>
             </div>
 
+            {{-- MAIN CARD --}}
             <div class="row">
                 <div class="col-md-12 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row align-items-center mb-4 pb-3 border-bottom">
-
-                                <!-- Left -->
-                                <div class="col-lg-8 col-md-7">
-                                    <div class="d-flex align-items-center gap-4">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm"
-                                                style="width:48px;height:48px;">
-                                                <i class="mdi mdi-file-document-outline fs-3"></i>
-                                            </div>
-
-                                            <div>
-                                                <h4 class="card-title mb-0 fw-bold">Invoice List</h4>
-                                                <small class="text-muted">Manage your invoices</small>
-                                            </div>
-                                        </div>
-
-                                        <div class="vr d-none d-md-block"></div>
-
-                                        <div class="d-flex align-items-center gap-2 bg-light rounded-pill px-3 py-1 border">
-                                            <span>Show</span>
-
-                                            <select id="dtLength"
-                                                class="form-select form-select-sm border-0 bg-transparent"
-                                                style="width:65px;">
-                                                <option>10</option>
-                                                <option>25</option>
-                                                <option>50</option>
-                                                <option>100</option>
-                                            </select>
-
-                                            <span>Rows</span>
-                                        </div>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            {{-- HEADER ROW --}}
+                            <div
+                                class="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 pb-3 border-bottom">
+                                <!-- Left: Title -->
+                                <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
+                                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                        style="width:48px;height:48px;">
+                                        <i class="mdi mdi-file-document-outline fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="card-title mb-0 fw-bold">Invoice List</h4>
+                                        <small class="text-muted">Manage your invoices</small>
                                     </div>
                                 </div>
 
-                                <!-- Right -->
-                                <div class="col-lg-4 col-md-5 text-end">
-                                    <div class="input-group input-group-sm ms-auto" style="width:250px;">
-                                        <span class="input-group-text bg-white">
-                                            <i class="mdi mdi-magnify"></i>
-                                        </span>
-
-                                        <input id="dtSearch" class="form-control" placeholder="Search invoices">
-                                    </div>
+                                <!-- Right: Search -->
+                                <div class="input-group input-group-sm" style="max-width:250px;">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="mdi mdi-magnify text-muted"></i>
+                                    </span>
+                                    <input id="dtSearch" class="form-control bg-light border-start-0"
+                                        placeholder="Search invoices">
                                 </div>
+                            </div>
+
+                            {{-- TABLE --}}
+                            <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+                                <table class="table table-striped table-borderless" id="invoiceTable">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Invoice No</th>
+                                            <th>Customer</th>
+                                            <th>Products</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Subtotal</th>
+                                            <th>Tax</th>
+                                            <th>Grand Total</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($invoices as $item)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td><strong>{{ $item->invoice_number }}</strong></td>
+                                                <td>
+                                                    {{ $item->customer_name }}
+                                                    <br>
+                                                    <small class="text-muted">{{ $item->customer_email }}</small>
+                                                </td>
+                                                <td>
+                                                    @foreach ($item->products as $product)
+                                                        <span class="badge badge-info">
+                                                            {{ $product['product_name'] }}
+                                                            @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                                (x{{ $product['quantity'] }})
+                                                            @endif
+                                                        </span>
+                                                    @endforeach
+                                                </td>
+                                                <td class="text-center">
+                                                    <strong>{{ collect($item->products)->sum('quantity') }}</strong>
+                                                </td>
+                                                <td>
+                                                    @if (isset($item->products[0]))
+                                                        ₹{{ number_format($item->products[0]['price'], 2) }}
+                                                    @else
+                                                        ₹0.00
+                                                    @endif
+                                                </td>
+                                                <td>₹{{ number_format($item->subtotal, 2) }}</td>
+                                                <td>₹{{ number_format($item->tax_amount, 2) }}</td>
+                                                <td>
+                                                    <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
+                                                <td style="min-width: 180px;">
+                                                    <div class="d-flex align-items-center gap-1 flex-nowrap">
+                                                        <!-- View Button -->
+                                                        <button type="button" class="btn btn-info btn-sm"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#viewInvoiceModal{{ $item->id }}">
+                                                            <i class="mdi mdi-eye me-1"></i> View
+                                                        </button>
+
+                                                        <!-- Update Button -->
+                                                        <a href="{{ route('invoices.edit', $item->id) }}"
+                                                            class="btn btn-primary btn-sm">
+                                                            <i class="mdi mdi-pencil me-1"></i> Update
+                                                        </a>
+
+                                                        <!-- Delete Button -->
+                                                        <button type="button" class="btn btn-danger btn-sm"
+                                                            onclick="confirmDelete('{{ $item->id }}')">
+                                                            <i class="mdi mdi-delete me-1"></i> Delete
+                                                        </button>
+                                                    </div>
+                                                    <form id="delete-form-{{ $item->id }}"
+                                                        action="{{ route('admin.invoices.destroy', $item->id) }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="11" class="text-center">No invoices found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- ✅ FOOTER: Outside card-body, properly aligned --}}
+                        <div class="card-footer bg-white border-top py-3 px-4">
+                            {{-- ✅ ENHANCED BOOTSTRAP 5 FOOTER --}}
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2 py-3 border-top mt-3"
+                                id="dtCustomFooter">
+
+                                {{-- LEFT: Show entries --}}
+                                <div id="lengthContainer" class="mb-2 mb-md-0 order-1 order-md-1"></div>
+
+                                {{-- CENTER: Pagination --}}
+                                <div id="paginationContainer" class="order-3 order-md-2"></div>
+
+                                {{-- RIGHT: Info text --}}
+                                <div id="infoContainer" class="text-end order-2 order-md-3"></div>
 
                             </div>
                         </div>
-                        {{-- TABLE --}}
-                    <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
-    <table class="table table-striped table-borderless" id="invoiceTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Invoice No</th>
-                <th>Customer</th>
-                <th>Products</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Subtotal</th>
-                <th>Tax</th>
-                <th>Grand Total</th>
-                <th>Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-                                    @forelse ($invoices as $item)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td><strong>{{ $item->invoice_number }}</strong></td>
-                                            <td>
-                                                {{ $item->customer_name }}
-                                                <br>
-                                                <small class="text-muted">{{ $item->customer_email }}</small>
-                                            </td>
-                                            <td>
-                                                @foreach ($item->products as $product)
-                                                    <span class="badge badge-info">
-                                                        {{ $product['product_name'] }}
-                                                        @if (isset($product['quantity']) && $product['quantity'] > 1)
-                                                            (x{{ $product['quantity'] }})
-                                                        @endif
-                                                    </span>
-                                                @endforeach
-                                            </td>
-                                            <td class="text-center">
-                                                <strong>{{ collect($item->products)->sum('quantity') }}</strong>
-                                            </td>
-                                            <td>
-                                                @if (isset($item->products[0]))
-                                                    ₹{{ number_format($item->products[0]['price'], 2) }}
-                                                @else
-                                                    ₹0.00
-                                                @endif
-                                            </td>
-                                            <td>₹{{ number_format($item->subtotal, 2) }}</td>
-                                            <td>₹{{ number_format($item->tax_amount, 2) }}</td>
-                                            <td>
-                                                <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
-                                            </td>
-                                            <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#viewInvoiceModal{{ $item->id }}">
-                                                    <i class="mdi mdi-eye"></i> View
-                                                </button>
-                                                <a href="{{ route('invoices.edit', $item->id) }}"
-                                                    class="btn btn-primary btn-sm">
-                                                    <i class="mdi mdi-pencil"></i> Update
-                                                </a>
-                                                <button type="button" class="btn btn-danger btn-sm"
-                                                    onclick="confirmDelete('{{ $item->id }}')">
-                                                    <i class="mdi mdi-delete"></i> Delete
-                                                </button>
-                                                <form id="delete-form-{{ $item->id }}"
-                                                    action="{{ route('admin.invoices.destroy', $item->id) }}"
-                                                    method="POST" style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="11" class="text-center">No invoices found.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
     <!-- content-wrapper ends -->
 
-    <!-- ✅ NEW: Date Range Picker Modal -->
+    {{-- CUSTOM DATE RANGE MODAL (Calendars Only) --}}
     <div class="modal fade" id="dateRangeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-body p-0">
-                    <div class="d-flex" style="min-height: 420px;">
-
-                        {{-- LEFT SIDEBAR: Presets --}}
-                        <div class="p-3 border-end" style="width: 190px; background: #f8f9fa;">
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3"
-                                style="font-size: 0.7rem; letter-spacing: 0.05em;">Quick Select</h6>
-                            <div class="preset-list d-flex flex-column gap-1">
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="today">Today</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="yesterday">Yesterday</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="last7">Past 7 days</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="last30">Past 30 days</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="thisMonth">This month</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="lastMonth">Previous month</button>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm"
-                                    data-range="thisYear">This year</button>
-                                <div class="border-top my-2"></div>
-                                <button type="button" class="preset-btn w-100 text-start btn btn-sm active"
-                                    data-range="custom">Custom range</button>
-                            </div>
+                <div class="modal-header border-bottom bg-light">
+                    <h5 class="modal-title fw-bold">Select Custom Range</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calPrev"
+                            style="width: 32px; height: 32px;">
+                            <i class="mdi mdi-chevron-left"></i>
+                        </button>
+                        <div class="d-flex gap-5">
+                            <strong id="month1Label" class="fs-6 text-dark">January 2026</strong>
+                            <strong id="month2Label" class="fs-6 text-dark">February 2026</strong>
                         </div>
+                        <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calNext"
+                            style="width: 32px; height: 32px;">
+                            <i class="mdi mdi-chevron-right"></i>
+                        </button>
+                    </div>
 
-                        {{-- RIGHT: Dual Calendar --}}
-                        <div class="flex-grow-1 p-4 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calPrev"
-                                    style="width: 32px; height: 32px;">
-                                    <i class="mdi mdi-chevron-left"></i>
-                                </button>
-                                <div class="d-flex gap-5">
-                                    <strong id="month1Label" class="fs-6 text-dark">January 2026</strong>
-                                    <strong id="month2Label" class="fs-6 text-dark">February 2026</strong>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calNext"
-                                    style="width: 32px; height: 32px;">
-                                    <i class="mdi mdi-chevron-right"></i>
-                                </button>
+                    <div class="d-flex gap-4 flex-grow-1">
+                        {{-- Calendar 1 --}}
+                        <div class="flex-grow-1">
+                            <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                <div class="flex-grow-1 py-1">Su</div>
+                                <div class="flex-grow-1 py-1">Mo</div>
+                                <div class="flex-grow-1 py-1">Tu</div>
+                                <div class="flex-grow-1 py-1">We</div>
+                                <div class="flex-grow-1 py-1">Th</div>
+                                <div class="flex-grow-1 py-1">Fr</div>
+                                <div class="flex-grow-1 py-1">Sa</div>
                             </div>
-
-                            <div class="d-flex gap-4 flex-grow-1">
-                                {{-- Calendar 1 --}}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
-                                        <div class="flex-grow-1 py-1">Su</div>
-                                        <div class="flex-grow-1 py-1">Mo</div>
-                                        <div class="flex-grow-1 py-1">Tu</div>
-                                        <div class="flex-grow-1 py-1">We</div>
-                                        <div class="flex-grow-1 py-1">Th</div>
-                                        <div class="flex-grow-1 py-1">Fr</div>
-                                        <div class="flex-grow-1 py-1">Sa</div>
-                                    </div>
-                                    <div id="calendar1" class="calendar-grid"></div>
-                                </div>
-                                {{-- Calendar 2 --}}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex text-center small text-muted mb-2 fw-semibold">
-                                        <div class="flex-grow-1 py-1">Su</div>
-                                        <div class="flex-grow-1 py-1">Mo</div>
-                                        <div class="flex-grow-1 py-1">Tu</div>
-                                        <div class="flex-grow-1 py-1">We</div>
-                                        <div class="flex-grow-1 py-1">Th</div>
-                                        <div class="flex-grow-1 py-1">Fr</div>
-                                        <div class="flex-grow-1 py-1">Sa</div>
-                                    </div>
-                                    <div id="calendar2" class="calendar-grid"></div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
-                                <button type="button" class="btn btn-light btn-sm px-3 rounded-pill"
-                                    data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" id="applyDateRange"
-                                    class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold">Apply dates</button>
-                            </div>
+                            <div id="calendar1" class="calendar-grid"></div>
                         </div>
+                        {{-- Calendar 2 --}}
+                        <div class="flex-grow-1">
+                            <div class="d-flex text-center small text-muted mb-2 fw-semibold">
+                                <div class="flex-grow-1 py-1">Su</div>
+                                <div class="flex-grow-1 py-1">Mo</div>
+                                <div class="flex-grow-1 py-1">Tu</div>
+                                <div class="flex-grow-1 py-1">We</div>
+                                <div class="flex-grow-1 py-1">Th</div>
+                                <div class="flex-grow-1 py-1">Fr</div>
+                                <div class="flex-grow-1 py-1">Sa</div>
+                            </div>
+                            <div id="calendar2" class="calendar-grid"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                        <button type="button" class="btn btn-light btn-sm px-3 rounded-pill"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="applyDateRange"
+                            class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold">Apply dates</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- View Invoice Modals -->
+    {{-- View Invoice Modals --}}
     @foreach ($invoices as $item)
         <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg" role="document">
@@ -328,7 +336,7 @@
                                 <p>
                                     <strong>Invoice #:</strong> {{ $item->invoice_number }}<br>
                                     <strong>Date:</strong>
-                                    {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}<br>
+                                    {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}
                                     <strong>Status:</strong>
                                     @if ($item->status == 'Paid')
                                         <span class="badge bg-success">Paid</span>
@@ -397,52 +405,217 @@
     @endforeach
 
     <style>
-        /* Table Styling */
+        .dropdown-menu {
+            z-index: 1090 !important;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 8px !important;
+        }
+
+        /* ===== TABLE STYLING ===== */
         #invoiceTable {
             width: 100% !important;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        #invoiceTable thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        #invoiceTable tbody tr {
+            transition: background-color 0.2s ease;
         }
 
         #invoiceTable tbody tr:hover {
             background-color: #f8f9fa !important;
-            transition: background-color 0.3s ease;
         }
 
-        #invoiceTable tbody tr td {
+        #invoiceTable tbody tr:last-child {
+            border-bottom: none !important;
+        }
+
+        #invoiceTable tbody td {
             vertical-align: middle;
+            font-size: 0.875rem;
         }
 
-        .badge-info {
-            background-color: #e3f2fd;
-            color: #0d6efd;
-            padding: 4px 8px;
-            margin: 2px;
+        /* ===== BADGE STYLING ===== */
+        .badge.bg-info.bg-opacity-10 {
+            background-color: rgba(13, 202, 240, 0.1) !important;
+            color: #0dcaf0;
             font-weight: 500;
-            border-radius: 4px;
+            padding: 0.35em 0.65em;
         }
 
-        /* ✅ Date Range Picker Styles */
-        .preset-btn {
-            color: #495057;
-            background: transparent;
-            border: none;
-            padding: 7px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
+        .badge.bg-secondary.bg-opacity-10 {
+            background-color: rgba(108, 117, 125, 0.1) !important;
+            color: #6c757d;
             font-weight: 500;
-            transition: all 0.15s ease;
         }
 
-        .preset-btn:hover {
-            background: #e9ecef;
-            color: #212529;
+        /* ===== ACTION BUTTONS ===== */
+        #invoiceTable td:last-child {
+            min-width: 200px;
+            /* Forces the Actions column to be wider */
         }
 
-        .preset-btn.active {
-            background: #0d6efd;
-            color: #fff;
-            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+        #invoiceTable .btn-sm {
+            padding: 0.25rem 0.6rem !important;
+            /* Standard button padding */
+            font-size: 0.75rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            /* Spaces the icon and text */
+            white-space: nowrap !important;
+            /* Prevents the words from breaking */
+            transition: all 0.2s ease;
         }
 
+        #invoiceTable .btn-sm i {
+            font-size: 16px !important;
+            /* Keeps the icon the correct size */
+        }
+
+        /* ✅ HIDE DEFAULT DATATABLES SEARCH BAR */
+        .dataTables_filter {
+            display: none !important;
+        }
+
+        #invoiceTable .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== FILTER BUTTONS (Pill Shape) ===== */
+        #customerDropdown,
+        #dateRangeDropdown {
+            border-color: #dee2e6;
+            font-weight: 500;
+        }
+
+        #customerDropdown:hover,
+        #dateRangeDropdown:hover {
+            background: #3d3f41;
+            border-color: #f8f3f3;
+        }
+
+        /* ===== DATA TABLES FOOTER ===== */
+        #dtCustomFooter {
+            min-height: 40px;
+        }
+
+        #lengthContainer .dataTables_length {
+            float: none !important;
+            margin: 0 !important;
+        }
+
+        #lengthContainer .dataTables_length label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 !important;
+            color: #6c757d !important;
+            font-size: 0.875rem !important;
+            font-weight: 500;
+        }
+
+        #lengthContainer .dataTables_length select {
+            border-radius: 50px !important;
+            border: 1px solid #dee2e6 !important;
+            background-color: #f8f9fa !important;
+            padding: 0.25rem 2rem 0.25rem 0.75rem !important;
+            font-size: 0.875rem !important;
+            cursor: pointer !important;
+            color: #495057 !important;
+            font-weight: 500;
+            appearance: auto;
+        }
+
+        #lengthContainer .dataTables_length select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15) !important;
+            outline: none;
+        }
+
+        /* ===== PAGINATION: Soft Pill ===== */
+        #paginationContainer .dataTables_paginate {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 4px !important;
+            float: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            flex-wrap: wrap !important;
+        }
+
+        #paginationContainer .dataTables_paginate .paginate_button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 50px;
+            height: 40px;
+            line-height: 1;
+            text-align: center;
+            border-radius: 10px !important;
+            border: 1px solid #e9ecef !important;
+            background: #ffffff !important;
+            color: #495057 !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            padding: 0 10px !important;
+            box-sizing: border-box !important;
+        }
+
+        #paginationContainer .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+            background: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+            color: #070708 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        #paginationContainer .dataTables_paginate .paginate_button.current {
+            background: #121314 !important;
+            border-color: #b7b8ba !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.28) !important;
+            transform: translateY(-1px);
+        }
+
+        #paginationContainer .dataTables_paginate .paginate_button.disabled {
+            color: #ced4da !important;
+            background: #f8f9fa !important;
+            border-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+        }
+
+        #paginationContainer .dataTables_paginate .paginate_button:active:not(.disabled) {
+            transform: translateY(0);
+            box-shadow: none !important;
+        }
+
+        #infoContainer .dataTables_info {
+            float: none !important;
+            text-align: right !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #6c757d;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* ===== CUSTOM CALENDAR ===== */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -522,47 +695,39 @@
             background: #e9ecef !important;
         }
 
-        #dateRangeBtn {
-            border-color: #dee2e6;
-            font-weight: 500;
-        }
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #dtCustomFooter {
+                text-align: center;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
 
-        #dateRangeBtn:hover {
-            background: #f8f9fa;
-            border-color: #adb5bd;
-        }
+            #lengthContainer,
+            #paginationContainer,
+            #infoContainer {
+                width: 100%;
+                display: flex !important;
+                justify-content: center !important;
+            }
 
-        /* ✅ Centered Pagination Fix */
-        .dataTables_wrapper .dataTables_paginate {
-            float: none !important;
-            text-align: center !important;
-            padding-top: 1em !important;
-        }
-
-        .dataTables_wrapper .dataTables_info {
-            float: none !important;
-            text-align: center !important;
-            padding-top: 0.5em !important;
-            padding-bottom: 0.5em !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            margin: 0 2px !important;
-            /* Spacing between buttons */
-            display: inline-block !important;
+            #infoContainer .dataTables_info {
+                text-align: center !important;
+            }
         }
     </style>
-
-    <!-- Include DataTables CSS and JS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <!-- DataTables CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
     <script>
         $(document).ready(function() {
-
+            // ===================== DATA TABLE INITIALIZATION =====================
             var table = $('#invoiceTable').DataTable({
                 responsive: true,
                 processing: true,
@@ -589,13 +754,12 @@
                     }
                 ],
                 language: {
-                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
+                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden"></span></div>',
                     search: "",
-                    searchPlaceholder: "Search invoices...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ invoices",
-                    infoEmpty: "Showing 0 to 0 of 0 invoices",
-                    infoFiltered: "(filtered from _MAX_ total invoices)",
+                    lengthMenu: "Show _MENU_",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
                     zeroRecords: "No matching invoices found",
                     emptyTable: "No invoices available",
                     paginate: {
@@ -605,72 +769,114 @@
                         last: '<i class="mdi mdi-chevron-double-right"></i>'
                     }
                 },
-
-                dom: '<"row"<"col-12"t>>' +
-                    '<"row"<"col-12 text-center"i>>' +
-                    '<"row"<"col-12 text-center"p>>',
                 drawCallback: function() {
-                    // Add standard bootstrap styling to pagination buttons
-                    $('.dataTables_paginate .paginate_button').addClass('btn btn-sm');
+                    // ✅ No longer forcing .page-link. Keep it clean for native styling.
                 }
             });
 
-            $('#dtLength').on('change', function() {
-                table.page.len($(this).val()).draw();
-            });
+            // ✅ MOVE CONTROLS TO CUSTOM BOOTSTRAP FOOTER
+            $('#lengthContainer').append($('.dataTables_length'));
+            $('#paginationContainer').append($('.dataTables_paginate'));
+            $('#infoContainer').append($('.dataTables_info'));
+
+            // Keep Search working
             $('#dtSearch').on('keyup', function() {
                 table.search($(this).val()).draw();
             });
 
-            // ===================== CUSTOMER FILTER (Dropdown) =====================
-            // Set initial label from URL params
+            // ===================== CUSTOMER FILTER =====================
             var urlParams = new URLSearchParams(window.location.search);
-            var initialCustomerId = urlParams.get('customer_id');
-            if (initialCustomerId) {
-                var customerName = $('.customer-option[data-id="' + initialCustomerId + '"]').text();
-                $('#customerLabel').text(customerName);
+
+            // Set customer label on page load
+            var customerId = urlParams.get('customer_id');
+            if (customerId) {
+                var customerName = $('.customer-option[data-id="' + customerId + '"]').text();
+                if (customerName) {
+                    $('#customerLabel').text(customerName);
+                }
             }
 
-            // On click, update label and reload page
+            // Handle customer selection
             $('.customer-option').on('click', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
                 var name = $(this).text();
-
-                $('#customerLabel').text(name);
-
                 var url = new URL(window.location.href);
-                if (id) {
-                    url.searchParams.set('customer_id', id);
-                } else {
+
+                url.searchParams.delete('page');
+
+                if (id === '') {
                     url.searchParams.delete('customer_id');
+                    $('#customerLabel').text('All Customers');
+                } else {
+                    url.searchParams.set('customer_id', id);
+                    $('#customerLabel').text(name);
                 }
+
                 window.location.href = url.toString();
             });
 
-            // ===================== CUSTOM DATE RANGE PICKER (KEEP YOUR LAYOUT) =====================
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August",
-                "September", "October", "November", "December"
+            // ===================== DATE RANGE FILTER =====================
+            var dateRangeParam = urlParams.get('date_range');
+            var startDateParam = urlParams.get('start_date');
+            var endDateParam = urlParams.get('end_date');
+
+            // Set date range label on page load
+            function updateDateRangeLabel() {
+                if (dateRangeParam && dateRangeParam !== 'custom') {
+                    var label = dateRangeParam.replace(/_/g, ' ');
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                    $('#dateRangeLabel').text(label);
+                } else if (startDateParam && endDateParam) {
+                    $('#dateRangeLabel').text(startDateParam + ' to ' + endDateParam);
+                } else {
+                    $('#dateRangeLabel').text('All Time');
+                }
+            }
+            updateDateRangeLabel();
+
+            // Handle Preset Clicks (Today, Yesterday, etc.)
+            $('.date-preset-option').on('click', function(e) {
+                e.preventDefault();
+                var range = $(this).data('range');
+                var url = new URL(window.location.href);
+
+                // Clear out any old custom dates
+                url.searchParams.delete('start_date');
+                url.searchParams.delete('end_date');
+                url.searchParams.delete('page');
+
+                if (range === 'all') {
+                    url.searchParams.delete('date_range');
+                    $('#dateRangeLabel').text('All Time');
+                } else {
+                    url.searchParams.set('date_range', range);
+                    var label = range.replace(/_/g, ' ');
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                    $('#dateRangeLabel').text(label);
+                }
+
+                window.location.href = url.toString();
+            });
+
+            // ===================== CUSTOM DATE RANGE MODAL LOGIC =====================
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
             ];
+
             let currentMonth = new Date();
             currentMonth.setDate(1);
             let selectedStart = null;
             let selectedEnd = null;
-            let activePreset = 'custom';
 
-            // Parse existing URL params
-            const existingStart = urlParams.get('start_date');
-            const existingEnd = urlParams.get('end_date');
-
-            if (existingStart && existingEnd) {
-                selectedStart = new Date(existingStart + 'T00:00:00');
-                selectedEnd = new Date(existingEnd + 'T00:00:00');
+            // Parse existing URL params for custom dates
+            if (startDateParam && endDateParam) {
+                selectedStart = new Date(startDateParam + 'T00:00:00');
+                selectedEnd = new Date(endDateParam + 'T00:00:00');
                 currentMonth = new Date(selectedStart);
                 currentMonth.setDate(1);
-                updateButtonLabelFromDates();
             }
 
-            // ✅ FIX: Format Date to YYYY-MM-DD (always 2 digits for month and day)
             function formatDate(d) {
                 var year = d.getFullYear();
                 var month = String(d.getMonth() + 1).padStart(2, '0');
@@ -678,13 +884,11 @@
                 return year + '-' + month + '-' + day;
             }
 
-            function formatDisplay(d) {
-                return monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-            }
-
             function isSameDay(d1, d2) {
-                return d1 && d2 && d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1
-                    .getDate() === d2.getDate();
+                return d1 && d2 &&
+                    d1.getFullYear() === d2.getFullYear() &&
+                    d1.getMonth() === d2.getMonth() &&
+                    d1.getDate() === d2.getDate();
             }
 
             function isBetween(target, d1, d2) {
@@ -693,51 +897,6 @@
                 const end = d1 < d2 ? d2 : d1;
                 const t = new Date(target.getFullYear(), target.getMonth(), target.getDate());
                 return t > start && t < end;
-            }
-
-            function getPresetRange(range) {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                let start, end;
-                switch (range) {
-                    case 'today':
-                        start = new Date(today);
-                        end = new Date(today);
-                        break;
-                    case 'yesterday':
-                        start = new Date(today);
-                        start.setDate(start.getDate() - 1);
-                        end = new Date(start);
-                        break;
-                    case 'last7':
-                        end = new Date(today);
-                        start = new Date(today);
-                        start.setDate(start.getDate() - 6);
-                        break;
-                    case 'last30':
-                        end = new Date(today);
-                        start = new Date(today);
-                        start.setDate(start.getDate() - 29);
-                        break;
-                    case 'thisMonth':
-                        start = new Date(today.getFullYear(), today.getMonth(), 1);
-                        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                        break;
-                    case 'lastMonth':
-                        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                        end = new Date(today.getFullYear(), today.getMonth(), 0);
-                        break;
-                    case 'thisYear':
-                        start = new Date(today.getFullYear(), 0, 1);
-                        end = new Date(today.getFullYear(), 11, 31);
-                        break;
-                    default:
-                        return null;
-                }
-                return {
-                    start,
-                    end
-                };
             }
 
             function renderCalendar() {
@@ -807,10 +966,6 @@
             }
 
             function onDayClick(date) {
-                activePreset = 'custom';
-                $('.preset-btn').removeClass('active');
-                $('.preset-btn[data-range="custom"]').addClass('active');
-
                 if (!selectedStart || (selectedStart && selectedEnd)) {
                     selectedStart = date;
                     selectedEnd = null;
@@ -825,86 +980,39 @@
                 renderCalendar();
             }
 
-            function applyPreset(range) {
-                const r = getPresetRange(range);
-                if (!r) return;
-                selectedStart = r.start;
-                selectedEnd = r.end;
-                activePreset = range;
-                renderCalendar();
-            }
-
-            function updateButtonLabelFromDates() {
-                if (!selectedStart || !selectedEnd) {
-                    $('#dateRangeLabel').text('All Time');
-                    return;
-                }
-                const s = formatDate(selectedStart);
-                const e = formatDate(selectedEnd);
-                const now = new Date();
-                const today = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
-                const yesterday = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
-
-                if (s === today && e === today) $('#dateRangeLabel').text('Today');
-                else if (s === yesterday && e === yesterday) $('#dateRangeLabel').text('Yesterday');
-                else if (s === e) $('#dateRangeLabel').text(formatDisplay(selectedStart));
-                else $('#dateRangeLabel').text(formatDisplay(selectedStart) + ' - ' + formatDisplay(selectedEnd));
-            }
-
-            // Navigation
+            // Calendar navigation
             $('#calPrev').on('click', function() {
                 currentMonth.setMonth(currentMonth.getMonth() - 1);
                 renderCalendar();
             });
+
             $('#calNext').on('click', function() {
                 currentMonth.setMonth(currentMonth.getMonth() + 1);
                 renderCalendar();
             });
 
-            // Preset clicks
-            $('.preset-btn').on('click', function() {
-                const range = $(this).data('range');
-                $('.preset-btn').removeClass('active');
-                $(this).addClass('active');
-                if (range === 'custom') {
-                    activePreset = 'custom';
-                    // Don't clear dates, let user pick
-                } else {
-                    applyPreset(range);
-                }
-            });
-
-            // ✅ FIX: Apply dates using the corrected formatDate()
+            // Apply custom date range
             $('#applyDateRange').on('click', function() {
-                if (!selectedStart || !selectedEnd) {
-                    if (activePreset !== 'custom') {
-                        const r = getPresetRange(activePreset);
-                        if (r) {
-                            selectedStart = r.start;
-                            selectedEnd = r.end;
-                        }
-                    }
-                }
-
                 if (selectedStart && selectedEnd) {
                     var url = new URL(window.location.href);
                     url.searchParams.set('date_range', 'custom');
                     url.searchParams.set('start_date', formatDate(selectedStart));
                     url.searchParams.set('end_date', formatDate(selectedEnd));
+                    url.searchParams.delete('page');
+                    window.location.href = url.toString();
+                } else if (selectedStart && !selectedEnd) {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('date_range', 'custom');
+                    url.searchParams.set('start_date', formatDate(selectedStart));
+                    url.searchParams.set('end_date', formatDate(selectedStart));
+                    url.searchParams.delete('page');
                     window.location.href = url.toString();
                 } else {
-                    $('#dateRangeModal').modal('hide');
+                    alert('Please select a date range.');
                 }
             });
 
-            // Reset local variables when the clear button is clicked
-            $(document).on('click', 'a[href*="invoices.index"]', function() {
-                selectedStart = null;
-                selectedEnd = null;
-                activePreset = 'custom';
-            });
-
-            // When opening the modal, sync the picker with the URL parameters
+            // Sync calendar with URL params when modal opens
             $('#dateRangeModal').on('shown.bs.modal', function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const startParam = urlParams.get('start_date');
@@ -915,15 +1023,26 @@
                     selectedEnd = new Date(endParam + 'T00:00:00');
                     currentMonth = new Date(selectedStart);
                     currentMonth.setDate(1);
-                    renderCalendar();
+                } else {
+                    selectedStart = null;
+                    selectedEnd = null;
+                    currentMonth = new Date();
+                    currentMonth.setDate(1);
                 }
+                renderCalendar();
             });
 
-            // Initialize
+            // Initialize calendar
             renderCalendar();
-            updateButtonLabelFromDates();
 
-            // ===================== DELETE & ALERTS =====================
+            // ===================== DELETE CONFIRMATION =====================
+            window.confirmDelete = function(id) {
+                if (confirm('Are you sure you want to delete this invoice?')) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            };
+
+            // ===================== AUTO-DISMISS ALERTS =====================
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(function(alert) {
@@ -933,13 +1052,7 @@
                         alert.style.display = 'none';
                     }, 500);
                 });
-            }, 500);
-
-            window.confirmDelete = function(id) {
-                if (confirm('Are you sure you want to delete this invoice?')) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            };
+            }, 5000);
         });
     </script>
 @endsection
