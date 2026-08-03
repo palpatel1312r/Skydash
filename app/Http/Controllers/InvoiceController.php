@@ -14,6 +14,12 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'date_range' => 'nullable|in:today,yesterday,this_week,last_week,this_month,last_month,custom',
+            'start_date' => 'nullable|required_if:date_range,custom|date_format:Y-m-d',
+            'end_date' => 'nullable|required_if:date_range,custom|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
+
         $query = Invoice::with('customer')->orderBy('created_at', 'desc');
 
         // Date Range Filter
@@ -27,27 +33,33 @@ class InvoiceController extends Controller
                     $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
                     break;
                 case 'this_week':
-                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+                    $query->whereBetween('invoice_date', [
+                        $now->copy()->startOfWeek()->toDateString(),
+                        $now->copy()->endOfWeek()->toDateString(),
+                    ]);
                     break;
                 case 'last_week':
-                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
-                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
+                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek()->toDateString();
+                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek()->toDateString();
                     $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
                     break;
                 case 'this_month':
-                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
+                    $query->whereBetween('invoice_date', [
+                        $now->copy()->startOfMonth()->toDateString(),
+                        $now->copy()->endOfMonth()->toDateString(),
+                    ]);
                     break;
                 case 'last_month':
-                    $lastMonth = $now->copy()->subMonth();
-                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
+                    $lastMonth = $now->copy()->startOfMonth()->subMonth();
+                    $query->whereBetween('invoice_date', [
+                        $lastMonth->copy()->startOfMonth()->toDateString(),
+                        $lastMonth->copy()->endOfMonth()->toDateString(),
+                    ]);
                     break;
                 case 'custom':
                     // ✅ FIX: Use startOfDay() and endOfDay() to precisely capture the range
                     if ($request->filled('start_date') && $request->filled('end_date')) {
-                        $startDateTime = \Carbon\Carbon::parse($request->start_date)->startOfDay();
-                        $endDateTime = \Carbon\Carbon::parse($request->end_date)->endOfDay();
-
-                        $query->whereBetween('invoice_date', [$startDateTime, $endDateTime]);
+                        $query->whereBetween('invoice_date', [$request->start_date, $request->end_date]);
                     }
                     break;
             }

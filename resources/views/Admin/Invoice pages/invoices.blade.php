@@ -5,7 +5,7 @@
     <div class="main-panel">
         <div class="content-wrapper">
             <div class="row">
-                <div class="col-md-12 grid-margin">
+                <div class="col-12 grid-margin">
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success') }}
@@ -25,11 +25,12 @@
             {{-- FILTERS + CREATE BUTTON ROW --}}
             <div class="row mb-3">
                 <div class="col-12">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div
+                        class="d-flex flex-column flex-sm-row flex-wrap align-items-start align-items-sm-center justify-content-between gap-2 gap-sm-3">
 
                         {{-- LEFT: Filters --}}
                         <div class="d-flex flex-wrap align-items-center gap-2">
-                            <span class="text-muted fw-bold small me-1">Filter By:</span>
+                            <span class="text-muted fw-bold small me-1 d-none d-sm-inline">Filter By:</span>
 
                             {{-- Customer Filter --}}
                             <div class="dropdown">
@@ -76,7 +77,7 @@
                                     <li><a class="dropdown-item date-preset-option" href="#"
                                             data-range="last_month">Last Month</a></li>
                                     <li>
-                                    <hr class="dropdown-divider">
+                                        <hr class="dropdown-divider">
                                     </li>
                                     <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                             data-bs-target="#dateRangeModal">Custom Range</a></li>
@@ -87,13 +88,13 @@
                             <a href="{{ route('invoices.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
                                {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
-                                <i class="mdi mdi-close me-1"></i> Clear
+                                <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
 
                         {{-- RIGHT: Create Button --}}
-                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-4 py-2">
-                            <i class="mdi mdi-plus me-1"></i>Create New Invoice
+                        <a href="{{ route('invoices.create') }}" class="btn btn-primary shadow px-3 px-sm-4 py-2">
+                            <i class="mdi mdi-plus me-1"></i><span class="d-none d-sm-inline">Create New </span>Invoice
                         </a>
                     </div>
                 </div>
@@ -101,15 +102,15 @@
 
             {{-- MAIN CARD --}}
             <div class="row">
-                <div class="col-md-12 grid-margin stretch-card">
+                <div class="col-12 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-0">
                             {{-- HEADER ROW --}}
                             <div
-                                class="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 pb-3 border-bottom">
+                                class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-3 p-sm-4 pb-3 border-bottom">
                                 <!-- Left: Title -->
                                 <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
-                                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0"
                                         style="width:48px;height:48px;">
                                         <i class="mdi mdi-file-document-outline fs-3"></i>
                                     </div>
@@ -120,7 +121,7 @@
                                 </div>
 
                                 <!-- Right: Search -->
-                                <div class="input-group input-group-sm" style="max-width:250px;">
+                                <div class="input-group input-group-sm w-100" style="max-width:250px;">
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="mdi mdi-magnify text-muted"></i>
                                     </span>
@@ -134,17 +135,17 @@
                                 <table class="table table-striped table-borderless" id="invoiceTable">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
-                                            <th>Invoice No</th>
-                                            <th>Customer</th>
-                                            <th>Products</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Subtotal</th>
-                                            <th>Tax</th>
-                                            <th>Grand Total</th>
-                                            <th>Date</th>
-                                            <th>Actions</th>
+                                            <th class="text-nowrap">#</th>
+                                            <th class="text-nowrap">Invoice No</th>
+                                            <th class="text-nowrap">Customer</th>
+                                            <th class="text-nowrap">Products</th>
+                                            <th class="text-nowrap text-center">Qty</th>
+                                            <th class="text-nowrap">Price</th>
+                                            <th class="text-nowrap">Subtotal</th>
+                                            <th class="text-nowrap">Tax</th>
+                                            <th class="text-nowrap">Grand Total</th>
+                                            <th class="text-nowrap">Date</th>
+                                            <th class="text-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -153,19 +154,21 @@
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td><strong>{{ $item->invoice_number }}</strong></td>
                                                 <td>
-                                                    {{ $item->customer_name }}
-                                                    <br>
-                                                    <small class="text-muted">{{ $item->customer_email }}</small>
+                                                    <div class="text-nowrap">{{ $item->customer_name }}</div>
+                                                    <small
+                                                        class="text-muted text-nowrap">{{ $item->customer_email }}</small>
                                                 </td>
                                                 <td>
-                                                    @foreach ($item->products as $product)
-                                                        <span class="badge badge-info">
-                                                            {{ $product['product_name'] }}
-                                                            @if (isset($product['quantity']) && $product['quantity'] > 1)
-                                                                (x{{ $product['quantity'] }})
-                                                            @endif
-                                                        </span>
-                                                    @endforeach
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        @foreach ($item->products as $product)
+                                                            <span class="badge badge-info text-nowrap">
+                                                                {{ $product['product_name'] }}
+                                                                @if (isset($product['quantity']) && $product['quantity'] > 1)
+                                                                    (x{{ $product['quantity'] }})
+                                                                @endif
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
                                                 </td>
                                                 <td class="text-center">
                                                     <strong>{{ collect($item->products)->sum('quantity') }}</strong>
@@ -183,25 +186,24 @@
                                                     <strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}</td>
-                                                <td style="min-width: 180px;">
-                                                    <div class="d-flex align-items-center gap-1 flex-nowrap">
-                                                        <!-- View Button -->
+                                                <td>
+                                                    <div
+                                                        class="d-flex align-items-center gap-1 flex-nowrap action-buttons">
                                                         <button type="button" class="btn btn-info btn-sm"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#viewInvoiceModal{{ $item->id }}">
-                                                            <i class="mdi mdi-eye me-1"></i> View
+                                                            <i class="mdi mdi-eye me-1"></i> <span
+                                                                class="d-none d-lg-inline">View</span>
                                                         </button>
-
-                                                        <!-- Update Button -->
                                                         <a href="{{ route('invoices.edit', $item->id) }}"
                                                             class="btn btn-primary btn-sm">
-                                                            <i class="mdi mdi-pencil me-1"></i> Update
+                                                            <i class="mdi mdi-pencil me-1"></i> <span
+                                                                class="d-none d-lg-inline">Update</span>
                                                         </a>
-
-                                                        <!-- Delete Button -->
                                                         <button type="button" class="btn btn-danger btn-sm"
                                                             onclick="confirmDelete('{{ $item->id }}')">
-                                                            <i class="mdi mdi-delete me-1"></i> Delete
+                                                            <i class="mdi mdi-delete me-1"></i> <span
+                                                                class="d-none d-lg-inline">Delete</span>
                                                         </button>
                                                     </div>
                                                     <form id="delete-form-{{ $item->id }}"
@@ -214,7 +216,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="11" class="text-center">No invoices found.</td>
+                                                <td colspan="11" class="text-center py-4">No invoices found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -222,20 +224,19 @@
                             </div>
                         </div>
 
-                        {{-- ✅ FOOTER: Outside card-body, properly aligned --}}
-                        <div class="card-footer bg-white border-top py-3 px-4">
-                            {{-- ✅ ENHANCED BOOTSTRAP 5 FOOTER --}}
-                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2 py-3 border-top mt-3"
+                        {{-- FOOTER --}}
+                        <div class="card-footer bg-white border-top py-3 px-3 px-sm-4">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 gap-sm-3"
                                 id="dtCustomFooter">
 
                                 {{-- LEFT: Show entries --}}
-                                <div id="lengthContainer" class="mb-2 mb-md-0 order-1 order-md-1"></div>
+                                <div id="lengthContainer" class="mb-2 mb-sm-0 order-1 order-sm-1"></div>
 
                                 {{-- CENTER: Pagination --}}
-                                <div id="paginationContainer" class="order-3 order-md-2"></div>
+                                <div id="paginationContainer" class="order-3 order-sm-2"></div>
 
                                 {{-- RIGHT: Info text --}}
-                                <div id="infoContainer" class="text-end order-2 order-md-3"></div>
+                                <div id="infoContainer" class="text-center text-sm-end order-2 order-sm-3"></div>
 
                             </div>
                         </div>
@@ -246,23 +247,23 @@
     </div>
     <!-- content-wrapper ends -->
 
-    {{-- CUSTOM DATE RANGE MODAL (Calendars Only) --}}
+    {{-- CUSTOM DATE RANGE MODAL --}}
     <div class="modal fade" id="dateRangeModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 720px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                 <div class="modal-header border-bottom bg-light">
                     <h5 class="modal-title fw-bold">Select Custom Range</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4 d-flex flex-column">
+                <div class="modal-body p-3 p-sm-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calPrev"
                             style="width: 32px; height: 32px;">
                             <i class="mdi mdi-chevron-left"></i>
                         </button>
-                        <div class="d-flex gap-5">
+                        <div class="d-flex gap-2 gap-sm-5">
                             <strong id="month1Label" class="fs-6 text-dark">January 2026</strong>
-                            <strong id="month2Label" class="fs-6 text-dark">February 2026</strong>
+                            <strong id="month2Label" class="fs-6 text-dark d-none d-sm-block">February 2026</strong>
                         </div>
                         <button type="button" class="btn btn-sm btn-light rounded-circle cal-nav" id="calNext"
                             style="width: 32px; height: 32px;">
@@ -270,7 +271,7 @@
                         </button>
                     </div>
 
-                    <div class="d-flex gap-4 flex-grow-1">
+                    <div class="d-flex flex-column flex-sm-row gap-3 gap-sm-4 flex-grow-1">
                         {{-- Calendar 1 --}}
                         <div class="flex-grow-1">
                             <div class="d-flex text-center small text-muted mb-2 fw-semibold">
@@ -285,7 +286,7 @@
                             <div id="calendar1" class="calendar-grid"></div>
                         </div>
                         {{-- Calendar 2 --}}
-                        <div class="flex-grow-1">
+                        <div class="flex-grow-1 d-none d-sm-block">
                             <div class="d-flex text-center small text-muted mb-2 fw-semibold">
                                 <div class="flex-grow-1 py-1">Su</div>
                                 <div class="flex-grow-1 py-1">Mo</div>
@@ -312,8 +313,8 @@
 
     {{-- View Invoice Modals --}}
     @foreach ($invoices as $item)
-        <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document">
+        <div class="modal fade" id="viewInvoiceModal{{ $item->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header" style="background: #f8f9fa;">
                         <h5 class="modal-title">
@@ -323,20 +324,20 @@
                     </div>
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
                                 <h6>Customer Information</h6>
-                                <p>
+                                <p class="mb-0">
                                     <strong>Name:</strong> {{ $item->customer->fullname ?? 'N/A' }}<br>
                                     <strong>Email:</strong> {{ $item->customer->email ?? 'N/A' }}<br>
                                     <strong>Phone:</strong> {{ $item->customer->phone ?? 'N/A' }}
                                 </p>
                             </div>
-                            <div class="col-md-6 text-end">
+                            <div class="col-sm-6 text-start text-sm-end">
                                 <h6>Invoice Information</h6>
-                                <p>
+                                <p class="mb-0">
                                     <strong>Invoice #:</strong> {{ $item->invoice_number }}<br>
                                     <strong>Date:</strong>
-                                    {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}
+                                    {{ \Carbon\Carbon::parse($item->invoice_date)->format('M d, Y') }}<br>
                                     <strong>Status:</strong>
                                     @if ($item->status == 'Paid')
                                         <span class="badge bg-success">Paid</span>
@@ -354,7 +355,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Product Name</th>
-                                        <th>Quantity</th>
+                                        <th class="text-center">Quantity</th>
                                         <th class="text-end">Price</th>
                                         <th class="text-end">Subtotal</th>
                                     </tr>
@@ -369,7 +370,7 @@
                                                     <strong>(x{{ $product['quantity'] }})</strong>
                                                 @endif
                                             </td>
-                                            <td class="text-end">x{{ $product['quantity'] ?? 1 }}</td>
+                                            <td class="text-center">x{{ $product['quantity'] ?? 1 }}</td>
                                             <td class="text-end">₹{{ number_format($product['price'], 2) }}</td>
                                             <td class="text-end">₹{{ number_format($product['subtotal'], 2) }}</td>
                                         </tr>
@@ -417,6 +418,7 @@
             width: 100% !important;
             border-collapse: separate;
             border-spacing: 0;
+            min-width: 900px;
         }
 
         #invoiceTable thead th {
@@ -425,6 +427,9 @@
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e9ecef;
             white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         #invoiceTable tbody tr {
@@ -445,41 +450,25 @@
         }
 
         /* ===== BADGE STYLING ===== */
-        .badge.bg-info.bg-opacity-10 {
-            background-color: rgba(13, 202, 240, 0.1) !important;
-            color: #0dcaf0;
-            font-weight: 500;
-            padding: 0.35em 0.65em;
-        }
-
-        .badge.bg-secondary.bg-opacity-10 {
-            background-color: rgba(108, 117, 125, 0.1) !important;
-            color: #6c757d;
+        .badge-info {
+            background-color: #e3f2fd;
+            color: #0d6efd;
             font-weight: 500;
         }
 
         /* ===== ACTION BUTTONS ===== */
         #invoiceTable td:last-child {
-            min-width: 200px;
-            /* Forces the Actions column to be wider */
+            min-width: 140px;
         }
 
-        #invoiceTable .btn-sm {
-            padding: 0.25rem 0.6rem !important;
-            /* Standard button padding */
+        .action-buttons .btn-sm {
+            padding: 0.25rem 0.5rem !important;
             font-size: 0.75rem !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            /* Spaces the icon and text */
             white-space: nowrap !important;
-            /* Prevents the words from breaking */
-            transition: all 0.2s ease;
         }
 
-        #invoiceTable .btn-sm i {
+        .action-buttons .btn-sm i {
             font-size: 16px !important;
-            /* Keeps the icon the correct size */
         }
 
         /* ✅ HIDE DEFAULT DATATABLES SEARCH BAR */
@@ -487,12 +476,7 @@
             display: none !important;
         }
 
-        #invoiceTable .btn-sm:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ===== FILTER BUTTONS (Pill Shape) ===== */
+        /* ===== FILTER BUTTONS ===== */
         #customerDropdown,
         #dateRangeDropdown {
             border-color: #dee2e6;
@@ -559,8 +543,8 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            min-width: 50px;
-            height: 40px;
+            min-width: 38px;
+            height: 38px;
             line-height: 1;
             text-align: center;
             border-radius: 10px !important;
@@ -695,12 +679,80 @@
             background: #e9ecef !important;
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
+        /* ===== RESPONSIVE BREAKPOINTS ===== */
+
+        /* Large tablets and small desktops */
+        @media (max-width: 1199.98px) {
+            #invoiceTable {
+                min-width: 850px;
+            }
+        }
+
+        /* Tablets */
+        @media (max-width: 991.98px) {
+            #invoiceTable {
+                min-width: 800px;
+            }
+        }
+
+        /* Mobile landscape and below */
+        @media (max-width: 767.98px) {
+            .content-wrapper {
+                padding: 1rem !important;
+            }
+
+            #invoiceTable {
+                min-width: 750px;
+            }
+
+            #dtCustomFooter {
+                gap: 12px !important;
+            }
+
+            .action-buttons .btn-sm span {
+                display: none !important;
+            }
+
+            .action-buttons .btn-sm {
+                padding: 0.25rem 0.4rem !important;
+            }
+
+            .action-buttons .btn-sm i {
+                margin-right: 0 !important;
+            }
+        }
+
+        /* Small mobile */
+        @media (max-width: 575.98px) {
+            .content-wrapper {
+                padding: 0.75rem !important;
+            }
+
+            #invoiceTable {
+                min-width: 700px;
+            }
+
+            .card-body {
+                padding: 0.75rem !important;
+            }
+
+            .action-buttons {
+                gap: 2px !important;
+            }
+
+            .action-buttons .btn-sm {
+                padding: 0.2rem 0.35rem !important;
+                font-size: 0.7rem !important;
+            }
+
+            .action-buttons .btn-sm i {
+                font-size: 14px !important;
+            }
+
             #dtCustomFooter {
                 text-align: center;
                 flex-direction: column !important;
-                gap: 15px !important;
+                gap: 10px !important;
             }
 
             #lengthContainer,
@@ -714,8 +766,23 @@
             #infoContainer .dataTables_info {
                 text-align: center !important;
             }
+
+            #paginationContainer .dataTables_paginate .paginate_button {
+                min-width: 34px;
+                height: 34px;
+                font-size: 0.8125rem !important;
+            }
+
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-body {
+                padding: 1rem !important;
+            }
         }
     </style>
+
     <!-- DataTables CSS & JS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
@@ -769,9 +836,7 @@
                         last: '<i class="mdi mdi-chevron-double-right"></i>'
                     }
                 },
-                drawCallback: function() {
-                    // ✅ No longer forcing .page-link. Keep it clean for native styling.
-                }
+                drawCallback: function() {}
             });
 
             // ✅ MOVE CONTROLS TO CUSTOM BOOTSTRAP FOOTER

@@ -62,14 +62,22 @@ fixing folder structure and routes managing
 
 29-07-2026
  #3786
- Updating invoices Tables to Detatable 
+ Updating invoices Tables to Datatable 
 
 //////////////////////////
 
 30-07-2026
 #3791
-Updating Customer tables And Products table to Detatable
+Updating Customer tables And Products table to Datatable
 
 //////////////////////////
+31-07-2026
+ #3795
+ Writing prompt for new  B2B Wholesale Seller App.
+ /////////////////////////
+
+03-08-2026
+ #3804 
+Writing prompt for new B2B Wholesale Seller Laravel Application.
 
 
