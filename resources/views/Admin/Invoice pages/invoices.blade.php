@@ -1146,7 +1146,7 @@
                         alert.style.display = 'none';
                     }, 500);
                 });
-            }, 5000);
+            }, 50);
         });
     </script>
 @endsection

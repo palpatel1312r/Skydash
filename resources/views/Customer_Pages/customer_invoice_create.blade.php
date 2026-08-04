@@ -429,7 +429,7 @@
                             // Remove it from DOM completely after the fade finishes (500ms)
                             setTimeout(() => errorAlert.remove(), 500);
                         }
-                    }, 1000);
+                    }, 10);
 
                     return;
                 }

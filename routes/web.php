@@ -7,6 +7,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -77,9 +78,14 @@ Route::get('/superadmin/dashboard', function () {
   return view('Superadmin.Superadmin_Dashboard');
 })->name('Superadmin.Superadmin_Dashboard')->middleware('auth:admin');
 
+Route::middleware(['auth:admin'])->group(function () {
+  Route::get('/superadmin/dashboard', [SuperAdminController::class, 'dashboard'])->name('Superadmin.Superadmin_Dashboard');
+});
+
+
 Route::resource('roles', RoleController::class)->except(['show'])->middleware('auth:admin');
 
-Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard')->middleware('auth:admin');
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('auth:admin');
 Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile')->middleware('auth:admin');
 Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update')->middleware('auth:admin');
 

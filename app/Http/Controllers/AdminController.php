@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-// use App\Models\Admin;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        return view('Admin.Dashboard.Admin_Dashboard');
-    }
     public function profile()
     {
         $admin = Auth::guard('admin')->user();
@@ -31,12 +28,10 @@ class AdminController extends Controller
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // 1. Update the main Admin table
         $admin->name = $request->name;
         $admin->email = $request->email;
         $admin->save();
 
-        // 2. Find or Create the Profile record
         $profile = $admin->profile;
         if (!$profile) {
             $profile = new \App\Models\Profile();
@@ -48,12 +43,9 @@ class AdminController extends Controller
         $profile->address = $request->address;
 
         if ($request->hasFile('profile_image')) {
-            // ✅ FIXED: Correctly delete the old image path
             if ($profile->profile_image && file_exists(storage_path('app/public/' . $profile->profile_image))) {
                 unlink(storage_path('app/public/' . $profile->profile_image));
             }
-
-            // ✅ Store correctly
             $path = $request->file('profile_image')->store('profile_images', 'public');
             $profile->profile_image = $path;
         }
@@ -61,5 +53,42 @@ class AdminController extends Controller
         $profile->save();
 
         return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
+    }
+
+    public function dashboard()
+    {
+        // 1. STATS CARDS DATA
+        $totalProducts = Product::count();
+        $activeDealers = Customer::where('status', 'Active')->count();
+        $totalOrders = Invoice::count();
+
+        // Today's Revenue
+        $todayRevenue = Invoice::whereDate('created_at', now()->toDateString())->sum('total_amount');
+
+        // Low Stock Count
+        $lowStockCount = Product::where('quantity', '<=', 10)->count();
+
+        // 2. SLIDER DATA
+        $newArrivals = Product::orderBy('created_at', 'desc')->take(8)->get();
+        $bestSellers = Product::inRandomOrder()->take(8)->get();
+
+        // 3. RECENT ACTIVITY LOG (Mock data)
+        $recentActivities = [
+            ['user' => 'Nilesh Traders', 'action' => 'Placed order #INV-2026-001', 'time' => '2 mins ago'],
+            ['user' => 'Mahesh Electronics', 'action' => 'Updated stock for Product X', 'time' => '15 mins ago'],
+            ['user' => 'System', 'action' => 'Low Stock Alert: Product Y (3 left)', 'time' => '1 hour ago'],
+            ['user' => 'Priya Wholesale', 'action' => 'Registered as a new Dealer', 'time' => '2 hours ago'],
+        ];
+
+        return view('Admin.Dashboard.Admin_Dashboard', compact(
+            'totalProducts',
+            'activeDealers',
+            'totalOrders',
+            'todayRevenue',
+            'lowStockCount',
+            'newArrivals',
+            'bestSellers',
+            'recentActivities'
+        ));
     }
 }
