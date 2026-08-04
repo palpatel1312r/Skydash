@@ -10,13 +10,31 @@ use Illuminate\Support\Facades\Log;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::with('role')->orderBy('created_at', 'desc')->get();
-        $roles = \App\Models\Role::all();
-        Log::info('Customers found: ' . $customers->count());
+        // 1. Start the query with Role relationship
+        $query = Customer::with('role')->orderBy('created_at', 'desc');
 
-        return view('Admin.Admin_Customer_Pages.Customer', compact('customers', 'roles'));
+        // 2. Apply Role Filter
+        if ($request->filled('role')) {
+            $query->where('role_id', $request->role);
+        }
+
+        // 3. Apply Status Filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 4. Get Results
+        $customers = $query->get();
+
+        // 5. Get Dropdown Data
+        $roles = \App\Models\Role::all();
+        // Get unique statuses from the database
+        $statuses = Customer::distinct()->pluck('status')->filter()->values();
+
+        // 6. Pass $request back for Blade logic
+        return view('Admin.Admin_Customer_Pages.Customer', compact('customers', 'roles', 'statuses'))->with('request', $request);
     }
 
     public function create()
@@ -196,5 +214,11 @@ class CustomerController extends Controller
                 'errors' => ['current_password' => ['The current password is incorrect.']]
             ], 422);
         }
+    }
+
+    public function showChangePasswordForm()
+    {
+        $customer = Auth::guard('customer')->user();
+        return view('Customer_Pages.customer_change_password', compact('customer'));
     }
 }

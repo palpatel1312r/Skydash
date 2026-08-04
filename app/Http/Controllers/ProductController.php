@@ -24,27 +24,42 @@ class ProductController extends Controller
     $customers = Customer::all();  // Keep if you need customers
     return view('Admin.Product_Pages.product_form', compact('product', 'products', 'customers'));
   }
-  public function index()
+
+  public function index(Request $request)
   {
-    // ✅ SECURITY CHECK: Only allow Admin/Super Admin
+    // ✅ SECURITY CHECK
     if (auth()->guard('admin')->check()) {
       $user = auth()->guard('admin')->user();
-      // Only role_id 1 (Super Admin) or 2 (Admin) can access
       if ($user->role_id != 1 && $user->role_id != 2) {
         abort(403, 'Unauthorized access.');
       }
     } else {
-      // If someone tries to access this while logged in as Customer, block them!
       abort(403, 'Unauthorized access.');
     }
 
-    // ✅ Fetch and order products correctly
-    $products = Product::orderBy('created_at', 'desc')->get();
-    Log::info('Products count: ' . $products->count());
+    // ✅ START THE QUERY
+    $query = Product::query();
 
-    return view('Admin.Product_Pages.products', compact('products'));
+    // ✅ Category Filter
+    if ($request->filled('category')) {
+      $query->where('category', $request->category);
+    }
+
+    // ✅ Type Filter
+    if ($request->filled('type')) {
+      $query->where('type', $request->type);
+    }
+
+    // ✅ GET DATA
+    $products = $query->orderBy('created_at', 'desc')->get();
+
+    // ✅ FETCH DISTINCT DROPDOWN DATA
+    $categories = Product::distinct()->pluck('category')->filter()->values();
+    $types = Product::distinct()->pluck('type')->filter()->values();
+
+    // ✅ Pass request to view
+    return view('Admin.Product_Pages.products', compact('products', 'categories', 'types'))->with('request', $request);
   }
-
   public function store(Request $request)
   {
     // 1. CREATE VALIDATOR INSTANCE

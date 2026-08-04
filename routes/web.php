@@ -141,6 +141,7 @@ Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])
 Route::get('/customer/invoices/create', [InvoiceController::class, 'customerCreate'])->name('customer.invoices.create')->middleware('auth:customer');
 Route::post('/customer/invoices', [InvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
 Route::post('/customer/password/update', [CustomerController::class, 'updatePassword'])->name('customer.password.update')->middleware('auth:customer');
+Route::get('/customer/password/form', [CustomerController::class, 'showChangePasswordForm'])->name('customer.password.form')->middleware('auth:customer');
 
 /*
 |--------------------------------------------------------------------------

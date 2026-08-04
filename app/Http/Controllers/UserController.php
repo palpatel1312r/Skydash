@@ -30,10 +30,11 @@ class UserController extends Controller
     return view('Admin.User Pages.User_form', compact('user'));
   }
 
-  public function index()
+  public function index(Request $request)
   {
     $roles = Role::pluck('name', 'id');
 
+    // 1. Fetch all admins and customers
     $admins = Admin::all()->map(function ($admin) use ($roles) {
       $roleName = $roles[$admin->role_id] ?? 'Admin';
       return [
@@ -41,7 +42,9 @@ class UserController extends Controller
         'name' => $admin->name,
         'email' => $admin->email,
         'role_name' => $roleName,
+        'role_id' => $admin->role_id,
         'guard' => 'admin',
+        'user_type' => 'admin', // For filtering
         'created_at' => $admin->created_at,
       ];
     });
@@ -53,14 +56,38 @@ class UserController extends Controller
         'name' => $customer->fullname,
         'email' => $customer->email,
         'role_name' => $roleName,
+        'role_id' => $customer->role_id,
         'guard' => 'customer',
+        'user_type' => 'customer', // For filtering
         'created_at' => $customer->created_at,
       ];
     });
 
-    $users = $admins->merge($customers)->sortByDesc('created_at');
+    // 2. Merge collections
+    $users = $admins->merge($customers);
 
-    return view('Admin.User Pages.User', compact('users'));
+    // 3. Apply Filters
+    if ($request->filled('role')) {
+      $users = $users->filter(function ($user) use ($request) {
+        return $user['role_id'] == $request->role;
+      });
+    }
+
+    if ($request->filled('user_type')) {
+      $users = $users->filter(function ($user) use ($request) {
+        return $user['user_type'] === $request->user_type;
+      });
+    }
+
+    // 4. Sort by date
+    $users = $users->sortByDesc('created_at');
+
+    // 5. Get distinct roles and types for dropdowns
+    $allRoles = Role::all();
+    $userTypes = [['value' => 'admin', 'label' => 'Admin'], ['value' => 'customer', 'label' => 'Customer']];
+
+    // 6. Return view with request object
+    return view('Admin.User Pages.User', compact('users', 'allRoles', 'userTypes'))->with('request', $request);
   }
 
   //////////////////////////////////////////////////////

@@ -55,7 +55,28 @@
                                 <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
                                     type="button" id="dateRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="mdi mdi-calendar-outline me-1"></i>
-                                    <span id="dateRangeLabel">All Time</span>
+                                    {{-- <span id="dateRangeLabel">All Time</span> --}}
+
+                                    <span id="dateRangeLabel">
+                                        @php
+                                            $label = 'All Time';
+                                            // Use the passed $request variable from the controller
+                                            if (
+                                                isset($request) &&
+                                                $request->has('date_range') &&
+                                                $request->date_range !== 'custom'
+                                            ) {
+                                                $label = ucwords(str_replace('_', ' ', $request->date_range));
+                                            } elseif (
+                                                isset($request) &&
+                                                $request->has('start_date') &&
+                                                $request->has('end_date')
+                                            ) {
+                                                $label = $request->start_date . ' to ' . $request->end_date;
+                                            }
+                                        @endphp
+                                        {{ $label }}
+                                    </span>
                                 </button>
                                 <ul class="dropdown-menu shadow-sm" aria-labelledby="dateRangeDropdown"
                                     style="min-width: 200px;">
@@ -872,15 +893,14 @@
 
                 if (id === '') {
                     url.searchParams.delete('customer_id');
-                    $('#customerLabel').text('All Customers');
+                    $('#customerLabel').text('All Customers'); // Update DOM
                 } else {
                     url.searchParams.set('customer_id', id);
-                    $('#customerLabel').text(name);
+                    $('#customerLabel').text(name); // Update DOM
                 }
 
-                window.location.href = url.toString();
+                window.location.href = url.toString(); // Reload
             });
-
             // ===================== DATE RANGE FILTER =====================
             var dateRangeParam = urlParams.get('date_range');
             var startDateParam = urlParams.get('start_date');
@@ -889,15 +909,19 @@
             // Set date range label on page load
             function updateDateRangeLabel() {
                 if (dateRangeParam && dateRangeParam !== 'custom') {
+                    // It's a preset (today, this_week, etc.)
                     var label = dateRangeParam.replace(/_/g, ' ');
                     label = label.charAt(0).toUpperCase() + label.slice(1);
                     $('#dateRangeLabel').text(label);
                 } else if (startDateParam && endDateParam) {
+                    // It's a custom range
                     $('#dateRangeLabel').text(startDateParam + ' to ' + endDateParam);
                 } else {
+                    // Fallback (No filters applied)
                     $('#dateRangeLabel').text('All Time');
                 }
             }
+            updateDateRangeLabel(); // Call on page load
             updateDateRangeLabel();
 
             // Handle Preset Clicks (Today, Yesterday, etc.)
@@ -913,14 +937,19 @@
 
                 if (range === 'all') {
                     url.searchParams.delete('date_range');
-                    $('#dateRangeLabel').text('All Time');
+                    $('#dateRangeLabel').text('All Time'); // Update DOM immediately
                 } else {
                     url.searchParams.set('date_range', range);
+
+                    // Format label correctly
                     var label = range.replace(/_/g, ' ');
                     label = label.charAt(0).toUpperCase() + label.slice(1);
+
+                    // 🛑 CRITICAL FIX: Force the DOM to update before reload!
                     $('#dateRangeLabel').text(label);
                 }
 
+                // Reload the page to apply the filter
                 window.location.href = url.toString();
             });
 

@@ -442,49 +442,22 @@ class InvoiceController extends Controller
         $customer = auth()->guard('customer')->user();
         $customers = Customer::all();
 
-        // 2. Start the query ALWAYS scoped to this specific customer
+        // 2. Start the query scoped to this specific customer
         $query = Invoice::where('customer_id', $customer->id);
 
-        // ✅ Apply Date Range Filter
-        if ($request->filled('date_range')) {
-            $now = now();
-            switch ($request->date_range) {
-                case 'today':
-                    $query->whereDate('invoice_date', $now->toDateString());
-                    break;
-                case 'yesterday':
-                    $query->whereDate('invoice_date', $now->copy()->subDay()->toDateString());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('invoice_date', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
-                    break;
-                case 'last_week':
-                    $lastWeekStart = $now->copy()->subWeek()->startOfWeek();
-                    $lastWeekEnd = $now->copy()->subWeek()->endOfWeek();
-                    $query->whereBetween('invoice_date', [$lastWeekStart, $lastWeekEnd]);
-                    break;
-                case 'this_month':
-                    $query->whereMonth('invoice_date', $now->month)->whereYear('invoice_date', $now->year);
-                    break;
-                case 'last_month':
-                    $lastMonth = $now->copy()->subMonth();
-                    $query->whereMonth('invoice_date', $lastMonth->month)->whereYear('invoice_date', $lastMonth->year);
-                    break;
-                case 'custom':
-                    if ($request->filled('start_date') && $request->filled('end_date')) {
-                        $startDateTime = \Carbon\Carbon::parse($request->start_date)->startOfDay();
-                        $endDateTime = \Carbon\Carbon::parse($request->end_date)->endOfDay();
+        // ✅ Apply Date Range Filter using start_date & end_date directly
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDateTime = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+            $endDateTime = \Carbon\Carbon::parse($request->end_date)->endOfDay();
 
-                        $query->whereBetween('invoice_date', [$startDateTime, $endDateTime]);
-                    }
-                    break;
-            }
+            $query->whereBetween('invoice_date', [$startDateTime, $endDateTime]);
         }
 
-        // ✅ FIX: GET ALL RECORDS. Do NOT use paginate(2) because DataTables handles pagination on the frontend!
+        // ✅ Get ALL records. DataTables handles pagination on the frontend!
         $invoices = $query->orderBy('invoice_date', 'desc')->get();
 
-        return view('Customer_Pages.customer_invoices', compact('invoices', 'customer', 'customers'));
+        // ✅ Pass the request back so the Blade inputs retain values
+        return view('Customer_Pages.customer_invoices', compact('invoices', 'customer', 'customers'))->with('request', $request);
     }
     public function updateStatus($id, $status)
     {
