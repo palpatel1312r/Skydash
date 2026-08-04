@@ -77,7 +77,15 @@ Updating Customer tables And Products table to Datatable
  /////////////////////////
 
 03-08-2026
- #3804 
+#3804 
 Writing prompt for new B2B Wholesale Seller Laravel Application.
+
+//////////////////////////
+
+04-08-2026
+#3813
+working on new B2B Wholesale Seller App.
+
+//////////////////////////
 
 
