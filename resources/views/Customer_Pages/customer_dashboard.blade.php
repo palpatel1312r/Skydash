@@ -60,6 +60,51 @@
                 </div>
             </div>
 
+            {{-- FILTERS + CREATE BUTTON ROW --}}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div
+                        class="d-flex flex-column flex-sm-row flex-wrap align-items-start align-items-sm-center justify-content-between gap-2 gap-sm-3">
+
+                        {{-- LEFT: Filters --}}
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted fw-bold small me-1 d-none d-sm-inline">Filter By:</span>
+
+
+                            {{-- 3. NEW: Category Filter --}}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
+                                    type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-tag-outline me-1"></i>
+                                    <span id="categoryLabel">
+                                        @if (isset($request) && $request->has('category'))
+                                            {{ $request->category }}
+                                        @else
+                                            All Categories
+                                        @endif
+                                    </span>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm" aria-labelledby="categoryDropdown"
+                                    style="min-width: 200px; max-height: 300px; overflow-y: auto;">
+                                    <li><a class="dropdown-item category-option" href="#" data-cat="">All
+                                            Categories</a></li>
+                                    @foreach ($categories as $category)
+                                        <li><a class="dropdown-item category-option" href="#"
+                                                data-cat="{{ $category }}">{{ $category }}</a></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            {{-- 5. Clear Filters Button --}}
+                            <a href="{{ route('customer.dashboard') }}"
+                                class="btn btn-sm shadow-sm rounded-pill px-3 
+   {{ request()->has('category') || request()->has('type') || request()->has('customer_id') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
+                                <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- 2. Products Section --}}
             <div class="row">
                 <div class="col-12 grid-margin stretch-card">
@@ -83,7 +128,16 @@
                                             <div class="img-wrapper position-relative">
                                                 @if ($product->image)
                                                     <img src="{{ asset($product->image) }}" alt="{{ $product->title }}"
-                                                        class="product-img">
+                                                        class="product-img"
+                                                        onclick="openProductDetailModal(
+                                                            '{{ addslashes($product->title) }}',
+                                                            '{{ addslashes($product->description ?? 'No description available.') }}',
+                                                            '{{ $product->price }}',
+                                                            '{{ $product->category }}',
+                                                            '{{ $product->quantity }}',
+                                                            '{{ $product->image }}'
+                                                        )"
+                                                        style="cursor: pointer;">
                                                 @else
                                                     <div
                                                         class="bg-light d-flex align-items-center justify-content-center text-muted no-image">
@@ -149,8 +203,9 @@
 
                                                 <div class="mt-auto d-flex flex-column gap-2 w-100">
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <input type="number" id="qty_{{ $product->id }}" value="1"
-                                                            min="1" max="{{ $product->quantity ?? 99 }}"
+                                                        <input type="number" id="qty_{{ $product->id }}"
+                                                            value="1" min="1"
+                                                            max="{{ $product->quantity ?? 99 }}"
                                                             class="form-control form-control-sm qty-input"
                                                             {{ ($product->quantity ?? 0) <= 0 ? 'disabled' : '' }}>
 
@@ -347,47 +402,94 @@
         </div>
     </div>
 
-    {{-- ENHANCED CART NOTIFICATION MODAL --}}
+    {{-- 1. CART NOTIFICATION MODAL --}}
     <div class="modal fade" id="cartNotificationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
             <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 18px;">
-
                 {{-- Colored top bar --}}
                 <div id="notifTopBar" style="height: 6px; background: #0d6efd;"></div>
-
                 <div class="modal-body text-center p-4 pt-4">
-                    {{-- Icon circle --}}
                     <div id="notifIconWrapper" class="mx-auto mb-3 d-flex align-items-center justify-content-center"
                         style="width: 78px; height: 78px; border-radius: 50%; background: #e7f1ff;">
                         <div id="notifIcon" style="font-size: 36px; line-height: 1;"></div>
                     </div>
-
-                    {{-- Title --}}
                     <h4 id="notifTitle" class="fw-bold mb-2" style="font-size: 1.35rem;">Notification</h4>
-
-                    {{-- Message --}}
                     <p id="notifMessage" class="text-muted mb-1 px-2" style="font-size: 0.95rem; line-height: 1.5;">
                         Message goes here
                     </p>
-
-                    {{-- Extra detail line (optional) --}}
                     <p id="notifDetail" class="small text-muted mb-4" style="display: none;"></p>
-
-                    {{-- Buttons --}}
                     <div class="d-grid gap-2">
                         <button type="button" class="btn btn-primary rounded-pill py-2 fw-medium" id="notifOkBtn">
                             <i class="mdi mdi-check me-1"></i> Got it
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary rounded-pill py-2" id="notifCloseBtn"
-                            style="display: none;">
-                            Close
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- 2. PRODUCT DETAIL MODAL (No Edit Button) --}}
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 750px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-bottom bg-white px-4 py-3">
+                    <h5 class="modal-title fw-bold text-truncate" id="pdTitle" style="max-width: 85%;">Product Title
+                    </h5>
+                    {{-- X button with Bootstrap 5 data-bs-dismiss --}}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        {{-- Left: Main Image --}}
+                        <div class="col-md-5">
+                            <div class="main-image-wrapper bg-light rounded-3 d-flex align-items-center justify-content-center p-3 border"
+                                style="height: 280px;">
+                                <img id="pdMainImage" src="" alt="Product Image" class="img-fluid"
+                                    style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+
+                        {{-- Right: Details --}}
+                        <div class="col-md-7">
+                            <h3 class="fw-bold mb-2 text-dark" id="pdName">Product Name</h3>
+                            <div class="d-flex align-items-baseline gap-3 mb-3">
+                                <h4 class="text-primary fw-bold mb-0" id="pdPrice">₹0.00</h4>
+                                <span class="text-danger text-decoration-line-through small" id="pdMrp">₹0.00</span>
+                            </div>
+                            <div class="mb-3 d-flex flex-wrap gap-2">
+                                <span
+                                    class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2"
+                                    id="pdStock">
+                                    <i class="mdi mdi-check-circle me-1"></i> In Stock
+                                </span>
+                                <span
+                                    class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 ms-2"
+                                    id="pdCategory">
+                                    Category
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-3" id="pdDesc" style="line-height: 1.6;">
+                                Product description will appear here...
+                            </p>
+                            <div class="d-grid gap-2 mt-3">
+                                {{-- ✅ CLOSE BUTTON ONLY --}}
+                                <button type="button" class="btn btn-light py-2" data-bs-dismiss="modal">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
+        #categoryDropdown:hover {
+            background: #2a2b2d;
+            border-color: #f8f3f3;
+        }
+
         /* ===== Hero ===== */
         .hero-card {
             background: linear-gradient(135deg, #3f51b5 0%, #2196f3 100%);
@@ -544,6 +646,30 @@
 
 @push('scripts')
     <script>
+        // Category Filter
+        $('.category-option').on('click', function(e) {
+            e.preventDefault();
+            var cat = $(this).data('cat');
+            var url = new URL(window.location.href);
+
+            // Prevent unnecessary reload if already selected
+            if (url.searchParams.get('category') === cat) {
+                return;
+            }
+
+            if (cat === '' || cat === null) {
+                url.searchParams.delete('category');
+                $('#categoryLabel').text('All Categories');
+            } else {
+                url.searchParams.set('category', cat);
+                $('#categoryLabel').text(cat);
+            }
+
+            window.location.href = url.toString();
+        });
+        // ========================================
+        // 1. CART NOTIFICATION LOGIC (Uses jQuery)
+        // ========================================
         let cartModalInstance = null;
 
         function showNotification(type, title, message, detail = null) {
@@ -561,12 +687,10 @@
                 return;
             }
 
-            // Reset
             detailEl.style.display = 'none';
             detailEl.textContent = '';
 
             if (type === 'success') {
-                // Success style
                 topBar.style.background = '#198754';
                 iconWrapper.style.background = '#d1e7dd';
                 icon.innerHTML = '<i class="mdi mdi-check-circle text-success"></i>';
@@ -574,7 +698,6 @@
                 okBtn.className = 'btn btn-success rounded-pill py-2 fw-medium';
                 okBtn.innerHTML = '<i class="mdi mdi-check me-1"></i> Great!';
             } else if (type === 'warning') {
-                // Warning style
                 topBar.style.background = '#ffc107';
                 iconWrapper.style.background = '#fff3cd';
                 icon.innerHTML = '<i class="mdi mdi-alert text-warning"></i>';
@@ -582,7 +705,6 @@
                 okBtn.className = 'btn btn-warning rounded-pill py-2 fw-medium text-dark';
                 okBtn.innerHTML = '<i class="mdi mdi-check me-1"></i> Understood';
             } else {
-                // Error style
                 topBar.style.background = '#dc3545';
                 iconWrapper.style.background = '#f8d7da';
                 icon.innerHTML = '<i class="mdi mdi-close-circle text-danger"></i>';
@@ -594,64 +716,71 @@
             titleEl.textContent = title;
             messageEl.textContent = message;
 
-            // Optional extra detail
             if (detail) {
                 detailEl.textContent = detail;
                 detailEl.style.display = 'block';
             }
 
-            // Create / reuse modal instance
-            if (!cartModalInstance) {
-                cartModalInstance = new bootstrap.Modal(modalEl, {
-                    backdrop: true,
-                    keyboard: true
-                });
-            }
+            // ✅ Use jQuery method like Admin file
+            $('#cartNotificationModal').modal('show');
 
-            cartModalInstance.show();
-
-            // Auto-close success after 2 seconds
             if (type === 'success') {
                 setTimeout(() => {
-                    if (cartModalInstance) cartModalInstance.hide();
+                    $('#cartNotificationModal').modal('hide');
                 }, 2000);
             }
         }
 
-        // Close handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            const closeBtn = document.getElementById('notifCloseBtn');
-            const okBtn = document.getElementById('notifOkBtn');
-
-            function closeModal() {
-                if (cartModalInstance) {
-                    cartModalInstance.hide();
-                } else {
-                    $('#cartNotificationModal').modal('hide'); // Bootstrap 4 fallback
-                }
-            }
-
-            if (closeBtn) closeBtn.addEventListener('click', closeModal);
-            if (okBtn) okBtn.addEventListener('click', closeModal);
-        });
-        // Manually close modal when OK or X is clicked
-        document.addEventListener('DOMContentLoaded', function() {
-            const closeBtn = document.getElementById('notifCloseBtn');
-            const okBtn = document.getElementById('notifOkBtn');
-
-            function closeModal() {
-                if (cartModalInstance) {
-                    cartModalInstance.hide();
-                } else {
-                    // Fallback for Bootstrap 4
-                    $('#cartNotificationModal').modal('hide');
-                }
-            }
-
-            if (closeBtn) closeBtn.addEventListener('click', closeModal);
-            if (okBtn) okBtn.addEventListener('click', closeModal);
+        // ✅ Close the cart modal when OK button is clicked
+        $(document).ready(function() {
+            $('#notifOkBtn').on('click', function() {
+                $('#cartNotificationModal').modal('hide');
+            });
         });
 
+        // ========================================
+        // 2. PRODUCT DETAIL MODAL LOGIC (Uses jQuery)
+        // ========================================
+        function openProductDetailModal(title, description, price, category, qty, image) {
+            $('#pdTitle').text(title);
+            $('#pdName').text(title);
+            $('#pdDesc').text(description || 'No description available.');
+            $('#pdPrice').text('₹' + parseFloat(price).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+            $('#pdCategory').text(category || 'General');
+
+            // Stock status
+            const stockBadge = document.getElementById('pdStock');
+            if (qty > 0) {
+                stockBadge.innerHTML = '<i class="mdi mdi-check-circle me-1"></i> In Stock';
+                stockBadge.className =
+                    'badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2';
+            } else {
+                stockBadge.innerHTML = '<i class="mdi mdi-close-circle me-1"></i> Out of Stock';
+                stockBadge.className =
+                    'badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3 py-2';
+            }
+
+            // Image
+            var imgSrc = image ? (image.startsWith('http') ? image : '{{ asset('') }}' + image) : '';
+            if (imgSrc) {
+                $('#pdMainImage').attr('src', imgSrc);
+                $('#pdMainImage').on('error', function() {
+                    $(this).attr('src', 'https://via.placeholder.com/400x300?text=No+Image');
+                });
+            } else {
+                $('#pdMainImage').attr('src', 'https://via.placeholder.com/400x300?text=No+Image');
+            }
+
+            // ✅ Use jQuery method like Admin file
+            $('#productDetailModal').modal('show');
+        }
+
+        // ========================================
+        // 3. AJAX SETUP (Add to Cart / Buy Now)
+        // ========================================
         jQuery(document).ready(function($) {
             $.ajaxSetup({
                 headers: {
@@ -734,7 +863,6 @@
                 $btn.prop('disabled', true).html(
                     '<i class="mdi mdi-loading mdi-spin me-1"></i> Processing...');
 
-                // Buy Now → go to invoice create with product & qty
                 window.location.href = "{{ route('customer.invoices.create') }}?product_id=" + productId +
                     "&quantity=" + quantity;
             });

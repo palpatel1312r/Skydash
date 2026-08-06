@@ -49,13 +49,30 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id);
         return view('Admin.Admin_Customer_Pages.Customer_form', compact('customer'));
     }
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $customer = Auth::guard('customer')->user();
-        $products = Product::all();
-        $cartCount = Cart::where('customer_id', $customer->id)->count();
 
-        return view('Customer_Pages.Customer_dashboard', compact('customer', 'products', 'cartCount'));
+        $query = Product::query();
+
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        $products = $query->get();
+        $categories = Product::select('category')->distinct()->whereNotNull('category')->pluck('category');
+
+        $cartCount = Cart::where('customer_id', $customer->id)->sum('quantity');
+
+        // Keep your existing stats if you have them
+        return view('Customer_Pages.Customer_dashboard', compact(
+            'customer',
+            'products',
+            'categories',
+            'cartCount',
+            'request'          // important for the filter label
+        ));
     }
     public function store(Request $request)
     {
