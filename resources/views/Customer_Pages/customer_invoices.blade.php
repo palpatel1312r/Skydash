@@ -106,14 +106,14 @@ if (
                             {{-- Clear Filters Button --}}
                             <a href="{{ route('customer.invoices') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
                                 <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
 
                         {{-- RIGHT: Create Button --}}
                         <a href="{{ route('customer.invoices.create') }}" class="btn btn-primary shadow px-3 px-sm-4 py-2">
-                            <i class="mdi mdi-plus me-1"></i><span class="d-none d-sm-inline">Create New </span>Invoice
+                            <i class="mdi mdi-plus me-1"></i><span class="d-none d-sm-inline">Create </span>Invoice
                         </a>
                     </div>
                 </div>
@@ -301,7 +301,8 @@ if (
                                     <tr>
                                         <th>#</th>
                                         <th>Product Name</th>
-                                        <th class="text-end">Price</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Price Per Item</th>
                                         <th class="text-end">Subtotal</th>
                                     </tr>
                                 </thead>
@@ -310,6 +311,7 @@ if (
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
                                             <td>{{ $product['product_name'] }}</td>
+                                            <td class="text-end">{{ $product['quantity'] }}</td>
                                             <td class="text-end">₹{{ number_format($product['price'], 2) }}</td>
                                             <td class="text-end">₹{{ number_format($product['subtotal'], 2) }}</td>
                                         </tr>
@@ -317,17 +319,16 @@ if (
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
                                         <td class="text-end">₹{{ number_format($item->subtotal, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td colspan="3" class="text-end"><strong>Tax
-                                                ({{ $item->tax_rate }}%)
+                                        <td colspan="4" class="text-end"><strong>Tax ({{ $item->tax_rate }}%)
                                                 :</strong></td>
                                         <td class="text-end">₹{{ number_format($item->tax_amount, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td colspan="3" class="text-end"><strong>Grand Total:</strong></td>
+                                        <td colspan="4" class="text-end"><strong>Grand Total:</strong></td>
                                         <td class="text-end"><strong>₹{{ number_format($item->total_amount, 2) }}</strong>
                                         </td>
                                     </tr>
@@ -346,6 +347,11 @@ if (
     @endforeach
 
     <style>
+        #dateRangeDropdown:hover {
+            background-color: #1e2124 !important;
+        }
+
+
         /* ===== CUSTOM CALENDAR ===== */
         .calendar-grid {
             display: grid;

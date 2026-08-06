@@ -1,4 +1,4 @@
-@extends('Components.superadminheader')
+@extends('Components.adminheader')
 @section('content')
     <div class="main-panel">
         <div class="content-wrapper">
@@ -75,14 +75,17 @@
                                 <div class="form-group">
                                     <label>Select Customer</label>
                                     <select name="customer_id" id="customerSelect"
-                                        class="form-control @error('customer_id') is-invalid @enderror"
+                                        class="form-select @error('customer_id') is-invalid @enderror"
                                         style="color: #333; background-color: #ffffff !important;">
                                         <option value="">-- Select Customer --</option>
                                         @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}"
-                                                {{ old('customer_id', $invoice->customer_id ?? '') == $customer->id ? 'selected' : '' }}>
-                                                {{ $customer->fullname }} ({{ $customer->email }})
-                                            </option>
+                                            {{-- Only show customers with status 'Active' --}}
+                                            @if ($customer->status === 'Active')
+                                                <option value="{{ $customer->id }}"
+                                                    {{ old('customer_id', $invoice->customer_id ?? '') == $customer->id ? 'selected' : '' }}>
+                                                    {{ $customer->fullname }} ({{ $customer->email }})
+                                                </option>
+                                            @endif
                                         @endforeach
                                     </select>
                                     @error('customer_id')
@@ -130,7 +133,7 @@
                                             <div class="col-md-4">
                                                 <label>Select Product</label>
                                                 <select name="product_id[]"
-                                                    class="form-control product-select @error('product_id.' . $i) is-invalid @enderror"
+                                                    class="form-select product-select @error('product_id.' . $i) is-invalid @enderror"
                                                     onchange="updateProductDetails(this)"
                                                     style="color: #333; background-color: #ffffff !important;">
                                                     <option value="">-- Select Product --</option>
@@ -178,7 +181,6 @@
                                             {{-- Subtotal (Width 2) --}}
                                             <div class="col-md-2">
                                                 <label>Subtotal (₹)</label>
-                                                {{-- ✅ FIX: Added inline PHP to remove d-none if a product is pre-selected --}}
                                                 <input type="text" name="subtotal[]"
                                                     class="form-control product-subtotal @error('subtotal.' . $i) is-invalid @enderror"
                                                     placeholder="0.00" value="{{ $selectedSubtotal }}"
@@ -646,19 +648,29 @@
                                     var baseName = parts[0];
                                     var index = parseInt(parts[1]);
 
+                                    // ✅ Find the specific input by index
                                     var inputs = $('[name="' + baseName + '[]"]');
                                     if (inputs.length > index) {
                                         var input = inputs.eq(index);
                                         if (input.length) {
+                                            // ✅ Add error class
+                                            input.addClass('is-invalid');
+                                            input.nextAll('.invalid-feedback').remove();
 
-                                            // ✅ CRITICAL FIX: ONLY ADD ERROR BORDER IF THE INPUT IS VISIBLE
-                                            var isHidden = input.hasClass('d-none');
-                                            if (!isHidden) {
-                                                input.addClass('is-invalid');
+                                            // ✅ CRITICAL FIX: Find the specific parent column for this input
+                                            // For subtotal, price, qty, it's a .col-md-2
+                                            // For product_id, it's a .col-md-4
+                                            var parentCol = input.closest('.col-md-4');
+                                            if (!parentCol.length) {
+                                                parentCol = input.closest('.col-md-2');
+                                            }
+                                            if (!parentCol.length) {
+                                                parentCol = input.closest(
+                                                    '[class*="col-md-"]');
                                             }
 
-                                            input.nextAll('.invalid-feedback').remove();
-                                            input.closest('[class*="col-md-"]').append(
+                                            // ✅ Append the error message inside that column
+                                            parentCol.append(
                                                 '<div class="invalid-feedback" style="display:block;">' +
                                                 messages[0] + '</div>'
                                             );

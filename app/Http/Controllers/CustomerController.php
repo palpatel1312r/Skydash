@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Customer;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -50,7 +52,10 @@ class CustomerController extends Controller
     public function dashboard()
     {
         $customer = Auth::guard('customer')->user();
-        return view('Customer_Pages.Customer_dashboard', compact('customer'));
+        $products = Product::all();
+        $cartCount = Cart::where('customer_id', $customer->id)->count();
+
+        return view('Customer_Pages.Customer_dashboard', compact('customer', 'products', 'cartCount'));
     }
     public function store(Request $request)
     {

@@ -222,8 +222,8 @@
                             <span class="menu-title">Profile</span>
                         </a>
                     </li>
-                    {{-- 7. MANAGE ROLES --}}
-                    @if ($user)
+                    {{-- 7. MANAGE ROLES (SUPER ADMIN ONLY) --}}
+                    @if ($user && $user->role_id == 1)
                         @php
                             $isRoleActive =
                                 request()->routeIs('roles.index') ||
@@ -237,6 +237,7 @@
                             </a>
                         </li>
                     @endif
+
                     {{-- LOGOUT BUTTON --}}
                     <li class="nav-item mt-auto" style="margin-top: auto;">
                         <a class="nav-link" href="#"

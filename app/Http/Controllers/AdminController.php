@@ -18,8 +18,10 @@ class AdminController extends Controller
 
     public function updateProfile(Request $request)
     {
+        // 1. Get the authenticated admin
         $admin = Auth::guard('admin')->user();
 
+        // 2. Validate inputs
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admins,email,' . $admin->id,
@@ -28,10 +30,12 @@ class AdminController extends Controller
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        // 3. Update Admin details
         $admin->name = $request->name;
         $admin->email = $request->email;
         $admin->save();
 
+        // 4. Get or create the profile record
         $profile = $admin->profile;
         if (!$profile) {
             $profile = new \App\Models\Profile();
@@ -42,19 +46,25 @@ class AdminController extends Controller
         $profile->phone = $request->phone;
         $profile->address = $request->address;
 
+        // 5. Handle Image Upload
         if ($request->hasFile('profile_image')) {
+            // 5a. Delete old image if exists (Use storage_path correctly)
             if ($profile->profile_image && file_exists(storage_path('app/public/' . $profile->profile_image))) {
                 unlink(storage_path('app/public/' . $profile->profile_image));
             }
+
+            // 5b. Store the new image
+            // IMPORTANT: This stores the file in: storage/app/public/profile_images/filename.jpg
             $path = $request->file('profile_image')->store('profile_images', 'public');
-            $profile->profile_image = $path;
+
+            // 5c. SAVE THE EXACT PATH returned by store()
+            $profile->profile_image = $path; // This will be "profile_images/filename.jpg"
         }
 
         $profile->save();
 
         return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
     }
-
     public function dashboard()
     {
         // 1. STATS CARDS DATA

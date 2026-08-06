@@ -33,6 +33,7 @@
                             <span class="text-muted fw-bold small me-1 d-none d-sm-inline">Filter By:</span>
 
                             {{-- Customer Filter --}}
+
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3 dropdown-toggle"
                                     type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -43,9 +44,13 @@
                                     style="min-width: 200px; max-height: 300px; overflow-y: auto;">
                                     <li><a class="dropdown-item customer-option" href="#" data-id="">All
                                             Customers</a></li>
+
+                                    {{-- ✅ FIX: Only show active customers --}}
                                     @foreach ($customers as $customer)
-                                        <li><a class="dropdown-item customer-option" href="#"
-                                                data-id="{{ $customer->id }}">{{ $customer->fullname }}</a></li>
+                                        @if ($customer->status === 'Active')
+                                            <li><a class="dropdown-item customer-option" href="#"
+                                                    data-id="{{ $customer->id }}">{{ $customer->fullname }}</a></li>
+                                        @endif
                                     @endforeach
                                 </ul>
                             </div>
@@ -108,7 +113,7 @@
                             {{-- Clear Filters Button --}}
                             <a href="{{ route('invoices.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                               {{ request()->has('customer_id') || request()->has('start_date') || request()->has('end_date') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
                                 <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
@@ -893,67 +898,57 @@
 
                 if (id === '') {
                     url.searchParams.delete('customer_id');
-                    $('#customerLabel').text('All Customers'); // Update DOM
+                    $('#customerLabel').text('All Customers');
                 } else {
                     url.searchParams.set('customer_id', id);
-                    $('#customerLabel').text(name); // Update DOM
+                    $('#customerLabel').text(name);
                 }
 
-                window.location.href = url.toString(); // Reload
+                window.location.href = url.toString();
             });
+
             // ===================== DATE RANGE FILTER =====================
             var dateRangeParam = urlParams.get('date_range');
             var startDateParam = urlParams.get('start_date');
             var endDateParam = urlParams.get('end_date');
 
-            // Set date range label on page load
             function updateDateRangeLabel() {
                 if (dateRangeParam && dateRangeParam !== 'custom') {
-                    // It's a preset (today, this_week, etc.)
                     var label = dateRangeParam.replace(/_/g, ' ');
                     label = label.charAt(0).toUpperCase() + label.slice(1);
                     $('#dateRangeLabel').text(label);
                 } else if (startDateParam && endDateParam) {
-                    // It's a custom range
                     $('#dateRangeLabel').text(startDateParam + ' to ' + endDateParam);
                 } else {
-                    // Fallback (No filters applied)
                     $('#dateRangeLabel').text('All Time');
                 }
             }
-            updateDateRangeLabel(); // Call on page load
             updateDateRangeLabel();
 
-            // Handle Preset Clicks (Today, Yesterday, etc.)
+            // Handle Preset Clicks
             $('.date-preset-option').on('click', function(e) {
                 e.preventDefault();
                 var range = $(this).data('range');
                 var url = new URL(window.location.href);
 
-                // Clear out any old custom dates
                 url.searchParams.delete('start_date');
                 url.searchParams.delete('end_date');
                 url.searchParams.delete('page');
 
                 if (range === 'all') {
                     url.searchParams.delete('date_range');
-                    $('#dateRangeLabel').text('All Time'); // Update DOM immediately
+                    $('#dateRangeLabel').text('All Time');
                 } else {
                     url.searchParams.set('date_range', range);
-
-                    // Format label correctly
                     var label = range.replace(/_/g, ' ');
                     label = label.charAt(0).toUpperCase() + label.slice(1);
-
-                    // 🛑 CRITICAL FIX: Force the DOM to update before reload!
                     $('#dateRangeLabel').text(label);
                 }
 
-                // Reload the page to apply the filter
                 window.location.href = url.toString();
             });
 
-            // ===================== CUSTOM DATE RANGE MODAL LOGIC =====================
+            // ===================== CUSTOM DATE RANGE MODAL =====================
             const monthNames = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
@@ -963,7 +958,6 @@
             let selectedStart = null;
             let selectedEnd = null;
 
-            // Parse existing URL params for custom dates
             if (startDateParam && endDateParam) {
                 selectedStart = new Date(startDateParam + 'T00:00:00');
                 selectedEnd = new Date(endDateParam + 'T00:00:00');
@@ -1013,7 +1007,6 @@
                 const grid = $('#' + containerId);
                 grid.empty();
 
-                // Empty cells before start
                 for (let i = 0; i < firstDay; i++) {
                     grid.append('<div class="cal-day empty"></div>');
                 }
@@ -1051,7 +1044,6 @@
                     grid.append(btn);
                 }
 
-                // Fill remaining to complete 6 rows (42 cells)
                 const totalCells = firstDay + daysInMonth;
                 const remaining = 42 - totalCells;
                 for (let i = 0; i < remaining; i++) {
@@ -1074,7 +1066,6 @@
                 renderCalendar();
             }
 
-            // Calendar navigation
             $('#calPrev').on('click', function() {
                 currentMonth.setMonth(currentMonth.getMonth() - 1);
                 renderCalendar();
@@ -1085,7 +1076,6 @@
                 renderCalendar();
             });
 
-            // Apply custom date range
             $('#applyDateRange').on('click', function() {
                 if (selectedStart && selectedEnd) {
                     var url = new URL(window.location.href);
@@ -1106,7 +1096,6 @@
                 }
             });
 
-            // Sync calendar with URL params when modal opens
             $('#dateRangeModal').on('shown.bs.modal', function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const startParam = urlParams.get('start_date');
@@ -1126,7 +1115,6 @@
                 renderCalendar();
             });
 
-            // Initialize calendar
             renderCalendar();
 
             // ===================== DELETE CONFIRMATION =====================
@@ -1136,17 +1124,23 @@
                 }
             };
 
-            // ===================== AUTO-DISMISS ALERTS =====================
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    alert.style.transition = 'opacity 0.5s ease';
-                    alert.style.opacity = '0';
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 500);
-                });
-            }, 50);
+            // ===================== ✅ AUTO-DISMISS ALERTS (FIXED) =====================
+            $(document).ready(function() {
+                // Wait 3 seconds, then fade out all alerts
+                setTimeout(function() {
+                    const alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(function(alert) {
+                        alert.style.transition =
+                        'opacity 1s ease'; // Smooth fade over 1 second
+                        alert.style.opacity = '0'; // Fade out
+
+                        // After 1 second (when fade is done), remove from DOM
+                        setTimeout(function() {
+                            alert.style.display = 'none';
+                        }, 1000);
+                    });
+                }, 3000); // Wait 3 seconds before starting
+            });
         });
     </script>
 @endsection

@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Cart;
+// use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class CartController extends Controller
+{
+    public function index()
+    {
+        $cartItems = Cart::where('customer_id', Auth::guard('customer')->id())
+            ->with('product')
+            ->get();
+
+        return view('cart.index', compact('cartItems'));
+    }
+
+    public function updateQuantity(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $cartItem = Cart::where('id', $id)
+            ->where('customer_id', Auth::guard('customer')->id())
+            ->firstOrFail();
+
+        $cartItem->quantity = $request->quantity;
+        $cartItem->save();
+
+        $subtotal = $cartItem->product->price * $cartItem->quantity;
+
+        $total = Cart::where('customer_id', Auth::guard('customer')->id())
+            ->with('product')
+            ->get()
+            ->sum(fn($item) => $item->product->price * $item->quantity);
+
+        return response()->json([
+            'success'   => true,
+            'subtotal'  => number_format($subtotal, 2),
+            'total'     => number_format($total, 2),
+            'cartCount' => Cart::where('customer_id', Auth::guard('customer')->id())->sum('quantity'),
+        ]);
+    }
+
+    public function add(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:product,id',
+            'quantity'   => 'required|integer|min:1',
+        ]);
+
+        $customerId = Auth::guard('customer')->id();
+
+        if (!$customerId) {
+            return response()->json(['message' => 'You must be logged in as a customer.'], 401);
+        }
+
+        $cartItem = Cart::where('customer_id', $customerId)
+            ->where('product_id', $request->product_id)
+            ->first();
+
+        if ($cartItem) {
+            $cartItem->quantity += $request->quantity;
+            $cartItem->save();
+        } else {
+            Cart::create([
+                'customer_id' => $customerId,
+                'product_id'  => $request->product_id,
+                'quantity'    => $request->quantity,
+            ]);
+        }
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Item added to cart!',
+            'cartCount' => Cart::where('customer_id', $customerId)->sum('quantity'),
+        ]);
+    }
+
+    public function buyNow(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:product,id',
+            'quantity'   => 'required|integer|min:1',
+        ]);
+
+        $customerId = Auth::guard('customer')->id();
+
+        if (!$customerId) {
+            return response()->json(['message' => 'You must be logged in as a customer.'], 401);
+        }
+
+        // Clear existing cart and add only this product
+        Cart::where('customer_id', $customerId)->delete();
+
+        Cart::create([
+            'customer_id' => $customerId,
+            'product_id'  => $request->product_id,
+            'quantity'    => $request->quantity,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ready to buy! Redirecting to checkout...',
+        ]);
+    }
+
+    public function remove($id)
+    {
+        $cart = Cart::where('id', $id)
+            ->where('customer_id', Auth::guard('customer')->id())
+            ->firstOrFail();
+
+        $cart->delete();
+
+        return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
+    }
+}

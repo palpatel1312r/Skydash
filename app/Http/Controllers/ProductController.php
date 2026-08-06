@@ -37,29 +37,30 @@ class ProductController extends Controller
       abort(403, 'Unauthorized access.');
     }
 
-    // ✅ START THE QUERY
     $query = Product::query();
 
-    // ✅ Category Filter
+    // Apply Category Filter
     if ($request->filled('category')) {
       $query->where('category', $request->category);
     }
-
-    // ✅ Type Filter
+    // Apply Type Filter
     if ($request->filled('type')) {
       $query->where('type', $request->type);
     }
 
-    // ✅ GET DATA
     $products = $query->orderBy('created_at', 'desc')->get();
-
-    // ✅ FETCH DISTINCT DROPDOWN DATA
     $categories = Product::distinct()->pluck('category')->filter()->values();
     $types = Product::distinct()->pluck('type')->filter()->values();
 
-    // ✅ Pass request to view
+    // ✅ IF AJAX REQUEST: Return ONLY the table rows partial
+    if ($request->ajax()) {
+      return view('Admin.Product_Pages.partials.product_table_rows', compact('products'));
+    }
+
+    // ✅ NORMAL REQUEST: Return the full page
     return view('Admin.Product_Pages.products', compact('products', 'categories', 'types'))->with('request', $request);
   }
+
   public function store(Request $request)
   {
     // 1. CREATE VALIDATOR INSTANCE

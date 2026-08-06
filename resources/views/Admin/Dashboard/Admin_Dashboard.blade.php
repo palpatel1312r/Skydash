@@ -1,4 +1,4 @@
-@extends('Components.superadminheader')
+@extends('Components.adminheader')
 
 @section('content')
     <div class="main-panel">
@@ -22,51 +22,84 @@
                     <div class="row">
                         <div class="col-12 col-xl-8 mb-4 mb-xl-0">
                             <h3 class="font-weight-bold">Welcome Admin</h3>
-                            <h6 class="font-weight-normal mb-0">Your B2B marketplace is running smoothly!</h6>
+                            <h6 class="font-weight-normal mb-0">Your SkyDash marketplace is running smoothly!</h6>
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- STATS CARDS --}}
-            <div class="row">
-                <div class="col-md-3 grid-margin stretch-card">
-                    <div class="card card-tale">
-                        <div class="card-body">
-                            <p class="mb-4">Total Products</p>
-                            <p class="fs-30 mb-2">{{ $totalProducts }}</p>
-                            <p>Active Catalog</p>
+            {{-- STATS CARDS --}}
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted small mb-1 fw-medium">Total Products</p>
+                                    <h3 class="fw-bold mb-0">{{ $totalProducts }}</h3>
+                                    <small class="text-success"><i class="mdi mdi-trending-up"></i> Active Catalog</small>
+                                </div>
+                                <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                                    <i class="mdi mdi-package-variant"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 grid-margin stretch-card">
-                    <div class="card card-dark-blue">
-                        <div class="card-body">
-                            <p class="mb-4">Active Dealers</p>
-                            <p class="fs-30 mb-2">{{ $activeDealers }}</p>
-                            <p>Registered Users</p>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted small mb-1 fw-medium">Active Dealers</p>
+                                    <h3 class="fw-bold mb-0">{{ $activeDealers }}</h3>
+                                    <small class="text-info"><i class="mdi mdi-account-check"></i> Registered Users</small>
+                                </div>
+                                <div class="stats-icon bg-info bg-opacity-10 text-info">
+                                    <i class="mdi mdi-account-group"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 grid-margin stretch-card">
-                    <div class="card card-light-blue">
-                        <div class="card-body">
-                            <p class="mb-4">Today's Revenue</p>
-                            <p class="fs-30 mb-2">₹{{ number_format($todayRevenue, 0) }}</p>
-                            <p>Net Sales</p>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted small mb-1 fw-medium">Today's Revenue</p>
+                                    <h3 class="fw-bold mb-0">₹{{ number_format($todayRevenue, 0) }}</h3>
+                                    <small class="text-success"><i class="mdi mdi-currency-inr"></i> Net Sales</small>
+                                </div>
+                                <div class="stats-icon bg-success bg-opacity-10 text-success">
+                                    <i class="mdi mdi-cash-multiple"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 grid-margin stretch-card">
-                    <div class="card card-light-danger">
-                        <div class="card-body">
-                            <p class="mb-4">Low Stock Items</p>
-                            <p class="fs-30 mb-2 text-danger">{{ $lowStockCount }}</p>
-                            <p>Need Immediate Restock</p>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted small mb-1 fw-medium">Low Stock Items</p>
+                                    <h3 class="fw-bold mb-0 text-danger">{{ $lowStockCount }}</h3>
+                                    <small class="text-danger"><i class="mdi mdi-alert"></i> Need Restock</small>
+                                </div>
+                                <div class="stats-icon bg-danger bg-opacity-10 text-danger">
+                                    <i class="mdi mdi-alert-octagon"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
 
             {{-- NEW ARRIVALS SECTION --}}
             <div class="row">
@@ -88,7 +121,19 @@
                             <div class="slider-container new-arrivals-container">
                                 @foreach ($newArrivals as $product)
                                     <div class="product-slide">
-                                        <div class="amazon-card">
+                                        {{-- ✅ UPDATED: Added onclick to open product modal --}}
+                                        <div class="amazon-card" style="cursor: pointer;"
+                                            onclick="openProductModal(
+    {{ $product->id }}, 
+    '{{ addslashes($product->title) }}', 
+    `{{ addslashes($product->description) }}`, 
+    '{{ $product->price }}', 
+    '{{ $product->category }}', 
+    '{{ $product->quantity }}', 
+    '{{ $product->type }}',          {{-- ADD THIS --}}
+    '{{ $product->image }}', 
+    '{{ route('products.edit', $product->id) }}'
+)">
                                             <div class="img-wrapper">
                                                 @if ($product->image)
                                                     <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
@@ -136,7 +181,19 @@
                             <div class="slider-container best-sellers-container">
                                 @foreach ($bestSellers as $product)
                                     <div class="product-slide">
-                                        <div class="amazon-card">
+                                        {{-- ✅ UPDATED: Added onclick to open product modal --}}
+                                        <div class="amazon-card" style="cursor: pointer;"
+                                            onclick="openProductModal(
+    {{ $product->id }}, 
+    '{{ addslashes($product->title) }}', 
+    `{{ addslashes($product->description) }}`, 
+    '{{ $product->price }}', 
+    '{{ $product->category }}', 
+    '{{ $product->quantity }}', 
+    '{{ $product->type }}',          {{-- ADD THIS --}}
+    '{{ $product->image }}', 
+    '{{ route('products.edit', $product->id) }}'
+)">
                                             <div class="img-wrapper">
                                                 @if ($product->image)
                                                     <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
@@ -212,6 +269,71 @@
                                         <i class="mdi mdi-file-document-edit me-2"></i> Manage Pending Orders
                                     </a>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 🛒 DYNAMIC PRODUCT DETAIL MODAL (Amazon/Flipkart Style) --}}
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 750px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-bottom bg-white px-4 py-3">
+                    <h5 class="modal-title fw-bold text-truncate" id="modalProductTitle" style="max-width: 85%;">
+                        Product Title</h5>
+                    {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        {{-- Left: Main Image & Thumbnails --}}
+                        {{-- Left: Main Image Only --}}
+                        <div class="col-md-5">
+                            <div class="main-image-wrapper bg-light rounded-3 d-flex align-items-center justify-content-center p-3 mb-3 border"
+                                style="height: 280px;">
+                                <img id="modalMainImage" src="" alt="Product Image" class="img-fluid"
+                                    style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+
+                        {{-- Right: Details --}}
+                        <div class="col-md-7">
+                            <h3 class="fw-bold mb-2 text-dark" id="modalProductName">Product Name</h3>
+
+                            <div class="d-flex align-items-baseline gap-3 mb-3">
+                                <h4 class="text-primary fw-bold mb-0" id="modalProductPrice">₹0.00</h4>
+                                <span class="text-danger text-decoration-line-through small"
+                                    id="modalProductMrp">₹0.00</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <span
+                                    class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2"
+                                    id="modalProductStatus">
+                                    <i class="mdi mdi-check-circle me-1"></i> In Stock
+                                </span>
+                                <span
+                                    class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 ms-2"
+                                    id="modalProductCategory">
+                                    Category
+                                </span>
+                            </div>
+
+                            <p class="text-muted small mb-3" id="modalProductDesc" style="line-height: 1.6;">
+                                Product description will appear here...
+                            </p>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="#" id="modalEditBtn" class="btn btn-primary py-2">
+                                    <i class="mdi mdi-pencil me-2"></i> Edit This Product
+                                </a>
+                                {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
+                                <button type="button" class="btn btn-light py-2" data-bs-dismiss="modal">
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -369,6 +491,33 @@
     </style>
 
     <script>
+        // ===================== PRODUCT MODAL =====================
+        window.openProductModal = function(id, title, description, price, category, qty, type, image, editUrl) {
+            document.getElementById('modalProductTitle').textContent = title;
+            document.getElementById('modalProductName').textContent = title;
+            document.getElementById('modalProductDesc').textContent = description || 'No description available.';
+            document.getElementById('modalProductPrice').textContent = '₹' + parseFloat(price).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            document.getElementById('modalProductCategory').textContent = category;
+            document.getElementById('modalProductStatus').textContent = qty > 0 ? 'In Stock' : 'Out of Stock';
+
+            // Image handling
+            var imgSrc = image && (image.startsWith('http://') || image.startsWith('https://')) ?
+                image :
+                (image ? '{{ asset('') }}' + image : '');
+            var mainImage = document.getElementById('modalMainImage');
+            mainImage.src = imgSrc;
+            mainImage.onerror = function() {
+                this.src = 'https://via.placeholder.com/400x300?text=No+Image';
+            };
+
+            // Edit button – now receives the correct URL
+            document.getElementById('modalEditBtn').href = editUrl;
+
+            $('#productDetailModal').modal('show');
+        };
         $(document).ready(function() {
             // 1. Turn new arrivals into a slider
             $('.new-arrivals-container').slick({
@@ -377,7 +526,6 @@
                 infinite: true,
                 speed: 300,
                 slidesToShow: 4,
-                /* 4 exact cards */
                 slidesToScroll: 1,
                 responsive: [{
                         breakpoint: 1024,
@@ -398,7 +546,6 @@
                         }
                     }
                 ],
-                // ✅ Force override any display issues
                 cssEase: 'linear'
             });
 
@@ -409,7 +556,6 @@
                 infinite: true,
                 speed: 300,
                 slidesToShow: 4,
-                /* 4 exact cards */
                 slidesToScroll: 1,
                 responsive: [{
                         breakpoint: 1024,

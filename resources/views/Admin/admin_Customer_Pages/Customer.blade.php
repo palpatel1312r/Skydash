@@ -83,7 +83,7 @@
                             {{-- Clear Filters Button --}}
                             <a href="{{ route('admin.customers.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                               {{ request()->has('role') || request()->has('status') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                               {{ request()->has('role') || request()->has('status') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
                                 <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
@@ -166,12 +166,13 @@
                                                 <td class="text-center">
                                                     <div
                                                         class="d-flex align-items-center justify-content-center gap-1 flex-nowrap action-buttons">
-                                                        <button type="button" class="btn btn-primary btn-sm"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#updateModal{{ $item->id }}">
+
+                                                        {{-- ✅ NEW: Direct Link to Edit Page (No Modal) --}}
+                                                        <a href="{{ route('admin.customers.edit', $item->id) }}"
+                                                            class="btn btn-primary btn-sm">
                                                             <i class="mdi mdi-pencil me-1"></i> <span
                                                                 class="d-none d-lg-inline">Update</span>
-                                                        </button>
+                                                        </a>
 
                                                         <form action="{{ route('admin.customers.delete', $item->id) }}"
                                                             method="POST" class="d-inline-block"
@@ -277,6 +278,13 @@
     @endforeach
 
     <style>
+        #statusDropdown:hover,
+        #roleDropdown:hover {
+            background: #262729;
+            border-color: #f8f3f3;
+        }
+
+
         .dropdown-menu {
             z-index: 1090 !important;
             max-height: 300px;

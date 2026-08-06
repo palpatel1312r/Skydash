@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-    <!-- SAME HEAD SECTION -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Skydash Customer</title>
@@ -22,8 +21,9 @@
 
 <body>
     <div class="container-scroller">
-        <!-- partial:partials/_navbar.html -->
         <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+
+            {{-- BRAND LOGO --}}
             <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
                 @php
                     $dashboardUrl = route('customer.dashboard');
@@ -36,11 +36,12 @@
                 </a>
             </div>
 
-            <!-- SAME NAVBAR RIGHTS -->
+            {{-- RIGHT MENU --}}
             <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
                 <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
                     <span class="icon-menu"></span>
                 </button>
+
                 <ul class="navbar-nav mr-lg-2">
                     <li class="nav-item nav-search d-none d-lg-block">
                         <div class="input-group">
@@ -53,16 +54,29 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav navbar-nav-right">
+                    {{-- NOTIFICATIONS --}}
                     <li class="nav-item dropdown">
                         <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#"
                             data-toggle="dropdown"></a>
                     </li>
+
+                    {{-- ✅ CART ICON --}}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('cart.index') }}">
+                            <i class="mdi mdi-cart"></i>
+                            <span class="badge badge-primary ml-1" id="cartCount">
+                                {{ $cartCount ?? 0 }}
+                            </span>
+                        </a>
+                    </li>
+
+                    {{-- PROFILE --}}
                     <li class="nav-item nav-profile dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
                                 $user = auth()->guard('customer')->user();
-                                $bgColor = '#1cc88a'; // Customer Green
-                                $initial = strtoupper(substr($user->name ?? 'U', 0, 1));
+                                $bgColor = '#1cc88a';
+                                $initial = strtoupper(substr($user->fullname ?? 'U', 0, 1));
                             @endphp
                             <div
                                 style="width: 35px; height: 35px; border-radius: 50%; background-color: {{ $bgColor }}; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase;">
@@ -74,15 +88,10 @@
                             <a class="dropdown-item" href="{{ route('customer.profile') }}">
                                 <i class="ti-user text-primary"></i> Profile
                             </a>
-
-                            {{-- ✅ FIXED: Changed route to customer specific password form --}}
                             <a class="dropdown-item" href="{{ route('customer.password.form') }}">
                                 <i class="ti-key text-primary"></i> Change Password
                             </a>
-
                             <div class="dropdown-divider"></div>
-
-                            {{-- ✅ FIXED: Added pop-up confirmation --}}
                             <a class="dropdown-item" href="#"
                                 onclick="event.preventDefault(); 
                                          if(confirm('Are you sure you want to logout?')) {
@@ -97,6 +106,7 @@
                         </div>
                     </li>
                 </ul>
+
                 <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
                     data-toggle="offcanvas">
                     <span class="icon-menu"></span>
@@ -128,55 +138,35 @@
                 </div>
             </div>
 
-            {{-- ======================= CUSTOMER SIDEBAR ======================= --}}
+            {{-- SIDEBAR --}}
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
-                    {{-- 1. CUSTOMER DASHBOARD --}}
-                    @php
-                        $isCustomerDashboardActive = request()->routeIs('customer.dashboard');
-                    @endphp
-                    <li class="nav-item {{ $isCustomerDashboardActive ? 'active' : '' }}">
+                    <li class="nav-item {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('customer.dashboard') }}">
                             <i class="icon-grid menu-icon"></i>
                             <span class="menu-title">Dashboard</span>
                         </a>
                     </li>
-
-                    {{-- 2. CUSTOMER INVOICES --}}
-                    @php
-                        $isCustomerInvoiceActive =
-                            request()->routeIs('customer.invoices') ||
-                            request()->routeIs('customer.invoices.create') ||
-                            request()->routeIs('customer.invoices.edit');
-                    @endphp
-                    <li class="nav-item {{ $isCustomerInvoiceActive ? 'active' : '' }}">
+                    <li class="nav-item {{ request()->routeIs('customer.invoices*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('customer.invoices') }}">
                             <i class="icon-file menu-icon"></i>
                             <span class="menu-title">Invoices</span>
                         </a>
                     </li>
-
-                    {{-- 3. CUSTOMER PROFILE --}}
-                    @php
-                        $isCustomerProfileActive =
-                            request()->routeIs('customer.profile') || request()->routeIs('customer.password.update');
-                    @endphp
-                    <li class="nav-item {{ $isCustomerProfileActive ? 'active' : '' }}">
+                    <li class="nav-item {{ request()->routeIs('customer.profile') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('customer.profile') }}">
                             <i class="mdi mdi-account-circle menu-icon"></i>
                             <span class="menu-title">Profile</span>
                         </a>
                     </li>
-                    {{-- LOGOUT BUTTON --}}
-                    <li class="nav-item mt-auto" style="margin-top: auto;">
+                    <li class="nav-item mt-auto">
                         <a class="nav-link" href="#"
                             onclick="event.preventDefault(); 
                                      if(confirm('Are you sure you want to logout?')) {
                                          document.getElementById('logout-form').submit();
-                                     }"
-                            style="cursor: pointer;">
+                                     }">
                             <i class="mdi mdi-logout menu-icon"></i>
-                            <span class="menu-title" style="color: inherit;">Logout</span>
+                            <span class="menu-title">Logout</span>
                         </a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                             @csrf
@@ -185,12 +175,10 @@
                 </ul>
             </nav>
 
-            <!-- Main Content -->
             @yield('content')
         </div>
     </div>
 
-    <!-- plugins:js -->
     <script src="{{ asset('Dashboard/vendors/js/vendor.bundle.base.js') }}"></script>
     <script src="{{ asset('Dashboard/vendors/datatables.net/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('Dashboard/js/dataTables.select.min.js') }}"></script>
@@ -200,14 +188,7 @@
     <script src="{{ asset('Dashboard/js/settings.js') }}"></script>
     <script src="{{ asset('Dashboard/js/todolist.js') }}"></script>
     <script src="{{ asset('Dashboard/js/Admin.Dashboard.js') }}"></script>
-    <style>
-        .navbar-toggler:focus,
-        .navbar-toggler:active,
-        .navbar-toggler:hover {
-            outline: none !important;
-            box-shadow: none !important;
-        }
-    </style>
+    @stack('scripts')
 </body>
 
 </html>

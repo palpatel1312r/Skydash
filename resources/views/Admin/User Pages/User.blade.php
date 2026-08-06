@@ -83,7 +83,7 @@
                             {{-- Clear Filters Button --}}
                             <a href="{{ route('admin.user.index') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                               {{ request()->has('role') || request()->has('user_type') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                               {{ request()->has('role') || request()->has('user_type') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
                                 <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
@@ -211,6 +211,13 @@
     </div>
 
     <style>
+        #roleDropdown:hover,
+        #typeDropdown:hover {
+            background: #3d3f41;
+            border-color: #f8f3f3;
+        }
+
+
         .dropdown-menu {
             z-index: 1090 !important;
             max-height: 300px;

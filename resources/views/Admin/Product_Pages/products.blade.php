@@ -84,7 +84,7 @@
                             {{-- 5. Clear Filters Button --}}
                             <a href="{{ route('products') }}"
                                 class="btn btn-sm shadow-sm rounded-pill px-3 
-                   {{ request()->has('category') || request()->has('type') || request()->has('customer_id') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-secondary' }}">
+                   {{ request()->has('category') || request()->has('type') || request()->has('customer_id') || request()->has('date_range') ? 'btn-outline-danger' : 'btn-outline-dark' }}">
                                 <i class="mdi mdi-close me-1"></i> <span class="d-none d-sm-inline">Clear</span>
                             </a>
                         </div>
@@ -147,20 +147,34 @@
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td><strong>{{ $item->title }}</strong></td>
-                                                <td>
+                                                <td style="cursor: pointer;">
                                                     @if ($item->image)
-                                                        @if (Str::startsWith($item->image, ['http://', 'https://']))
-                                                            <img src="{{ $item->image }}" alt="Product Image"
-                                                                class="img-thumbnail"
-                                                                style="width: 80px; height: 80px; object-fit: cover;">
-                                                        @else
-                                                            <img src="{{ asset($item->image) }}" alt="Product Image"
-                                                                class="img-thumbnail"
-                                                                style="width: 80px; height: 80px; object-fit: cover;">
-                                                        @endif
+                                                        @php
+                                                            $imgSrc = Str::startsWith($item->image, [
+                                                                'http://',
+                                                                'https://',
+                                                            ])
+                                                                ? $item->image
+                                                                : asset($item->image);
+                                                        @endphp
+                                                        <img src="{{ $imgSrc }}" alt="Product Image"
+                                                            class="img-thumbnail"
+                                                            style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                                            onclick="openProductModal(
+        {{ $item->id }}, 
+        '{{ addslashes($item->title) }}', 
+        `{{ addslashes($item->description) }}`, 
+        '{{ $item->price }}', 
+        '{{ $item->category }}', 
+        '{{ $item->quantity }}', 
+        '{{ $item->type }}',
+        '{{ $item->image }}', 
+        '{{ route('products.edit', $item->id) }}'
+    )">
                                                     @else
                                                         <span class="text-muted">No image</span>
                                                     @endif
+
                                                 </td>
                                                 <td>₹{{ number_format($item->price, 2) }}</td>
                                                 <td>
@@ -168,7 +182,8 @@
                                                         <span class="badge badge-success">{{ $item->quantity }} in
                                                             stock</span>
                                                     @elseif($item->quantity > 0 && $item->quantity <= 10)
-                                                        <span class="badge badge-warning">{{ $item->quantity }} in stock
+                                                        <span class="badge badge-warning">{{ $item->quantity }} in
+                                                            stock
                                                             (Low)
                                                         </span>
                                                     @else
@@ -292,6 +307,72 @@
                             data-bs-dismiss="modal">Cancel</button>
                         <button type="button" id="applyDateRange"
                             class="btn btn-primary btn-sm px-4 rounded-pill fw-semibold">Apply dates</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 🛒 DYNAMIC PRODUCT DETAIL MODAL (Amazon/Flipkart Style) --}}
+
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 750px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-bottom bg-white px-4 py-3">
+                    <h5 class="modal-title fw-bold text-truncate" id="modalProductTitle" style="max-width: 85%;">
+                        Product Title</h5>
+                    {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        {{-- Left: Main Image & Thumbnails --}}
+                        {{-- Left: Main Image Only --}}
+                        <div class="col-md-5">
+                            <div class="main-image-wrapper bg-light rounded-3 d-flex align-items-center justify-content-center p-3 mb-3 border"
+                                style="height: 280px;">
+                                <img id="modalMainImage" src="" alt="Product Image" class="img-fluid"
+                                    style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+
+                        {{-- Right: Details --}}
+                        <div class="col-md-7">
+                            <h3 class="fw-bold mb-2 text-dark" id="modalProductName">Product Name</h3>
+
+                            <div class="d-flex align-items-baseline gap-3 mb-3">
+                                <h4 class="text-primary fw-bold mb-0" id="modalProductPrice">₹0.00</h4>
+                                <span class="text-danger text-decoration-line-through small"
+                                    id="modalProductMrp">₹0.00</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <span
+                                    class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2"
+                                    id="modalProductStatus">
+                                    <i class="mdi mdi-check-circle me-1"></i> In Stock
+                                </span>
+                                <span
+                                    class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 ms-2"
+                                    id="modalProductCategory">
+                                    Category
+                                </span>
+                            </div>
+
+                            <p class="text-muted small mb-3" id="modalProductDesc" style="line-height: 1.6;">
+                                Product description will appear here...
+                            </p>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="#" id="modalEditBtn" class="btn btn-primary py-2">
+                                    <i class="mdi mdi-pencil me-2"></i> Edit This Product
+                                </a>
+                                {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
+                                <button type="button" class="btn btn-light py-2" data-bs-dismiss="modal">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -462,6 +543,11 @@
             font-weight: 600 !important;
             box-shadow: 0 4px 12px rgba(13, 110, 253, 0.28) !important;
             transform: translateY(-1px);
+        }
+
+        #typeDropdown:hover, #categoryDropdown:hover {
+            background: #3d3f41;
+            border-color: #f8f3f3;
         }
 
         #paginationContainer .dataTables_paginate .paginate_button.disabled {
@@ -731,8 +817,7 @@
                 table.search($(this).val()).draw();
             });
 
-            // ===================== GET URL PARAMETERS (FIXED) =====================
-            // We define urlParams here so the filter logic can read the URL
+            // ===================== GET URL PARAMETERS =====================
             var urlParams = new URLSearchParams(window.location.search);
 
             // ===================== CATEGORY FILTER =====================
@@ -741,12 +826,21 @@
                 $('#categoryLabel').text(categoryParam);
             }
 
+            // ===================== CATEGORY FILTER (AJAX) =====================
             $('.category-option').on('click', function(e) {
                 e.preventDefault();
                 var cat = $(this).data('cat');
                 var url = new URL(window.location.href);
-                url.searchParams.delete('page');
 
+                // 1. Get current category from URL
+                var currentCat = url.searchParams.get('category');
+
+                // 2. If clicking the same category that's already active, STOP!
+                if (currentCat === cat) {
+                    return;
+                }
+
+                url.searchParams.delete('page');
                 if (cat === '') {
                     url.searchParams.delete('category');
                     $('#categoryLabel').text('All Categories');
@@ -754,10 +848,10 @@
                     url.searchParams.set('category', cat);
                     $('#categoryLabel').text(cat);
                 }
-                // Reload the page to apply the filter
+
+                // Finally reload
                 window.location.href = url.toString();
             });
-
             // ===================== TYPE FILTER =====================
             var typeParam = urlParams.get('type');
             if (typeParam) {
@@ -777,7 +871,6 @@
                     url.searchParams.set('type', type);
                     $('#typeLabel').text(type);
                 }
-                // Reload the page to apply the filter
                 window.location.href = url.toString();
             });
 
@@ -800,5 +893,34 @@
                 });
             }, 50);
         });
+
+        // ===================== PRODUCT MODAL =====================
+        window.openProductModal = function(id, title, description, price, category, qty, type, image, editUrl) {
+            // Set all the data using vanilla JS
+            document.getElementById('modalProductTitle').textContent = title;
+            document.getElementById('modalProductName').textContent = title;
+            document.getElementById('modalProductDesc').textContent = description || 'No description available.';
+            document.getElementById('modalProductPrice').textContent = '₹' + parseFloat(price).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            document.getElementById('modalProductCategory').textContent = category;
+            document.getElementById('modalProductStatus').textContent = qty > 0 ? 'In Stock' : 'Out of Stock';
+
+            // Handle image
+            var imgSrc = image && (image.startsWith('http://') || image.startsWith('https://')) ? image : (image ?
+                '{{ asset('') }}' + image : '');
+            var mainImage = document.getElementById('modalMainImage');
+            mainImage.src = imgSrc;
+            mainImage.onerror = function() {
+                this.src = 'https://via.placeholder.com/400x300?text=No+Image';
+            };
+
+            // Set edit button
+            document.getElementById('modalEditBtn').href = editUrl;
+
+            // Use jQuery to open modal
+            $('#productDetailModal').modal('show');
+        };
     </script>
 @endsection

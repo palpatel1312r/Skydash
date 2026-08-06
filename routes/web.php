@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerInvoiceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -143,12 +145,23 @@ Route::get('/customer/dashboard', [CustomerController::class, 'dashboard'])->nam
 Route::get('/customer/profile', [CustomerController::class, 'profile'])->name('customer.profile')->middleware('auth:customer');
 Route::post('/customer/profile/update', [CustomerController::class, 'updateProfile'])->name('customer.profile.update')->middleware('auth:customer');
 // Route::get('/customer/products', [ProductController::class, 'customerProducts'])->name('customer.products')->middleware('auth:customer');
-Route::get('/customer/invoices', [InvoiceController::class, 'customerInvoices'])->name('customer.invoices')->middleware('auth:customer');
-Route::get('/customer/invoices/create', [InvoiceController::class, 'customerCreate'])->name('customer.invoices.create')->middleware('auth:customer');
-Route::post('/customer/invoices', [InvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
+Route::get('/customer/invoices', [CustomerInvoiceController::class, 'customerInvoices'])->name('customer.invoices')->middleware('auth:customer');
+Route::get('/customer/invoices/create', [CustomerInvoiceController::class, 'customerCreate'])->name('customer.invoices.create')->middleware('auth:customer');
+Route::post('/customer/invoices', [CustomerInvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
 Route::post('/customer/password/update', [CustomerController::class, 'updatePassword'])->name('customer.password.update')->middleware('auth:customer');
 Route::get('/customer/password/form', [CustomerController::class, 'showChangePasswordForm'])->name('customer.password.form')->middleware('auth:customer');
 
+// Cart
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index')->middleware('auth:customer');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth:customer');
+Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth:customer');
+Route::patch('/cart/update/{id}', [CartController::class, 'updateQuantity'])
+  ->name('cart.update')
+  ->middleware('auth:customer');
+Route::post('/cart/buynow', [CartController::class, 'buyNow'])
+  ->name('cart.buynow')
+  ->middleware('auth:customer');
 /*
 |--------------------------------------------------------------------------
 | Static Pages

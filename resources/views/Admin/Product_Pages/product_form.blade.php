@@ -44,7 +44,9 @@
                                             <label>Title</label>
                                             <input type="text" name="title" id="title" class="form-control"
                                                 value="{{ old('title', $product->title ?? '') }}"
-                                                placeholder="Enter product title">
+                                                placeholder="Enter product title"
+                                                onkeypress="return (event.charCode > 64 && event.charCode < 91) || (event.charCode > 96 && event.charCode < 123) || event.charCode == 32"
+                                                onpaste="return false;">
                                             <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
@@ -241,7 +243,7 @@
                         // Redirect after 1.5 seconds
                         setTimeout(function() {
                             window.location.href = "{{ route('products') }}";
-                        }, 1500);
+                        }, 100);
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
