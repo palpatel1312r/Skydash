@@ -29,7 +29,6 @@
             </div>
 
             {{-- STATS CARDS --}}
-            {{-- STATS CARDS --}}
             <div class="row g-3 mb-4">
                 <div class="col-xl-3 col-md-6">
                     <div class="card stats-card border-0 shadow-sm h-100">
@@ -100,7 +99,6 @@
                 </div>
             </div>
 
-
             {{-- NEW ARRIVALS SECTION --}}
             <div class="row">
                 <div class="col-md-12 grid-margin stretch-card">
@@ -121,19 +119,18 @@
                             <div class="slider-container new-arrivals-container">
                                 @foreach ($newArrivals as $product)
                                     <div class="product-slide">
-                                        {{-- ✅ UPDATED: Added onclick to open product modal --}}
                                         <div class="amazon-card" style="cursor: pointer;"
                                             onclick="openProductModal(
-    {{ $product->id }}, 
-    '{{ addslashes($product->title) }}', 
-    `{{ addslashes($product->description) }}`, 
-    '{{ $product->price }}', 
-    '{{ $product->category }}', 
-    '{{ $product->quantity }}', 
-    '{{ $product->type }}',          {{-- ADD THIS --}}
-    '{{ $product->image }}', 
-    '{{ route('products.edit', $product->id) }}'
-)">
+                                                {{ $product->id }},
+                                                '{{ addslashes($product->title) }}',
+                                                `{{ addslashes($product->description) }}`,
+                                                '{{ $product->price }}',
+                                                '{{ $product->category }}',
+                                                '{{ $product->quantity }}',
+                                                '{{ $product->type }}',
+                                                '{{ $product->image }}',
+                                                '{{ route('products.edit', $product->id) }}'
+                                            )">
                                             <div class="img-wrapper">
                                                 @if ($product->image)
                                                     <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
@@ -181,19 +178,18 @@
                             <div class="slider-container best-sellers-container">
                                 @foreach ($bestSellers as $product)
                                     <div class="product-slide">
-                                        {{-- ✅ UPDATED: Added onclick to open product modal --}}
                                         <div class="amazon-card" style="cursor: pointer;"
                                             onclick="openProductModal(
-    {{ $product->id }}, 
-    '{{ addslashes($product->title) }}', 
-    `{{ addslashes($product->description) }}`, 
-    '{{ $product->price }}', 
-    '{{ $product->category }}', 
-    '{{ $product->quantity }}', 
-    '{{ $product->type }}',          {{-- ADD THIS --}}
-    '{{ $product->image }}', 
-    '{{ route('products.edit', $product->id) }}'
-)">
+                                                {{ $product->id }},
+                                                '{{ addslashes($product->title) }}',
+                                                `{{ addslashes($product->description) }}`,
+                                                '{{ $product->price }}',
+                                                '{{ $product->category }}',
+                                                '{{ $product->quantity }}',
+                                                '{{ $product->type }}',
+                                                '{{ $product->image }}',
+                                                '{{ route('products.edit', $product->id) }}'
+                                            )">
                                             <div class="img-wrapper">
                                                 @if ($product->image)
                                                     <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
@@ -251,24 +247,31 @@
                     </div>
                 </div>
                 <div class="col-md-5 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">Quick Actions</h4>
-                            <div class="list-wrapper pt-2">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('products.create') }}"
-                                        class="btn btn-primary btn-lg text-start shadow-sm">
-                                        <i class="mdi mdi-plus-circle me-2"></i> Add New Product
-                                    </a>
-                                    <a href="{{ route('admin.customers.create') }}"
-                                        class="btn btn-info btn-lg text-start shadow-sm">
-                                        <i class="mdi mdi-account-plus me-2"></i> Register New Dealer
-                                    </a>
-                                    <a href="{{ route('invoices.index') }}"
-                                        class="btn btn-warning btn-lg text-start shadow-sm">
-                                        <i class="mdi mdi-file-document-edit me-2"></i> Manage Pending Orders
-                                    </a>
-                                </div>
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-3">
+                            <h5 class="card-title fw-bold mb-3">
+                                <i class="mdi mdi-lightning-bolt text-primary me-1"></i>
+                                Quick Actions
+                            </h5>
+
+                            <div class="d-grid gap-2">
+                                <a href="{{ route('products.create') }}"
+                                    class="btn btn-primary btn-sm d-flex align-items-center text-start rounded-3 shadow-sm py-2 px-3">
+                                    <i class="mdi mdi-plus-circle me-2 fs-5"></i>
+                                    <span class="fw-medium">Add New Product</span>
+                                </a>
+
+                                <a href="{{ route('admin.customers.create') }}"
+                                    class="btn btn-info btn-sm d-flex align-items-center text-start rounded-3 shadow-sm py-2 px-3 text-white">
+                                    <i class="mdi mdi-account-plus me-2 fs-5"></i>
+                                    <span class="fw-medium">Register New Dealer</span>
+                                </a>
+
+                                <a href="{{ route('invoices.index') }}"
+                                    class="btn btn-warning btn-sm d-flex align-items-center text-start rounded-3 shadow-sm py-2 px-3 text-dark">
+                                    <i class="mdi mdi-file-document-edit me-2 fs-5"></i>
+                                    <span class="fw-medium">Manage Pending Orders</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -277,19 +280,17 @@
         </div>
     </div>
 
-    {{-- 🛒 DYNAMIC PRODUCT DETAIL MODAL (Amazon/Flipkart Style) --}}
+    {{-- 🛒 FIXED PRODUCT DETAIL MODAL (Admin) --}}
     <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 750px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                 <div class="modal-header border-bottom bg-white px-4 py-3">
                     <h5 class="modal-title fw-bold text-truncate" id="modalProductTitle" style="max-width: 85%;">
                         Product Title</h5>
-                    {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-4">
-                        {{-- Left: Main Image & Thumbnails --}}
                         {{-- Left: Main Image Only --}}
                         <div class="col-md-5">
                             <div class="main-image-wrapper bg-light rounded-3 d-flex align-items-center justify-content-center p-3 mb-3 border"
@@ -304,7 +305,10 @@
                             <h3 class="fw-bold mb-2 text-dark" id="modalProductName">Product Name</h3>
 
                             <div class="d-flex align-items-baseline gap-3 mb-3">
+                                {{-- Main Price --}}
                                 <h4 class="text-primary fw-bold mb-0" id="modalProductPrice">₹0.00</h4>
+
+                                {{-- MRP (Strikethrough) --}}
                                 <span class="text-danger text-decoration-line-through small"
                                     id="modalProductMrp">₹0.00</span>
                             </div>
@@ -330,7 +334,6 @@
                                 <a href="#" id="modalEditBtn" class="btn btn-primary py-2">
                                     <i class="mdi mdi-pencil me-2"></i> Edit This Product
                                 </a>
-                                {{-- Use button with data-bs-dismiss -- NO href, NO page reload --}}
                                 <button type="button" class="btn btn-light py-2" data-bs-dismiss="modal">
                                     Close
                                 </button>
@@ -370,15 +373,12 @@
         .slider-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            /* 4 Columns */
             gap: 20px;
             padding: 10px 0;
         }
 
-        /* ===== PRODUCT SLIDE CARD ===== */
         .product-slide {
             padding: 0;
-            /* No extra padding inside grid */
         }
 
         .amazon-card {
@@ -400,7 +400,6 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        /* ===== IMAGE HANDLING ===== */
         .amazon-card .img-wrapper {
             width: 100%;
             height: 160px;
@@ -422,7 +421,6 @@
             transform: scale(1.02);
         }
 
-        /* ===== TEXT DETAILS ===== */
         .amazon-card .card-details {
             width: 100%;
             text-align: left;
@@ -470,7 +468,6 @@
             color: #565959 !important;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
             .slider-container {
                 grid-template-columns: repeat(3, 1fr);
@@ -496,11 +493,23 @@
             document.getElementById('modalProductTitle').textContent = title;
             document.getElementById('modalProductName').textContent = title;
             document.getElementById('modalProductDesc').textContent = description || 'No description available.';
+
+
+            // ✅ Calculate and display the MRP (40% higher)
+            var mrp = parseFloat(price) * 1.4;
+            document.getElementById('modalProductMrp').textContent = '₹' + mrp.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            // ✅ Format the main price
             document.getElementById('modalProductPrice').textContent = '₹' + parseFloat(price).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-            document.getElementById('modalProductCategory').textContent = category;
+
+
+            document.getElementById('modalProductCategory').textContent = category || 'General';
             document.getElementById('modalProductStatus').textContent = qty > 0 ? 'In Stock' : 'Out of Stock';
 
             // Image handling
@@ -513,7 +522,7 @@
                 this.src = 'https://via.placeholder.com/400x300?text=No+Image';
             };
 
-            // Edit button – now receives the correct URL
+            // Edit button
             document.getElementById('modalEditBtn').href = editUrl;
 
             $('#productDetailModal').modal('show');

@@ -185,7 +185,7 @@
                             request()->routeIs('products.add') ||
                             request()->routeIs('products.update');
                     @endphp
-                    @if ($user->role_id == 1 || $user->role_id == 2)
+                    @if ($user && ($user->role_id == 1 || $user->role_id == 2))
                         <li class="nav-item {{ $isProductActive ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('products') }}">
                                 <i class="icon-layout menu-icon"></i>

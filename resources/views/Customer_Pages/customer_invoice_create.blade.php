@@ -23,6 +23,10 @@
             <div class="row">
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm">
+
+                        {{-- ✅ MOVED UP: Alert Container is now INSIDE the card, before the header --}}
+                        <div id="global-alert-container" style="min-height: 15px; padding: 15px 15px 0 15px;"></div>
+
                         <div class="card-header bg-white border-bottom-0 pt-3 px-4 pb-0">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h4 class="card-title fw-bold mb-0">
@@ -35,8 +39,6 @@
                         </div>
 
                         <div class="card-body px-4 pt-3">
-                            {{-- Global Alert Container --}}
-                            <div id="global-alert-container" style="min-height: 15px; margin-bottom: 15px;"></div>
 
                             <form action="{{ route('customer.invoices.store') }}" method="POST" id="invoiceForm"
                                 novalidate>
@@ -406,9 +408,9 @@
                         const errorAlert = document.getElementById('last-product-error');
                         if (errorAlert) {
                             errorAlert.classList.remove('show');
-                            setTimeout(() => errorAlert.remove(), 5000);
+                            setTimeout(() => errorAlert.remove(), 500);
                         }
-                    }, 1000);
+                    }, 3000);
                     return;
                 }
 

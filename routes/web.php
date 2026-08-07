@@ -45,9 +45,6 @@ Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm']
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
-Route::post('/admin/password/update', [AuthController::class, 'updatePassword'])->name('admin.password.update')->middleware('auth:admin');
-Route::get('/admin/password/form', [AuthController::class, 'showChangePasswordForm'])->name('admin.password.form')->middleware('auth:admin');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -148,20 +145,37 @@ Route::post('/customer/profile/update', [CustomerController::class, 'updateProfi
 Route::get('/customer/invoices', [CustomerInvoiceController::class, 'customerInvoices'])->name('customer.invoices')->middleware('auth:customer');
 Route::get('/customer/invoices/create', [CustomerInvoiceController::class, 'customerCreate'])->name('customer.invoices.create')->middleware('auth:customer');
 Route::post('/customer/invoices', [CustomerInvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
-Route::post('/customer/password/update', [CustomerController::class, 'updatePassword'])->name('customer.password.update')->middleware('auth:customer');
-Route::get('/customer/password/form', [CustomerController::class, 'showChangePasswordForm'])->name('customer.password.form')->middleware('auth:customer');
 
 // Cart
-
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index')->middleware('auth:customer');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth:customer');
 Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth:customer');
-Route::patch('/cart/update/{id}', [CartController::class, 'updateQuantity'])
-  ->name('cart.update')
+Route::patch('/cart/update/{id}', [CartController::class, 'updateQuantity'])->name('cart.update')->middleware('auth:customer');
+Route::post('/cart/buynow', [CartController::class, 'buyNow'])->name('cart.buynow')->middleware('auth:customer');
+
+
+/*
+|--------------------------------------------------------------------------
+| ✅ UNIFIED CHANGE PASSWORD ROUTES (For Both Admin & Customer)
+|--------------------------------------------------------------------------
+*/
+
+// Admin password form
+Route::get('/admin/password/form', [AuthController::class, 'showChangePasswordForm'])
+  ->name('admin.password.form')
+  ->middleware('auth:admin');
+
+// Customer password form
+Route::get('/customer/password/form', [AuthController::class, 'showChangePasswordForm'])
+  ->name('customer.password.form')
   ->middleware('auth:customer');
-Route::post('/cart/buynow', [CartController::class, 'buyNow'])
-  ->name('cart.buynow')
-  ->middleware('auth:customer');
+
+// Shared password update endpoint (Both guards can use this)
+Route::post('/password/update', [AuthController::class, 'updatePassword'])
+  ->name('password.update')
+  ->middleware('auth:admin,customer');
+
+
 /*
 |--------------------------------------------------------------------------
 | Static Pages

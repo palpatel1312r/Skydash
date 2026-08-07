@@ -181,7 +181,7 @@
                 var formData = new FormData(this);
 
                 $.ajax({
-                    url: "{{ route('admin.password.update') }}",
+                    url: "{{ route('password.update') }}",
                     type: 'POST',
                     data: formData,
                     cache: false,

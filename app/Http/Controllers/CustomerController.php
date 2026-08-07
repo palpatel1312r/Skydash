@@ -219,28 +219,4 @@ class CustomerController extends Controller
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
 
-    public function validateCurrentPassword(Request $request)
-    {
-        if (Auth::guard('admin')->check()) {
-            $user = Auth::guard('admin')->user();
-        } elseif (Auth::guard('customer')->check()) {
-            $user = Auth::guard('customer')->user();
-        } else {
-            return response()->json(['message' => 'Unauthenticated'], 401);
-        }
-
-        if (Hash::check($request->current_password, $user->password)) {
-            return response()->json(['success' => true]);
-        } else {
-            return response()->json([
-                'errors' => ['current_password' => ['The current password is incorrect.']]
-            ], 422);
-        }
-    }
-
-    public function showChangePasswordForm()
-    {
-        $customer = Auth::guard('customer')->user();
-        return view('Customer_Pages.customer_change_password', compact('customer'));
-    }
 }

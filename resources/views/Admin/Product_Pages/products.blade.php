@@ -161,16 +161,17 @@
                                                             class="img-thumbnail"
                                                             style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
                                                             onclick="openProductModal(
-        {{ $item->id }}, 
-        '{{ addslashes($item->title) }}', 
-        `{{ addslashes($item->description) }}`, 
-        '{{ $item->price }}', 
-        '{{ $item->category }}', 
-        '{{ $item->quantity }}', 
-        '{{ $item->type }}',
-        '{{ $item->image }}', 
-        '{{ route('products.edit', $item->id) }}'
-    )">
+    {{ $item->id }}, 
+    '{{ addslashes($item->title) }}', 
+    `{{ addslashes($item->description) }}`, 
+    '{{ $item->price }}', 
+   '{{ $item->mrp ?? 0 }}', 
+    '{{ $item->category }}', 
+    '{{ $item->quantity }}', 
+    '{{ $item->type }}',
+    '{{ $item->image }}', 
+    '{{ route('products.edit', $item->id) }}'
+)">
                                                     @else
                                                         <span class="text-muted">No image</span>
                                                     @endif
@@ -545,7 +546,8 @@
             transform: translateY(-1px);
         }
 
-        #typeDropdown:hover, #categoryDropdown:hover {
+        #typeDropdown:hover,
+        #categoryDropdown:hover {
             background: #3d3f41;
             border-color: #f8f3f3;
         }
@@ -895,15 +897,25 @@
         });
 
         // ===================== PRODUCT MODAL =====================
-        window.openProductModal = function(id, title, description, price, category, qty, type, image, editUrl) {
+        window.openProductModal = function(id, title, description, price, mrp, category, qty, type, image, editUrl) {
             // Set all the data using vanilla JS
             document.getElementById('modalProductTitle').textContent = title;
             document.getElementById('modalProductName').textContent = title;
             document.getElementById('modalProductDesc').textContent = description || 'No description available.';
+
+            // ✅ Calculate and display the MRP (40% higher)
+            var mrp = parseFloat(price) * 1.4;
+            document.getElementById('modalProductMrp').textContent = '₹' + mrp.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            // ✅ Format the main price
             document.getElementById('modalProductPrice').textContent = '₹' + parseFloat(price).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
+
             document.getElementById('modalProductCategory').textContent = category;
             document.getElementById('modalProductStatus').textContent = qty > 0 ? 'In Stock' : 'Out of Stock';
 

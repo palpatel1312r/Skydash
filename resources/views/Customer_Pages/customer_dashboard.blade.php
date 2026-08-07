@@ -721,7 +721,6 @@
                 detailEl.style.display = 'block';
             }
 
-            // ✅ Use jQuery method like Admin file
             $('#cartNotificationModal').modal('show');
 
             if (type === 'success') {
@@ -731,7 +730,6 @@
             }
         }
 
-        // ✅ Close the cart modal when OK button is clicked
         $(document).ready(function() {
             $('#notifOkBtn').on('click', function() {
                 $('#cartNotificationModal').modal('hide');
@@ -742,13 +740,30 @@
         // 2. PRODUCT DETAIL MODAL LOGIC (Uses jQuery)
         // ========================================
         function openProductDetailModal(title, description, price, category, qty, image) {
+            // Title & Name
             $('#pdTitle').text(title);
             $('#pdName').text(title);
-            $('#pdDesc').text(description || 'No description available.');
-            $('#pdPrice').text('₹' + parseFloat(price).toLocaleString('en-IN', {
+
+            // Description
+            $('#pdDesc').text(description && description.trim() !== '' ?
+                description :
+                'No description available.');
+
+            // Current Price
+            const priceNum = parseFloat(price) || 0;
+            $('#pdPrice').text('₹' + priceNum.toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }));
+
+            // ✅ MRP (this was missing)
+            const mrp = priceNum * 1.4;
+            $('#pdMrp').text('₹' + mrp.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+
+            // Category
             $('#pdCategory').text(category || 'General');
 
             // Stock status
@@ -764,17 +779,17 @@
             }
 
             // Image
-            var imgSrc = image ? (image.startsWith('http') ? image : '{{ asset('') }}' + image) : '';
-            if (imgSrc) {
-                $('#pdMainImage').attr('src', imgSrc);
-                $('#pdMainImage').on('error', function() {
+            let imgSrc = '';
+            if (image) {
+                imgSrc = image.startsWith('http') ? image : '{{ asset('') }}' + image;
+            }
+            $('#pdMainImage')
+                .attr('src', imgSrc || 'https://via.placeholder.com/400x300?text=No+Image')
+                .on('error', function() {
                     $(this).attr('src', 'https://via.placeholder.com/400x300?text=No+Image');
                 });
-            } else {
-                $('#pdMainImage').attr('src', 'https://via.placeholder.com/400x300?text=No+Image');
-            }
 
-            // ✅ Use jQuery method like Admin file
+            // Show modal
             $('#productDetailModal').modal('show');
         }
 

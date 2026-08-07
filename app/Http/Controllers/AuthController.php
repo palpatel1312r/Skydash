@@ -19,70 +19,6 @@ class AuthController extends Controller
     {
         return view('Auth.Register');
     }
-    public function showChangePasswordForm()
-    {
-        return view('Auth.change_password');
-    }
-    public function updatePassword(Request $request)
-    {
-        $user = null;
-        $guard = null;
-
-        if (Auth::guard('admin')->check()) {
-            $user = Auth::guard('admin')->user();
-            $guard = 'admin';
-        } elseif (Auth::guard('customer')->check()) {
-            $user = Auth::guard('customer')->user();
-            $guard = 'customer';
-        } else {
-            return response()->json(['errors' => ['general' => ['You must be logged in to change your password.']]], 422);
-        }
-
-        // 1. VALIDATE
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'current_password' => 'required',
-            'new_password' => [
-                'required',
-                'min:4',
-                'confirmed',
-                function ($attribute, $value, $fail) use ($user) {
-                    if (Hash::check($value, $user->password)) {
-                        $fail('The new password cannot be the same as your current password.');
-                    }
-                },
-            ],
-            // ✅ FIX: 'messages' was moved OUT of the rules array, into the 3rd argument below
-        ], [
-            'current_password.required' => 'Please enter your current password.',
-            'new_password.required' => 'Please enter a new password.',
-            'new_password.min' => 'The new password must be at least 4 characters.',
-            'new_password.confirmed' => 'The password confirmation does not match.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // 2. CHECK CURRENT PASSWORD
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['errors' => ['current_password' => ['Current password is incorrect.']]], 422);
-        }
-
-        // 3. Update the password
-        $user->password = Hash::make($request->new_password);
-        $user->save();
-
-        // 4. LOGOUT THE USER
-        Auth::guard($guard)->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        // 5. RETURN JSON SUCCESS
-        return response()->json([
-            'success' => true,
-            'message' => 'Password changed successfully! Please login with your new credentials.'
-        ]);
-    }
     public function register(Request $request)
     {
         $request->validate([
@@ -192,5 +128,97 @@ class AuthController extends Controller
 
         return redirect()->route('login')->with('success', 'Logged out successfully!');
     }
-    
+
+    public function validateCurrentPassword(Request $request)
+    {
+        if (Auth::guard('admin')->check()) {
+            $user = Auth::guard('admin')->user();
+        } elseif (Auth::guard('customer')->check()) {
+            $user = Auth::guard('customer')->user();
+        } else {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        if (Hash::check($request->current_password, $user->password)) {
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json([
+                'errors' => ['current_password' => ['The current password is incorrect.']]
+            ], 422);
+        }
+    }
+
+    public function showChangePasswordForm()
+    {
+        // Determine the user and guard dynamically
+        if (auth()->guard('admin')->check()) {
+            $user = auth()->guard('admin')->user();
+            $guard = 'admin';
+        } elseif (auth()->guard('customer')->check()) {
+            $user = auth()->guard('customer')->user();
+            $guard = 'customer';
+        } else {
+            abort(403, 'Unauthorized access.');
+        }
+
+        return view('Auth.change_password', compact('user', 'guard'));
+    }
+
+    public function updatePassword(Request $request)
+    {
+        // 1. Identify which guard is active
+        if (Auth::guard('admin')->check()) {
+            $user = Auth::guard('admin')->user();
+            $guard = 'admin';
+        } elseif (Auth::guard('customer')->check()) {
+            $user = Auth::guard('customer')->user();
+            $guard = 'customer';
+        } else {
+            return response()->json(['errors' => ['general' => ['You must be logged in to change your password.']]], 422);
+        }
+
+        // 2. Validate
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'current_password' => 'required',
+            'new_password' => [
+                'required',
+                'min:4',
+                'confirmed',
+                function ($attribute, $value, $fail) use ($user) {
+                    if (Hash::check($value, $user->password)) {
+                        $fail('The new password cannot be the same as your current password.');
+                    }
+                },
+            ],
+        ], [
+            'current_password.required' => 'Please enter your current password.',
+            'new_password.required' => 'Please enter a new password.',
+            'new_password.min' => 'The new password must be at least 4 characters.',
+            'new_password.confirmed' => 'The password confirmation does not match.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // 3. Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['errors' => ['current_password' => ['Current password is incorrect.']]], 422);
+        }
+
+        // 4. Update the password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        // 5. Logout the user securely
+        Auth::guard($guard)->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // 6. Return success JSON
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully! Please login with your new credentials.'
+        ]);
+    }
 }

@@ -22,7 +22,7 @@
                     @endif
                 </div>
             </div>
-
+            <div id="global-alert-container" style="min-height: 10px;"></div>
             <div class="row">
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card">
@@ -581,7 +581,7 @@
                                 errorAlert.remove();
                             }, 500);
                         }
-                    }, 300);
+                    }, 3000);
                     return;
                 }
 
