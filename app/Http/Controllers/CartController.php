@@ -15,7 +15,7 @@ class CartController extends Controller
             ->with('product')
             ->get();
 
-        return view('cart.index', compact('cartItems'));
+        return view('admin.cart.cart', compact('cartItems'));
     }
 
     public function updateQuantity(Request $request, $id)
@@ -117,6 +117,6 @@ class CartController extends Controller
 
         $cart->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
+        return redirect()->route('admin.cart.cart')->with('success', 'Item removed from cart.');
     }
 }

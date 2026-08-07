@@ -147,7 +147,7 @@ Route::get('/customer/invoices/create', [CustomerInvoiceController::class, 'cust
 Route::post('/customer/invoices', [CustomerInvoiceController::class, 'customerStore'])->name('customer.invoices.store')->middleware('auth:customer');
 
 // Cart
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index')->middleware('auth:customer');
+Route::get('/cart', [CartController::class, 'index'])->name('admin.cart.cart')->middleware('auth:customer');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth:customer');
 Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth:customer');
 Route::patch('/cart/update/{id}', [CartController::class, 'updateQuantity'])->name('cart.update')->middleware('auth:customer');

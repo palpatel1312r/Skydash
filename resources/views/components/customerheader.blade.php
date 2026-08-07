@@ -62,7 +62,7 @@
 
                     {{-- ✅ CART ICON --}}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('cart.index') }}">
+                        <a class="nav-link" href="{{ route('admin.cart.cart') }}">
                             <i class="mdi mdi-cart"></i>
                             <span class="badge badge-primary ml-1" id="cartCount">
                                 {{ $cartCount ?? 0 }}
