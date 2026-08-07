@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
-// use App\Models\Product;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -94,18 +94,17 @@ class CartController extends Controller
             return response()->json(['message' => 'You must be logged in as a customer.'], 401);
         }
 
-        // Clear existing cart and add only this product
-        Cart::where('customer_id', $customerId)->delete();
-
-        Cart::create([
-            'customer_id' => $customerId,
-            'product_id'  => $request->product_id,
-            'quantity'    => $request->quantity,
-        ]);
+        // DON'T clear the cart - just redirect to invoice with product_id parameter
+        // The invoice controller will handle showing only this product
 
         return response()->json([
             'success' => true,
-            'message' => 'Ready to buy! Redirecting to checkout...',
+            'message' => 'Redirecting to checkout...',
+            'redirect_url' => route('customer.invoices.create', [
+                'product_id' => $request->product_id,
+                'quantity' => $request->quantity,
+                'from_buy_now' => 1
+            ])
         ]);
     }
 

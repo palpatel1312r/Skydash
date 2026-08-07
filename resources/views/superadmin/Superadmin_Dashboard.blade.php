@@ -443,11 +443,6 @@
             text-align: left;
         }
 
-        .amazon-card .product-title:hover {
-            color: #c7511f;
-            text-decoration: underline;
-        }
-
         .amazon-card .price-box {
             display: flex;
             align-items: center;

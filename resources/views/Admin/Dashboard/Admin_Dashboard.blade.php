@@ -101,52 +101,94 @@
 
             {{-- NEW ARRIVALS SECTION --}}
             <div class="row">
-                <div class="col-md-12 grid-margin stretch-card">
+                <div class="col-12 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge badge-primary p-2 rounded-circle"><i
-                                            class="mdi mdi-star text-white"></i></span>
-                                    <h4 class="card-title mb-0 ms-2 fw-bold">New Arrivals</h4>
+                                    <span class="badge bg-primary p-2 rounded-circle">
+                                        <i class="mdi mdi-star text-white"></i>
+                                    </span>
+                                    <h4 class="card-title mb-0 fw-bold">New Arrivals</h4>
                                 </div>
-                                <a href="{{ route('products') }}"
-                                    class="text-primary small fw-bold text-decoration-none">See more <i
-                                        class="mdi mdi-arrow-right"></i></a>
+                                <a href="{{ route('products') }}" class="text-primary small fw-bold text-decoration-none">
+                                    See more <i class="mdi mdi-arrow-right"></i>
+                                </a>
                             </div>
 
-                            {{-- SLIDER WRAPPER --}}
                             <div class="slider-container new-arrivals-container">
                                 @foreach ($newArrivals as $product)
-                                    <div class="product-slide">
-                                        <div class="amazon-card" style="cursor: pointer;"
+                                    <div class="product-slide px-2">
+                                        <div class="card border h-100 shadow-sm" style="cursor:pointer;"
                                             onclick="openProductModal(
-                                                {{ $product->id }},
-                                                '{{ addslashes($product->title) }}',
-                                                `{{ addslashes($product->description) }}`,
-                                                '{{ $product->price }}',
-                                                '{{ $product->category }}',
-                                                '{{ $product->quantity }}',
-                                                '{{ $product->type }}',
-                                                '{{ $product->image }}',
-                                                '{{ route('products.edit', $product->id) }}'
-                                            )">
-                                            <div class="img-wrapper">
+                                    {{ $product->id }},
+                                    '{{ addslashes($product->title) }}',
+                                    `{{ addslashes($product->description) }}`,
+                                    '{{ $product->price }}',
+                                    '{{ $product->category }}',
+                                    '{{ $product->quantity }}',
+                                    '{{ $product->type }}',
+                                    '{{ $product->image }}',
+                                    '{{ route('products.edit', $product->id) }}'
+                                 )">
+                                            {{-- Image --}}
+                                            <div class="position-relative bg-light d-flex align-items-center justify-content-center"
+                                                style="height:160px;">
                                                 @if ($product->image)
-                                                    <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
+                                                    <img src="{{ asset($product->image) }}" alt="{{ $product->title }}"
+                                                        class="img-fluid p-2" style="max-height:100%;object-fit:contain;">
                                                 @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center text-muted"
-                                                        style="height: 160px; width:100%; border-radius:8px;">
-                                                        <small>No Image</small>
+                                                    <div class="text-center text-muted">
+                                                        <i class="mdi mdi-image-off fs-3"></i>
+                                                        <div class="small">No Image</div>
                                                     </div>
                                                 @endif
-                                            </div>
-                                            <div class="card-details">
-                                                <h6 class="product-title">{{ $product->title }}</h6>
-                                                <div class="price-box">
-                                                    <span class="currency">₹</span>{{ number_format($product->price, 0) }}
+
+                                                @if (($product->quantity ?? 0) <= 5 && ($product->quantity ?? 0) > 0)
                                                     <span
-                                                        class="mrp text-danger"><del>₹{{ number_format($product->price * 1.4, 0) }}</del></span>
+                                                        class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 rounded-pill">Low
+                                                        Stock</span>
+                                                @elseif (($product->quantity ?? 0) <= 0)
+                                                    <span
+                                                        class="badge bg-danger position-absolute top-0 start-0 m-2 rounded-pill">Out
+                                                        of Stock</span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Details --}}
+                                            <div class="card-body d-flex flex-column p-3">
+                                                @if ($product->category)
+                                                    <span
+                                                        class="badge bg-light text-muted border rounded-pill mb-2 align-self-start"
+                                                        style="font-size:11px;">
+                                                        {{ $product->category }}
+                                                    </span>
+                                                @endif
+
+                                                <h6 class="card-title text-truncate mb-1" title="{{ $product->title }}">
+                                                    {{ $product->title }}
+                                                </h6>
+
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <span
+                                                        class="fw-bold fs-5">₹{{ number_format($product->price, 0) }}</span>
+                                                    <small class="text-muted text-decoration-line-through">
+                                                        ₹{{ number_format($product->price * 1.4, 0) }}
+                                                    </small>
+                                                </div>
+
+                                                <div class="mt-auto">
+                                                    @if (($product->quantity ?? 0) > 0)
+                                                        <small class="text-success">
+                                                            <i
+                                                                class="mdi mdi-check-circle me-1"></i>{{ $product->quantity }}
+                                                            in stock
+                                                        </small>
+                                                    @else
+                                                        <small class="text-danger">
+                                                            <i class="mdi mdi-close-circle me-1"></i>Unavailable
+                                                        </small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -160,52 +202,95 @@
 
             {{-- BEST SELLERS SECTION --}}
             <div class="row">
-                <div class="col-md-12 grid-margin stretch-card">
+                <div class="col-12 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge badge-danger p-2 rounded-circle"><i
-                                            class="mdi mdi-fire text-white"></i></span>
-                                    <h4 class="card-title mb-0 ms-2 fw-bold">Best Sellers</h4>
+                                    <span class="badge bg-danger p-2 rounded-circle">
+                                        <i class="mdi mdi-fire text-white"></i>
+                                    </span>
+                                    <h4 class="card-title mb-0 fw-bold">Best Sellers</h4>
                                 </div>
                                 <a href="{{ route('products') }}"
-                                    class="text-primary small fw-bold text-decoration-none">See more <i
-                                        class="mdi mdi-arrow-right"></i></a>
+                                    class="text-primary small fw-bold text-decoration-none">
+                                    See more <i class="mdi mdi-arrow-right"></i>
+                                </a>
                             </div>
 
-                            {{-- SLIDER WRAPPER --}}
                             <div class="slider-container best-sellers-container">
                                 @foreach ($bestSellers as $product)
-                                    <div class="product-slide">
-                                        <div class="amazon-card" style="cursor: pointer;"
+                                    <div class="product-slide px-2">
+                                        <div class="card border h-100 shadow-sm" style="cursor:pointer;"
                                             onclick="openProductModal(
-                                                {{ $product->id }},
-                                                '{{ addslashes($product->title) }}',
-                                                `{{ addslashes($product->description) }}`,
-                                                '{{ $product->price }}',
-                                                '{{ $product->category }}',
-                                                '{{ $product->quantity }}',
-                                                '{{ $product->type }}',
-                                                '{{ $product->image }}',
-                                                '{{ route('products.edit', $product->id) }}'
-                                            )">
-                                            <div class="img-wrapper">
+                                    {{ $product->id }},
+                                    '{{ addslashes($product->title) }}',
+                                    `{{ addslashes($product->description) }}`,
+                                    '{{ $product->price }}',
+                                    '{{ $product->category }}',
+                                    '{{ $product->quantity }}',
+                                    '{{ $product->type }}',
+                                    '{{ $product->image }}',
+                                    '{{ route('products.edit', $product->id) }}'
+                                 )">
+                                            {{-- Image --}}
+                                            <div class="position-relative bg-light d-flex align-items-center justify-content-center"
+                                                style="height:160px;">
                                                 @if ($product->image)
-                                                    <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
+                                                    <img src="{{ asset($product->image) }}" alt="{{ $product->title }}"
+                                                        class="img-fluid p-2" style="max-height:100%;object-fit:contain;">
                                                 @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center text-muted"
-                                                        style="height: 160px; width:100%; border-radius:8px;">
-                                                        <small>No Image</small>
+                                                    <div class="text-center text-muted">
+                                                        <i class="mdi mdi-image-off fs-3"></i>
+                                                        <div class="small">No Image</div>
                                                     </div>
                                                 @endif
-                                            </div>
-                                            <div class="card-details">
-                                                <h6 class="product-title">{{ $product->title }}</h6>
-                                                <div class="price-box">
-                                                    <span class="currency">₹</span>{{ number_format($product->price, 0) }}
+
+                                                @if (($product->quantity ?? 0) <= 5 && ($product->quantity ?? 0) > 0)
                                                     <span
-                                                        class="mrp text-danger"><del>₹{{ number_format($product->price * 1.4, 0) }}</del></span>
+                                                        class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 rounded-pill">Low
+                                                        Stock</span>
+                                                @elseif (($product->quantity ?? 0) <= 0)
+                                                    <span
+                                                        class="badge bg-danger position-absolute top-0 start-0 m-2 rounded-pill">Out
+                                                        of Stock</span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Details --}}
+                                            <div class="card-body d-flex flex-column p-3">
+                                                @if ($product->category)
+                                                    <span
+                                                        class="badge bg-light text-muted border rounded-pill mb-2 align-self-start"
+                                                        style="font-size:11px;">
+                                                        {{ $product->category }}
+                                                    </span>
+                                                @endif
+
+                                                <h6 class="card-title text-truncate mb-1" title="{{ $product->title }}">
+                                                    {{ $product->title }}
+                                                </h6>
+
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <span
+                                                        class="fw-bold fs-5">₹{{ number_format($product->price, 0) }}</span>
+                                                    <small class="text-muted text-decoration-line-through">
+                                                        ₹{{ number_format($product->price * 1.4, 0) }}
+                                                    </small>
+                                                </div>
+
+                                                <div class="mt-auto">
+                                                    @if (($product->quantity ?? 0) > 0)
+                                                        <small class="text-success">
+                                                            <i
+                                                                class="mdi mdi-check-circle me-1"></i>{{ $product->quantity }}
+                                                            in stock
+                                                        </small>
+                                                    @else
+                                                        <small class="text-danger">
+                                                            <i class="mdi mdi-close-circle me-1"></i>Unavailable
+                                                        </small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -326,7 +411,7 @@
                                 </span>
                             </div>
 
-                            <p class="text-muted small mb-3" id="modalProductDesc" style="line-height: 1.6;">
+                            <p class="text-bold small mb-3" id="modalProductDesc" style="line-height: 1.6;">
                                 Product description will appear here...
                             </p>
 
@@ -439,11 +524,6 @@
             height: 38px;
             line-height: 1.3;
             text-align: left;
-        }
-
-        .amazon-card .product-title:hover {
-            color: #c7511f;
-            text-decoration: underline;
         }
 
         .amazon-card .price-box {

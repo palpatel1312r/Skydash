@@ -22,22 +22,6 @@
                 </div>
             </div>
 
-            {{-- Breadcrumb --}}
-            <div class="row mb-3">
-                <div class="col-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb bg-transparent p-0 mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('customer.dashboard') }}"
-                                    class="text-decoration-none text-muted">Dashboard</a>
-                            </li>
-                            <li class="breadcrumb-item active text-primary fw-medium" aria-current="page">Shopping Cart
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-
             {{-- SINGLE COLUMN LAYOUT --}}
             <div class="row">
                 <div class="col-12">
@@ -68,11 +52,11 @@
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="bg-light">
                                             <tr class="text-muted small text-uppercase">
-                                                <th class="ps-4 py-3" style="width: 42%;">Product</th>
-                                                <th class="py-3" style="width: 14%;">Unit Price</th>
+                                                <th class="ps-4 py-3" style="width: 40%;">Product</th>
+                                                <th class="py-3" style="width: 15%;">Unit Price</th>
                                                 <th class="py-3 text-center" style="width: 20%;">Quantity</th>
-                                                <th class="py-3 text-end" style="width: 14%;">Subtotal</th>
-                                                <th class="pe-4 py-3 text-end" style="width: 10%;">Action</th>
+                                                <th class="py-3 text-end" style="width: 15%;">Subtotal</th>
+                                                <th class="pe-4 py-3 text-center" style="width: 10%;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -160,18 +144,34 @@
                                                         </span>
                                                     </td>
 
-                                                    {{-- Remove --}}
-                                                    <td class="pe-4 py-4 text-end">
-                                                        <form action="{{ route('cart.remove', $item->id) }}" method="POST"
-                                                            onsubmit="return confirm('Are you sure you want to remove this item?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="btn btn-outline-danger btn-sm rounded-circle"
-                                                                style="width: 38px; height: 38px;" title="Remove item">
-                                                                <i class="mdi mdi-delete-outline"></i>
-                                                            </button>
-                                                        </form>
+                                                    {{-- Action: Buy Now + Remove --}}
+                                                    <td class="pe-4 py-4 text-center">
+                                                        <div class="d-flex flex-column gap-2 align-items-center">
+                                                            {{-- Buy Now Button --}}
+                                                            <a href="{{ route('customer.invoices.create', [
+                                                                'product_id' => $item->product_id,
+                                                                'quantity' => $item->quantity,
+                                                                'cart_id' => $item->id,
+                                                                'from_buy_now' => 1,
+                                                            ]) }}"
+                                                                class="btn btn-success btn-sm w-100 rounded-pill"
+                                                                style="font-size: 0.75rem;">
+                                                                <i class="mdi mdi-flash me-1"></i> Buy Now
+                                                            </a>
+
+                                                            {{-- Remove Button --}}
+                                                            <form action="{{ route('cart.remove', $item->id) }}"
+                                                                method="POST"
+                                                                onsubmit="return confirm('Are you sure you want to remove this item?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="btn btn-outline-danger btn-sm rounded-pill w-100"
+                                                                    style="font-size: 0.7rem;">
+                                                                    <i class="mdi mdi-delete-outline me-1"></i> Remove
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -221,13 +221,9 @@
                                                     <div class="d-grid gap-2">
                                                         <a href="{{ route('customer.invoices.create', ['from_cart' => 1]) }}"
                                                             class="btn btn-success btn-lg rounded-pill shadow-sm fw-bold py-3">
-                                                            <i class="mdi mdi-credit-card-outline me-2"></i> Proceed to
-                                                            Checkout
+                                                            <i class="mdi mdi-cart-check me-2"></i> Buy All Items
                                                         </a>
-
                                                     </div>
-
-
                                                 </div>
                                             </div>
                                         </div>
@@ -244,7 +240,7 @@
                                     </div>
                                     <h4 class="fw-bold text-dark mb-2">Your Cart is Empty</h4>
                                     <p class="text-muted mb-4 col-md-6 mx-auto">
-                                        Looks like you haven’t added any products yet. Explore our catalog and find
+                                        Looks like you haven't added any products yet. Explore our catalog and find
                                         something you love!
                                     </p>
                                     <a href="{{ route('customer.dashboard') }}"
@@ -286,34 +282,66 @@
         .card-header {
             background: linear-gradient(to right, #ffffff, #f8f9fa);
         }
+
+        /* Action buttons */
+        .action-buttons .btn {
+            transition: all 0.2s ease;
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-1px);
+        }
     </style>
 @endsection
 
 @push('scripts')
     <script>
-        // Keep your existing quantity update + notification scripts here
-        // (the ones you already have working)
-
+        // ========================================
+        // 1. NOTIFICATION FUNCTION
+        // ========================================
         function showNotification(type, title, message) {
-            const icon = document.getElementById('notifIcon');
-            const titleEl = document.getElementById('notifTitle');
-            const messageEl = document.getElementById('notifMessage');
+            // Try to use the existing notification modal if available
+            const notifModal = document.getElementById('cartNotificationModal');
+            if (notifModal) {
+                const icon = document.getElementById('notifIcon');
+                const titleEl = document.getElementById('notifTitle');
+                const messageEl = document.getElementById('notifMessage');
+                const topBar = document.getElementById('notifTopBar');
+                const okBtn = document.getElementById('notifOkBtn');
+                const iconWrapper = document.getElementById('notifIconWrapper');
 
-            if (type === 'success') {
-                icon.innerHTML = '<i class="mdi mdi-check-circle text-success"></i>';
-                titleEl.className = 'fw-bold mb-2 text-success';
-            } else {
-                icon.innerHTML = '<i class="mdi mdi-alert-circle text-danger"></i>';
-                titleEl.className = 'fw-bold mb-2 text-danger';
+                if (icon && titleEl && messageEl) {
+                    if (type === 'success') {
+                        topBar.style.background = '#198754';
+                        iconWrapper.style.background = '#d1e7dd';
+                        icon.innerHTML = '<i class="mdi mdi-check-circle text-success"></i>';
+                        titleEl.className = 'fw-bold mb-2 text-success';
+                        okBtn.className = 'btn btn-success rounded-pill py-2 fw-medium';
+                        okBtn.innerHTML = '<i class="mdi mdi-check me-1"></i> Great!';
+                    } else {
+                        topBar.style.background = '#dc3545';
+                        iconWrapper.style.background = '#f8d7da';
+                        icon.innerHTML = '<i class="mdi mdi-close-circle text-danger"></i>';
+                        titleEl.className = 'fw-bold mb-2 text-danger';
+                        okBtn.className = 'btn btn-danger rounded-pill py-2 fw-medium';
+                        okBtn.innerHTML = '<i class="mdi mdi-close me-1"></i> Close';
+                    }
+                    titleEl.textContent = title;
+                    messageEl.textContent = message;
+                    $('#cartNotificationModal').modal('show');
+                    if (type === 'success') {
+                        setTimeout(() => $('#cartNotificationModal').modal('hide'), 2000);
+                    }
+                    return;
+                }
             }
-
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-
-            const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
-            modal.show();
+            // Fallback to alert
+            alert(title + ': ' + message);
         }
 
+        // ========================================
+        // 2. JQUERY READY
+        // ========================================
         jQuery(document).ready(function($) {
             $.ajaxSetup({
                 headers: {
@@ -321,7 +349,9 @@
                 }
             });
 
-            // Quantity Increase / Decrease
+            // ========================================
+            // 3. QUANTITY INCREASE / DECREASE
+            // ========================================
             $(document).on('click', '.qty-btn', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -353,7 +383,16 @@
                         $('#subtotal-' + cartId).text('₹' + response.subtotal);
                         $('#summary-subtotal').text('₹' + response.total);
                         $('#summary-total').text('₹' + response.total);
-                        $('#cartCount').text(response.cartCount);
+
+                        if (response.cartCount !== undefined) {
+                            $('#cartCount').text(response.cartCount);
+                        }
+
+                        // Update the buy now button data-quantity attribute
+                        $('.buy-now-cart-btn[data-cart-id="' + cartId + '"]').data('quantity',
+                            currentQty);
+
+
                     },
                     error: function() {
                         showNotification('error', 'Error', 'Failed to update quantity.');
@@ -363,6 +402,133 @@
                     }
                 });
             });
+
+            // ========================================
+            // 4. BUY NOW FROM CART (WITH AUTO-SELECT)
+            // ========================================
+            $(document).on('click', '.buy-now-cart-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $btn = $(this);
+                var productId = $btn.data('product-id');
+                var quantity = $btn.data('quantity');
+                var cartId = $btn.data('cart-id');
+
+                // Prevent multiple clicks
+                if ($btn.prop('disabled')) {
+                    return;
+                }
+
+                if (!productId || !quantity) {
+                    showNotification('error', 'Error', 'Product information missing.');
+                    return;
+                }
+
+                $btn.prop('disabled', true).html(
+                    '<i class="mdi mdi-loading mdi-spin me-1"></i> Processing...');
+
+                // Store product data in sessionStorage for the invoice page
+                var productData = {
+                    product_id: productId,
+                    quantity: quantity,
+                    cart_id: cartId,
+                    from_cart: true,
+                    from_buy_now: true
+                };
+
+                try {
+                    sessionStorage.setItem('buy_now_product', JSON.stringify(productData));
+                } catch (e) {
+                    console.warn('Session storage not available, using URL params instead.');
+                }
+
+                // Redirect to invoice creation with URL parameters as fallback
+                window.location.href = "{{ route('customer.invoices.create') }}?product_id=" + productId +
+                    "&quantity=" + quantity +
+                    "&cart_id=" + cartId +
+                    "&from_buy_now=1";
+            });
+
+            // ========================================
+            // 5. CART REMOVE WITH CONFIRMATION
+            // ========================================
+            $(document).on('submit', 'form[action*="cart.remove"]', function(e) {
+                if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // ========================================
+        // 6. HANDLE BUY NOW ON INVOICE PAGE
+        // ========================================
+        // This code runs when the invoice creation page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're on the invoice creation page
+            if (window.location.pathname.includes('/invoices/create')) {
+                var productId = null;
+                var quantity = null;
+                var cartId = null;
+
+                // Try to get data from sessionStorage first
+                try {
+                    var storedData = sessionStorage.getItem('buy_now_product');
+                    if (storedData) {
+                        var data = JSON.parse(storedData);
+                        productId = data.product_id;
+                        quantity = data.quantity;
+                        cartId = data.cart_id;
+                        // Clear after use
+                        sessionStorage.removeItem('buy_now_product');
+                    }
+                } catch (e) {
+                    console.warn('Error reading from sessionStorage:', e);
+                }
+
+                // Fallback to URL parameters
+                if (!productId) {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    productId = urlParams.get('product_id');
+                    quantity = urlParams.get('quantity');
+                    cartId = urlParams.get('cart_id');
+                }
+
+                // Auto-select the product if we have a product ID
+                if (productId) {
+                    // Wait for the page to fully load
+                    setTimeout(function() {
+                        var $productSelect = $('#product_id');
+                        var $qtyInput = $('#quantity');
+
+                        if ($productSelect.length) {
+                            // Set the product value
+                            $productSelect.val(productId).trigger('change');
+
+                            // Also try to trigger change on the select if it's a dynamic dropdown
+                            if (typeof $productSelect.trigger === 'function') {
+                                $productSelect.trigger('change');
+                            }
+                        }
+
+                        if ($qtyInput.length && quantity) {
+                            $qtyInput.val(quantity);
+                        }
+
+                        // Auto-trigger tax calculation if needed
+                        if (typeof calculateTotal === 'function') {
+                            calculateTotal();
+                        }
+
+                        // Show a notification
+                        if (typeof showNotification === 'function') {
+                            showNotification('success', 'Product Loaded',
+                                'Product has been automatically selected for your invoice.');
+                        }
+
+                    }, 500); // Slight delay to ensure DOM is ready
+                }
+            }
         });
     </script>
 @endpush

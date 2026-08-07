@@ -360,7 +360,7 @@
                                 </span>
                             </div>
 
-                            <p class="text-muted small mb-3" id="modalProductDesc" style="line-height: 1.6;">
+                            <p class="text-bold small mb-3" id="modalProductDesc" style="line-height: 1.6;">
                                 Product description will appear here...
                             </p>
 

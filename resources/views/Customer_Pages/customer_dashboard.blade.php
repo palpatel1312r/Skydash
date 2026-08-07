@@ -243,17 +243,7 @@
                                                         </button>
                                                     </div>
 
-                                                    {{-- Success Message (hidden by default) --}}
-                                                    {{-- <div class="added-success-message text-center py-2"
-                                                        style="display: none;">
-                                                        <div class="bg-success bg-opacity-10 text-success rounded-3 p-2">
-                                                            <i class="mdi mdi-check-circle" style="font-size: 24px;"></i>
-                                                            <p class="mb-0 fw-bold" style="font-size: 0.85rem;">Added to
-                                                                Cart!</p>
-                                                            <small class="text-muted">Item has been added
-                                                                successfully</small>
-                                                        </div>
-                                                    </div> --}}
+
                                                 </div>
                                             </div>
                                         </div>
@@ -510,8 +500,8 @@
                                 </span>
                             </div>
 
-                            <p class="text-muted small mb-3" id="pdDesc" style="line-height: 1.6;">
-                                Product description will appear here...
+                            <p class="fw-semibold small mb-3" id="pdDesc" style="line-height: 1.6;">
+                                Discription goes here
                             </p>
 
                             {{-- Add to Cart & Buy Now - Using data attributes from modal --}}
@@ -635,9 +625,6 @@
             min-height: 2.7em;
         }
 
-        .amazon-card .product-title:hover {
-            color: #0d6efd;
-        }
 
         .amazon-card .price-box {
             display: flex;

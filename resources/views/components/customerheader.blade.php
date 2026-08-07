@@ -60,13 +60,18 @@
                             data-toggle="dropdown"></a>
                     </li>
 
-                    {{-- ✅ CART ICON --}}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.cart.cart') }}">
-                            <i class="mdi mdi-cart"></i>
-                            <span class="badge badge-primary ml-1" id="cartCount">
-                                {{ $cartCount ?? 0 }}
-                            </span>
+                        <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 border rounded bg-white text-dark"
+                            href="{{ route('admin.cart.cart') }}" style="border-color: #dee2e6 !important;">
+                            <div class="position-relative">
+                                <i class="mdi mdi-cart-outline" style="font-size: 1.4rem;"></i>
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white"
+                                    id="cartCount" style="font-size: 0.65rem; min-width: 18px; padding: 2px 5px;">
+                                    {{ $cartCount ?? 0 }}
+                                </span>
+                            </div>
+                            <span class="fw-medium">Cart</span>
                         </a>
                     </li>
 
