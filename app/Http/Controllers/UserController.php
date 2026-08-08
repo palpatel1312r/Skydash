@@ -6,28 +6,15 @@ use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
   public function create()
   {
     return view('Admin.User Pages.User_form');
-  }
-
-  public function edit($id, $guard)
-  {
-    if ($guard === 'admin') {
-      $user = Admin::findOrFail($id);
-      $user['guard'] = 'admin';
-    } elseif ($guard === 'customer') {
-      $user = Customer::findOrFail($id);
-      $user['guard'] = 'customer';
-      $user['name'] = $user['fullname'];
-    } else {
-      return redirect()->back()->with('error', 'Invalid user type provided.');
-    }
-
-    return view('Admin.User Pages.User_form', compact('user'));
   }
 
   public function index(Request $request)
@@ -90,7 +77,6 @@ class UserController extends Controller
     return view('Admin.User Pages.User', compact('users', 'allRoles', 'userTypes'))->with('request', $request);
   }
 
-  //////////////////////////////////////////////////////
   public function store(Request $request)
   {
     $messages = [
@@ -106,25 +92,22 @@ class UserController extends Controller
       'user_type.required' => 'Please select if this user is an Admin or Customer.',
     ];
 
-    // 1. CREATE VALIDATOR INSTANCE
-    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+    $validator = Validator::make($request->all(), [
       'name' => 'required|string|max:255',
       'password' => 'required|string|min:4',
       'password_confirmation' => 'required|same:password',
       'user_type' => 'required|in:super_admin,admin,customer',
     ], $messages);
 
-    // 2. ADD EMAIL RULES DYNAMICALLY
+    // Add Email Rules Dynamically
     $emailRules = ['required', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'];
     if ($request->user_type === 'super_admin' || $request->user_type === 'admin') {
       $emailRules[] = 'unique:admins,email';
     } elseif ($request->user_type === 'customer') {
       $emailRules[] = 'unique:customer,email';
     }
-
     $validator->addRules(['email' => $emailRules]);
 
-    // 3. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
     if ($validator->fails()) {
       return response()->json(['errors' => $validator->errors()], 422);
     }
@@ -158,7 +141,6 @@ class UserController extends Controller
         ]);
       }
 
-      // RETURN 200 JSON SUCCESS
       return response()->json([
         'success' => true,
         'message' => 'New user created successfully!'
@@ -166,6 +148,36 @@ class UserController extends Controller
     } catch (\Exception $e) {
       return response()->json(['errors' => ['general' => ['Failed to create user: ' . $e->getMessage()]]], 422);
     }
+  }
+  public function edit($id, $guard)
+  {
+    if ($guard === 'admin') {
+      $user = Admin::with('role')->findOrFail($id);
+      $user['guard'] = 'admin';
+    } elseif ($guard === 'customer') {
+      $user = Customer::with('role')->findOrFail($id);
+      $user['guard'] = 'customer';
+      $user['name'] = $user['fullname'];
+    } else {
+      return redirect()->back()->with('error', 'Invalid user type provided.');
+    }
+
+    $currentAdmin = Auth::guard('admin')->user();
+    $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+    $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
+    $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+    // ✅ BLOCK: The logged-in user cannot edit themselves (even if they are Super Admin).
+    if ($isTargetSelf) {
+      return redirect()->route('admin.user.index')->with('error', 'You cannot edit your own account here. Please use the Profile page.');
+    }
+
+    // ✅ BLOCK: Regular Admin cannot edit Super Admin
+    if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+      return redirect()->route('admin.user.index')->with('error', 'You do not have permission to edit this user.');
+    }
+
+    return view('Admin.User Pages.User_form', compact('user'));
   }
 
   public function update(Request $request, $id, $guard)
@@ -180,7 +192,6 @@ class UserController extends Controller
       'role_id.required' => 'Please select a role for this user.',
     ];
 
-    // 1. CREATE VALIDATOR INSTANCE
     $rules = [
       'name' => 'required|string|max:255',
       'user_type' => 'required|in:super_admin,admin,customer',
@@ -189,7 +200,6 @@ class UserController extends Controller
       $rules['role_id'] = 'required|exists:roles,id';
     }
 
-    // Email rules
     $emailRules = ['required', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'];
     if ($request->user_type === 'super_admin' || $request->user_type === 'admin') {
       $emailRules[] = 'unique:admins,email,' . $id;
@@ -203,14 +213,35 @@ class UserController extends Controller
       $rules['password_confirmation'] = 'required_with:password|same:password';
     }
 
-    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules, $messages);
+    $validator = Validator::make($request->all(), $rules, $messages);
 
-    // 2. CHECK VALIDATION AND RETURN 422 JSON ON FAILURE
     if ($validator->fails()) {
       return response()->json(['errors' => $validator->errors()], 422);
     }
 
     try {
+      $targetUser = match ($guard) {
+        'admin' => Admin::with('role')->findOrFail($id),
+        'customer' => Customer::with('role')->findOrFail($id),
+        default => throw new \Exception('Invalid user type provided.'),
+      };
+
+      $currentAdmin = Auth::guard('admin')->user();
+      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+      $isTargetSuperAdmin = ($targetUser->role && $targetUser->role->name === 'Super Admin');
+      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+      // ✅ BLOCK: Cannot update self
+      if ($isTargetSelf) {
+        return response()->json(['errors' => ['general' => ['You cannot update your own account here. Please use the Profile page.']]], 403);
+      }
+
+      // ✅ BLOCK: Regular Admin cannot update Super Admin
+      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+        return response()->json(['errors' => ['general' => ['You do not have permission to update this user.']]], 403);
+      }
+
+      // Proceed with logic to swap between Admin/Customer tables
       $newUserType = $request->user_type;
       $roleIdToAssign = null;
       $adminRole = Role::where('name', 'Admin')->first();
@@ -262,7 +293,6 @@ class UserController extends Controller
         }
       }
 
-      // RETURN 200 JSON SUCCESS
       return response()->json([
         'success' => true,
         'message' => 'User updated successfully!'
@@ -278,10 +308,25 @@ class UserController extends Controller
 
     try {
       $user = match ($guard) {
-        'admin' => Admin::findOrFail($id),
-        'customer' => Customer::findOrFail($id),
+        'admin' => Admin::with('role')->findOrFail($id),
+        'customer' => Customer::with('role')->findOrFail($id),
         default => throw new \Exception('Invalid user type provided.'),
       };
+
+      $currentAdmin = Auth::guard('admin')->user();
+      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
+      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+      // ✅ BLOCK: Cannot change own role
+      if ($isTargetSelf) {
+        return redirect()->back()->with('error', 'You cannot change your own role here.');
+      }
+
+      // ✅ BLOCK: Regular Admin cannot change Super Admin's role
+      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+        return redirect()->back()->with('error', 'You do not have permission to change the role of this user.');
+      }
 
       $user->role_id = $request->role_id;
       $user->save();
@@ -296,10 +341,25 @@ class UserController extends Controller
   {
     try {
       $user = match ($guard) {
-        'admin' => Admin::findOrFail($id),
-        'customer' => Customer::findOrFail($id),
+        'admin' => Admin::with('role')->findOrFail($id),
+        'customer' => Customer::with('role')->findOrFail($id),
         default => throw new \Exception('Invalid user type provided.'),
       };
+
+      $currentAdmin = Auth::guard('admin')->user();
+      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
+      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+      // ✅ BLOCK: Cannot delete self
+      if ($isTargetSelf) {
+        return redirect()->route('admin.user.index')->with('error', 'You cannot delete your own account.');
+      }
+
+      // ✅ BLOCK: Regular Admin cannot delete Super Admin
+      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+        return redirect()->route('admin.user.index')->with('error', 'You do not have permission to delete this user.');
+      }
 
       $user->delete();
       return redirect()->route('admin.user.index')->with('success', 'User deleted successfully!');

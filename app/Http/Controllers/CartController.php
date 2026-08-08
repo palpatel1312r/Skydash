@@ -59,14 +59,17 @@ class CartController extends Controller
             return response()->json(['message' => 'You must be logged in as a customer.'], 401);
         }
 
+        // ✅ CHECK: If product already exists in cart, UPDATE quantity instead of creating a new row
         $cartItem = Cart::where('customer_id', $customerId)
             ->where('product_id', $request->product_id)
             ->first();
 
         if ($cartItem) {
+            // Increase existing quantity
             $cartItem->quantity += $request->quantity;
             $cartItem->save();
         } else {
+            // Create new cart row
             Cart::create([
                 'customer_id' => $customerId,
                 'product_id'  => $request->product_id,
@@ -80,7 +83,6 @@ class CartController extends Controller
             'cartCount' => Cart::where('customer_id', $customerId)->sum('quantity'),
         ]);
     }
-
     public function buyNow(Request $request)
     {
         $request->validate([

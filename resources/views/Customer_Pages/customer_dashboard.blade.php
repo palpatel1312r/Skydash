@@ -105,7 +105,7 @@
                                     <i class="mdi mdi-magnify text-muted" style="font-size: 1.3rem;"></i>
                                 </span>
                                 <input id="productSearch" class="form-control bg-light border-start-0"
-                                    placeholder="Search products..." value="{{ request('search') ?? '' }}"
+                                    placeholder="Search Products..." value="{{ request('search') ?? '' }}"
                                     style="padding: 12px 16px; font-size: 1rem; height: 48px;">
                             </div>
                         </div>
@@ -375,6 +375,8 @@
                     </div>
                 </div>
             </div>
+
+
 
             {{-- 4. Quick Actions & Recent Activity --}}
             <div class="row">

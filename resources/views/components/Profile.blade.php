@@ -32,7 +32,11 @@
                             @php
                                 if (auth()->guard('admin')->check()) {
                                     $user = auth()->guard('admin')->user();
-                                    $role = 'Admin';
+
+                                    // ✅ Fetch the actual role name from the roles table
+                                    $roleModel = \App\Models\Role::find($user->role_id);
+                                    $role = $roleModel ? $roleModel->name : 'Admin'; // Fallback to 'Admin' if not found
+
                                     $updateRoute = route('admin.profile.update');
                                     $dashboardRoute = route('admin.dashboard');
                                     $isAdmin = true;
@@ -62,7 +66,6 @@
                                     $user->refresh();
                                 }
                             @endphp
-
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h4 class="card-title mb-0">
                                     <i class="mdi mdi-account-circle text-primary" style="font-size: 24px;"></i>

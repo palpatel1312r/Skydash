@@ -117,13 +117,15 @@
                                 </div>
 
                                 <!-- Right: Search -->
-                                <div class="input-group input-group-sm w-100" style="max-width:250px;">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="mdi mdi-magnify text-muted"></i>
+                                <div class="input-group" style="max-width: 320px; min-width: 200px;">
+                                    <span class="input-group-text bg-light border-end-0 py-2 px-3">
+                                        <i class="mdi mdi-magnify text-muted"
+                                            style="font-size: 1.3rem; line-height: 1;"></i>
                                     </span>
-                                    <input id="dtSearch" class="form-control bg-light border-start-0"
-                                        placeholder="Search customers...">
+                                    <input id="dtSearch" class="form-control bg-light border-start-0 py-2 px-3"
+                                        placeholder="Search customers..." style="font-size: 1rem;">
                                 </div>
+
                             </div>
 
                             {{-- TABLE --}}

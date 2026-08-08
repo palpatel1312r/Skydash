@@ -66,8 +66,8 @@ class CustomerInvoiceController extends Controller
       return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    $products = [];
-    $subtotal = 0;
+    // ✅ Step 1: Create a temporary array to consolidate duplicates
+    $consolidatedProducts = [];
 
     foreach ($request->product_id as $key => $productId) {
       $product = Product::find($productId);
@@ -81,16 +81,32 @@ class CustomerInvoiceController extends Controller
         ], 422);
       }
 
-      $products[] = [
-        'product_id'    => $productId,
-        'product_name'  => $product->title,
-        'price'         => $price,
-        'quantity'      => $quantitySold,
-        'subtotal'      => $productSubtotal,
-      ];
+      // ✅ Step 2: If product already exists in array, ADD quantity & subtotal
+      if (isset($consolidatedProducts[$productId])) {
+        $consolidatedProducts[$productId]['quantity'] += $quantitySold;
+        $consolidatedProducts[$productId]['subtotal'] += $productSubtotal;
+      } else {
+        // Add new entry
+        $consolidatedProducts[$productId] = [
+          'product_id'    => $productId,
+          'product_name'  => $product->title,
+          'price'         => $price,
+          'quantity'      => $quantitySold,
+          'subtotal'      => $productSubtotal,
+        ];
+      }
 
+      // Decrease stock
       $product->decreaseStock($quantitySold);
-      $subtotal += $productSubtotal;
+    }
+
+    // ✅ Step 3: Convert back to indexed array (removes the product_id keys)
+    $products = array_values($consolidatedProducts);
+
+    // ✅ Step 4: Calculate totals from the consolidated array
+    $subtotal = 0;
+    foreach ($products as $product) {
+      $subtotal += $product['subtotal'];
     }
 
     // Clear the customer's cart after successful invoice creation
@@ -109,21 +125,18 @@ class CustomerInvoiceController extends Controller
       'customer_email'    => $customer->email,
       'customer_phone'    => $customer->phone ?? 'N/A',
       'customer_address'  => $customer->address ?? 'N/A',
-      'products'          => $products,
+      'products'          => $products, // ✅ Consolidated array
       'subtotal'          => $subtotal,
       'tax_rate'          => $taxRate,
       'tax_amount'        => $taxAmount,
       'total_amount'      => $totalAmount,
     ]);
-    // Clear cart only after successful creation
-    Cart::where('customer_id', $customer->id)->delete();
 
     return response()->json([
       'success' => true,
       'message' => 'Invoice created successfully!'
     ]);
   }
-
 
   public function customerCreate()
   {

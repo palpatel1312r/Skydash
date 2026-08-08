@@ -135,12 +135,14 @@ if (
                                         <small class="text-muted">Manage your invoices</small>
                                     </div>
                                 </div>
-                                <div class="input-group input-group-sm" style="width: 250px;">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="mdi mdi-magnify text-muted"></i>
+                                <div class="input-group" style="max-width: 320px; min-width: 200px;">
+                                    <span class="input-group-text bg-light border-end-0" style="padding: 12px 16px;">
+                                        <i class="mdi mdi-magnify text-muted" style="font-size: 1.3rem;"></i>
                                     </span>
-                                    <input type="text" id="dtSearch" class="form-control border-start-0 bg-light"
-                                        placeholder="Search...">
+                                    <input id="dtSearch" class="form-control bg-light border-start-0"
+                                        placeholder="Search Invoices..." value="{{ request('search') ?? '' }}"
+                                        data-search-param="{{ request('search') ?? '' }}"
+                                        style="padding: 12px 16px; font-size: 1rem; height: 48px;">
                                 </div>
                             </div>
 
@@ -573,6 +575,11 @@ if (
             var urlParams = new URLSearchParams(window.location.search);
 
             // ===================== DATATABLES =====================
+            // ✅ FIX: Check if DataTable is already initialized
+            if ($.fn.DataTable.isDataTable('#invoiceTable')) {
+                $('#invoiceTable').DataTable().destroy();
+            }
+
             var table = $('#invoiceTable').DataTable({
                 responsive: true,
                 pageLength: 10,
@@ -609,17 +616,73 @@ if (
                         next: '<i class="mdi mdi-chevron-right"></i>',
                         last: '<i class="mdi mdi-chevron-double-right"></i>'
                     }
+                },
+                // ✅ FIX: Ensure table is fully initialized before moving controls
+                initComplete: function() {
+                    // Move controls to custom footer after initialization
+                    setTimeout(function() {
+                        $('#lengthContainer').append($('.dataTables_length'));
+                        $('#paginationContainer').append($('.dataTables_paginate'));
+                        $('#infoContainer').append($('.dataTables_info'));
+                    }, 100);
                 }
             });
 
-            // ✅ Move controls to custom footer
-            $('#lengthContainer').append($('.dataTables_length'));
-            $('#paginationContainer').append($('.dataTables_paginate'));
-            $('#infoContainer').append($('.dataTables_info'));
+            // ✅ FIX: Double-check that controls are moved (fallback)
+            setTimeout(function() {
+                if ($('#lengthContainer').is(':empty')) {
+                    $('#lengthContainer').append($('.dataTables_length'));
+                    $('#paginationContainer').append($('.dataTables_paginate'));
+                    $('#infoContainer').append($('.dataTables_info'));
+                }
+            }, 500);
 
-            // ✅ Search functionality
-            $('#dtSearch').on('keyup', function() {
-                table.search($(this).val()).draw();
+            // ========================================
+            // ✅ PERSISTENT SEARCH FUNCTIONALITY
+            // ========================================
+            var searchInput = $('#dtSearch');
+            var searchParam = searchInput.data('search-param');
+
+            // 1. If there's a search term in the URL, apply it to DataTable immediately
+            if (searchParam && searchParam.trim() !== '') {
+                table.search(searchParam).draw();
+                console.log('✅ Applied initial search: ' + searchParam);
+            }
+
+            // 2. Search as user types (with debounce)
+            var searchTimeout;
+            searchInput.on('keyup', function() {
+                clearTimeout(searchTimeout);
+                var value = $(this).val().trim();
+
+                searchTimeout = setTimeout(function() {
+                    // Update the URL with the search term (without reloading the page)
+                    var url = new URL(window.location.href);
+                    if (value !== '') {
+                        url.searchParams.set('search', value);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    // Update the URL in the browser without reloading
+                    window.history.replaceState({}, '', url.toString());
+
+                    // Apply search to DataTable
+                    table.search(value).draw();
+                    console.log('✅ Applied search: ' + value);
+                }, 300);
+            });
+
+            // 3. Handle "Clear Filters" button to also clear the search
+            $('.btn-outline-danger, .btn-outline-dark').on('click', function(e) {
+                // If this is the Clear button, also clear the search input and URL param
+                if ($(this).hasClass('btn-outline-danger') || $(this).text().includes('Clear')) {
+                    searchInput.val('');
+                    var url = new URL(window.location.href);
+                    url.searchParams.delete('search');
+                    window.history.replaceState({}, '', url.toString());
+                    table.search('').draw();
+                    console.log('✅ Cleared search');
+                }
             });
 
             // ===================== DATE RANGE FILTER =====================
@@ -663,7 +726,7 @@ if (
                 }
             }
 
-            // 🛑 FIX: Only run the label update if the URL does NOT have a 'date_range' parameter
+            // Only run the label update if the URL does NOT have a 'date_range' parameter
             if (!urlParams.has('date_range')) {
                 updateDateRangeLabel();
             }
@@ -734,7 +797,7 @@ if (
                     url.searchParams.set('start_date', formatDate(start));
                     url.searchParams.set('end_date', formatDate(end));
 
-                    // 🛑 FIX: Set the date_range param so the page knows it's a preset
+                    // Set the date_range param so the page knows it's a preset
                     url.searchParams.set('date_range', range);
                 } else {
                     $('#dateRangeLabel').text('All Time');
@@ -879,14 +942,11 @@ if (
             $('#applyDateRange').on('click', function() {
                 if (selectedStart && selectedEnd) {
                     var url = new URL(window.location.href);
-
-                    // 🛑 FIX: DO NOT send 'date_range'. Send 'start_date' and 'end_date' directly.
                     url.searchParams.delete('date_range');
                     url.searchParams.set('start_date', formatDate(selectedStart));
                     url.searchParams.set('end_date', formatDate(selectedEnd));
                     url.searchParams.delete('page');
-
-                    window.location.href = url.toString(); // Reload
+                    window.location.href = url.toString();
                 } else if (selectedStart && !selectedEnd) {
                     var url = new URL(window.location.href);
                     url.searchParams.delete('date_range');
@@ -922,7 +982,6 @@ if (
             // Initialize calendar
             renderCalendar();
 
-
             // ===================== AUTO-DISMISS ALERTS =====================
             setTimeout(function() {
                 document.querySelectorAll('.alert').forEach(alert => {
@@ -931,6 +990,9 @@ if (
                     setTimeout(() => alert.style.display = 'none', 500);
                 });
             }, 50);
+
+            // ✅ FIX: Open browser console (F12) to see if this logs
+            console.log('✅ DataTable initialized. Search should work now.');
         });
     </script>
 @endsection

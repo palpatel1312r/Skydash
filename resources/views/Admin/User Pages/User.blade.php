@@ -117,12 +117,13 @@
                                 </div>
 
                                 <!-- Right: Search -->
-                                <div class="input-group input-group-sm w-100" style="max-width:250px;">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="mdi mdi-magnify text-muted"></i>
+                                <div class="input-group" style="max-width: 320px; min-width: 200px;">
+                                    <span class="input-group-text bg-light border-end-0 py-2 px-3">
+                                        <i class="mdi mdi-magnify text-muted"
+                                            style="font-size: 1.3rem; line-height: 1;"></i>
                                     </span>
-                                    <input id="dtSearch" class="form-control bg-light border-start-0"
-                                        placeholder="Search users...">
+                                    <input id="dtSearch" class="form-control bg-light border-start-0 py-2 px-3"
+                                        placeholder="Search Users..." style="font-size: 1rem;">
                                 </div>
                             </div>
 
@@ -163,18 +164,42 @@
                                                 <td class="text-center">
                                                     <div
                                                         class="d-flex align-items-center justify-content-center gap-1 flex-nowrap action-buttons">
-                                                        <a href="{{ route('admin.user.edit', ['id' => $user['id'], 'guard' => $user['guard']]) }}"
-                                                            class="btn btn-primary btn-sm">
-                                                            <i class="mdi mdi-pencil me-1"></i> <span
-                                                                class="d-none d-lg-inline">Update</span>
-                                                        </a>
+                                                        @php
+                                                            $currentAdmin = auth()->guard('admin')->user();
+                                                            $isCurrentUserSuperAdmin =
+                                                                $currentAdmin->role &&
+                                                                $currentAdmin->role->name === 'Super Admin';
 
-                                                        <button type="button" class="btn btn-danger btn-sm"
-                                                            onclick="confirmDeleteUser('{{ $user['id'] }}', '{{ $user['guard'] }}')">
-                                                            <i class="mdi mdi-delete me-1"></i> <span
-                                                                class="d-none d-lg-inline">Delete</span>
-                                                        </button>
+                                                            $isTargetSuperAdmin =
+                                                                ($user['role_name'] ?? '') === 'Super Admin';
+                                                            $isTargetSelf =
+                                                                $currentAdmin->id == $user['id'] &&
+                                                                $user['guard'] == 'admin';
+                                                        @endphp
+
+                                                        {{-- ✅ RULE: Super Admin can edit ANYONE EXCEPT THEMSELVES. Regular Admin is restricted from Super Admins & Self. --}}
+                                                        @if (
+                                                            ($isCurrentUserSuperAdmin && !$isTargetSelf) ||
+                                                                (!$isCurrentUserSuperAdmin && !$isTargetSuperAdmin && !$isTargetSelf))
+                                                            <a href="{{ route('admin.user.edit', ['id' => $user['id'], 'guard' => $user['guard']]) }}"
+                                                                class="btn btn-primary btn-sm">
+                                                                <i class="mdi mdi-pencil me-1"></i> <span
+                                                                    class="d-none d-lg-inline">Update</span>
+                                                            </a>
+                                                            <button type="button" class="btn btn-danger btn-sm"
+                                                                onclick="confirmDeleteUser('{{ $user['id'] }}', '{{ $user['guard'] }}')">
+                                                                <i class="mdi mdi-delete me-1"></i> <span
+                                                                    class="d-none d-lg-inline">Delete</span>
+                                                            </button>
+                                                        @else
+                                                            {{-- Show a lock badge if they can't edit --}}
+                                                            <span
+                                                                class="badge bg-secondary text-white p-2 px-3 rounded-pill">
+                                                                <i class="mdi mdi-lock me-1"></i> No Access
+                                                            </span>
+                                                        @endif
                                                     </div>
+
                                                     <form id="delete-user-form-{{ $user['id'] }}-{{ $user['guard'] }}"
                                                         action="{{ route('admin.user.destroy', ['id' => $user['id'], 'guard' => $user['guard']]) }}"
                                                         method="POST" style="display: none;">

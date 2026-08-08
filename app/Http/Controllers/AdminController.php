@@ -13,6 +13,10 @@ class AdminController extends Controller
     public function profile()
     {
         $admin = Auth::guard('admin')->user();
+
+        // ✅ Load the role name
+        $admin->role_name = $admin->role ? $admin->role->name : 'Admin';
+
         return view('Components.Profile', compact('admin'));
     }
 
