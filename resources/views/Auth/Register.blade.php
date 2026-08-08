@@ -34,7 +34,8 @@
 
                                 <!-- fullname -->
                                 <div class="form-group">
-                                    <input type="text" name="fullname" class="form-control form-control-lg"
+                                    <input type="text" name="fullname"
+                                        class="form-control form-control-lg @error('fullname') is-invalid @enderror"
                                         placeholder="Enter your fullname" value="{{ old('fullname') }}">
                                     @error('fullname')
                                         <small class="text-danger">{{ $message }}</small>
@@ -43,7 +44,8 @@
 
                                 <!-- Email -->
                                 <div class="form-group">
-                                    <input type="email" name="email" class="form-control form-control-lg"
+                                    <input type="email" name="email"
+                                        class="form-control form-control-lg @error('email') is-invalid @enderror"
                                         placeholder="Enter your email" value="{{ old('email') }}">
                                     @error('email')
                                         <small class="text-danger">{{ $message }}</small>
@@ -52,7 +54,8 @@
 
                                 <!-- Password -->
                                 <div class="form-group">
-                                    <input type="password" name="password" class="form-control form-control-lg"
+                                    <input type="password" name="password"
+                                        class="form-control form-control-lg @error('password') is-invalid @enderror"
                                         placeholder="Enter your password">
                                     @error('password')
                                         <small class="text-danger">{{ $message }}</small>
@@ -62,7 +65,8 @@
                                 <!-- Confirm Password -->
                                 <div class="form-group">
                                     <input type="password" name="password_confirmation"
-                                        class="form-control form-control-lg" placeholder="Confirm your password">
+                                        class="form-control form-control-lg @error('password') is-invalid @enderror"
+                                        placeholder="Confirm your password">
                                     @error('password')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror

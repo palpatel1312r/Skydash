@@ -67,16 +67,36 @@
                                         <div class="form-group">
                                             <label>Password
                                                 {{ isset($user) ? '(Leave blank to keep current)' : '' }}:</label>
-                                            <input type="password" name="password" id="passwordField" class="form-control"
-                                                placeholder="{{ isset($user) ? 'Enter new password or leave empty' : 'Min 4 characters' }}">
+
+                                            <div class="input-group">
+                                                <input type="password" name="password" id="passwordField"
+                                                    class="form-control"
+                                                    placeholder="{{ isset($user) ? 'Enter new password or leave empty' : 'Min 4 characters' }}">
+
+                                                <span class="input-group-text toggle-password" data-target="#passwordField"
+                                                    style="cursor: pointer; background-color: #f8f9fa; padding: 0.375rem 0.75rem;">
+                                                    <i class="mdi mdi-eye" style="font-size: 1.1rem;"></i>
+                                                </span>
+                                            </div>
                                             <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
+
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Confirm Password:</label>
-                                            <input type="password" name="password_confirmation" id="confirmPasswordField"
-                                                class="form-control" placeholder="Confirm password">
+
+                                            <div class="input-group">
+                                                <input type="password" name="password_confirmation"
+                                                    id="confirmPasswordField" class="form-control"
+                                                    placeholder="Confirm password">
+
+                                                <span class="input-group-text toggle-password"
+                                                    data-target="#confirmPasswordField"
+                                                    style="cursor: pointer; background-color: #f8f9fa; padding: 0.375rem 0.75rem;">
+                                                    <i class="mdi mdi-eye" style="font-size: 1.1rem;"></i>
+                                                </span>
+                                            </div>
                                             <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
@@ -159,9 +179,49 @@
         .is-invalid~.invalid-feedback {
             display: block !important;
         }
+
+        /* Eye toggle styling */
+        .input-group-text {
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+
+        /* Ensure error messages show below the input-group wrapper */
+        .input-group+.invalid-feedback {
+            display: block !important;
+        }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // 5. EYE TOGGLE VISIBILITY (Show/Hide Password)
+        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+        togglePasswordButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.querySelector(targetId);
+                const icon = this.querySelector('i');
+
+                if (input) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('mdi-eye');
+                        icon.classList.add('mdi-eye-off');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('mdi-eye-off');
+                        icon.classList.add('mdi-eye');
+                    }
+                }
+            });
+        });
+
+        // 6. AUTO-FOCUS TO CONFIRM PASSWORD (Press Enter to Jump)
+        $('#passwordField').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#confirmPasswordField').focus();
+            }
+        });
         $(document).ready(function() {
             // 1. SETUP CSRF TOKEN
             $.ajaxSetup({

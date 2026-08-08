@@ -7,7 +7,7 @@ use App\Models\Customer;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+// use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -149,6 +149,73 @@ class UserController extends Controller
       return response()->json(['errors' => ['general' => ['Failed to create user: ' . $e->getMessage()]]], 422);
     }
   }
+
+  public function updateRole(Request $request, $id, $guard)
+  {
+    $request->validate(['role_id' => 'required|exists:roles,id']);
+
+    try {
+      $user = match ($guard) {
+        'admin' => Admin::with('role')->findOrFail($id),
+        'customer' => Customer::with('role')->findOrFail($id),
+        default => throw new \Exception('Invalid user type provided.'),
+      };
+
+      $currentAdmin = Auth::guard('admin')->user();
+      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
+      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+      // ✅ BLOCK: Cannot change own role
+      if ($isTargetSelf) {
+        return redirect()->back()->with('error', 'You cannot change your own role here.');
+      }
+
+      // ✅ BLOCK: Regular Admin cannot change Super Admin's role
+      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+        return redirect()->back()->with('error', 'You do not have permission to change the role of this user.');
+      }
+
+      $user->role_id = $request->role_id;
+      $user->save();
+
+      return redirect()->route('admin.user.index')->with('success', 'User role updated successfully!');
+    } catch (\Exception $e) {
+      return redirect()->back()->with('error', 'Failed to update role: ' . $e->getMessage());
+    }
+  }
+
+  public function destroy($id, $guard)
+  {
+    try {
+      $user = match ($guard) {
+        'admin' => Admin::with('role')->findOrFail($id),
+        'customer' => Customer::with('role')->findOrFail($id),
+        default => throw new \Exception('Invalid user type provided.'),
+      };
+
+      $currentAdmin = Auth::guard('admin')->user();
+      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
+      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
+      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
+
+      // ✅ BLOCK: Cannot delete self
+      if ($isTargetSelf) {
+        return redirect()->route('admin.user.index')->with('error', 'You cannot delete your own account.');
+      }
+
+      // ✅ BLOCK: Regular Admin cannot delete Super Admin
+      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
+        return redirect()->route('admin.user.index')->with('error', 'You do not have permission to delete this user.');
+      }
+
+      $user->delete();
+      return redirect()->route('admin.user.index')->with('success', 'User deleted successfully!');
+    } catch (\Exception $e) {
+      return redirect()->back()->with('error', 'Failed to delete user: ' . $e->getMessage());
+    }
+  }
+
   public function edit($id, $guard)
   {
     if ($guard === 'admin') {
@@ -299,72 +366,6 @@ class UserController extends Controller
       ]);
     } catch (\Exception $e) {
       return response()->json(['errors' => ['general' => ['Failed to update user: ' . $e->getMessage()]]], 422);
-    }
-  }
-
-  public function updateRole(Request $request, $id, $guard)
-  {
-    $request->validate(['role_id' => 'required|exists:roles,id']);
-
-    try {
-      $user = match ($guard) {
-        'admin' => Admin::with('role')->findOrFail($id),
-        'customer' => Customer::with('role')->findOrFail($id),
-        default => throw new \Exception('Invalid user type provided.'),
-      };
-
-      $currentAdmin = Auth::guard('admin')->user();
-      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
-      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
-      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
-
-      // ✅ BLOCK: Cannot change own role
-      if ($isTargetSelf) {
-        return redirect()->back()->with('error', 'You cannot change your own role here.');
-      }
-
-      // ✅ BLOCK: Regular Admin cannot change Super Admin's role
-      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
-        return redirect()->back()->with('error', 'You do not have permission to change the role of this user.');
-      }
-
-      $user->role_id = $request->role_id;
-      $user->save();
-
-      return redirect()->route('admin.user.index')->with('success', 'User role updated successfully!');
-    } catch (\Exception $e) {
-      return redirect()->back()->with('error', 'Failed to update role: ' . $e->getMessage());
-    }
-  }
-
-  public function destroy($id, $guard)
-  {
-    try {
-      $user = match ($guard) {
-        'admin' => Admin::with('role')->findOrFail($id),
-        'customer' => Customer::with('role')->findOrFail($id),
-        default => throw new \Exception('Invalid user type provided.'),
-      };
-
-      $currentAdmin = Auth::guard('admin')->user();
-      $isCurrentUserSuperAdmin = ($currentAdmin->role && $currentAdmin->role->name === 'Super Admin');
-      $isTargetSuperAdmin = ($user->role && $user->role->name === 'Super Admin');
-      $isTargetSelf = ($currentAdmin->id == $id && $guard == 'admin');
-
-      // ✅ BLOCK: Cannot delete self
-      if ($isTargetSelf) {
-        return redirect()->route('admin.user.index')->with('error', 'You cannot delete your own account.');
-      }
-
-      // ✅ BLOCK: Regular Admin cannot delete Super Admin
-      if (!$isCurrentUserSuperAdmin && $isTargetSuperAdmin) {
-        return redirect()->route('admin.user.index')->with('error', 'You do not have permission to delete this user.');
-      }
-
-      $user->delete();
-      return redirect()->route('admin.user.index')->with('success', 'User deleted successfully!');
-    } catch (\Exception $e) {
-      return redirect()->back()->with('error', 'Failed to delete user: ' . $e->getMessage());
     }
   }
 }
