@@ -182,14 +182,14 @@ class CustomerController extends Controller
         $customer = Auth::guard('customer')->user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:customer,email,' . $customer->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $customer->name = $request->name;
+        $customer->fullname = $request->fullname;
         $customer->email = $request->email;
         $customer->save();
 
@@ -204,11 +204,9 @@ class CustomerController extends Controller
         $profile->address = $request->address;
 
         if ($request->hasFile('profile_image')) {
-            // ✅ FIXED: Correctly check and delete the old image path
-            if ($profile->profile_image && file_exists(storage_path('app/public/profile_images/' . $profile->profile_image))) {
-                unlink(storage_path('app/public/profile_images/' . $profile->profile_image));
+            if ($profile->profile_image && file_exists(storage_path('app/public/' . $profile->profile_image))) {
+                unlink(storage_path('app/public/' . $profile->profile_image));
             }
-
 
             $path = $request->file('profile_image')->store('profile_images', 'public');
             $profile->profile_image = $path;
@@ -218,5 +216,4 @@ class CustomerController extends Controller
 
         return redirect()->route('customer.profile')->with('success', 'Profile updated successfully!');
     }
-
 }

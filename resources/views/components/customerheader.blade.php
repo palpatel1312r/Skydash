@@ -41,18 +41,6 @@
                 <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
                     <span class="icon-menu"></span>
                 </button>
-
-                <ul class="navbar-nav mr-lg-2">
-                    <li class="nav-item nav-search d-none d-lg-block">
-                        <div class="input-group">
-                            <div class="input-group-prepend hover-cursor" id="navbar-search-icon">
-                                <span class="input-group-text" id="search"><i class="icon-search"></i></span>
-                            </div>
-                            <input type="text" class="form-control" id="navbar-search-input" placeholder="Search now"
-                                aria-label="search" aria-describedby="search">
-                        </div>
-                    </li>
-                </ul>
                 <ul class="navbar-nav navbar-nav-right">
                     {{-- NOTIFICATIONS --}}
                     <li class="nav-item dropdown">
@@ -80,18 +68,27 @@
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
                                 $user = auth()->guard('customer')->user();
-                                $bgColor = '#1cc88a';
                                 $initial = strtoupper(substr($user->fullname ?? 'U', 0, 1));
+                                $profileImage = $user->profile->profile_image ?? null;
                             @endphp
-                            <div
-                                style="width: 35px; height: 35px; border-radius: 50%; background-color: {{ $bgColor }}; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase;">
-                                {{ $initial }}
-                            </div>
+
+                            @if ($profileImage)
+                                <img src="{{ asset('storage/' . $profileImage) }}?v={{ time() }}"
+                                    alt="Profile"
+                                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                            @else
+                                <div
+                                    style="width: 35px; height: 35px; border-radius: 50%; background-color: #1cc88a; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">
+                                    {{ $initial }}
+                                </div>
+                            @endif
                         </a>
+
+                        {{-- ✅ FIXED: Properly nested dropdown menu --}}
                         <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
                             aria-labelledby="profileDropdown">
                             <a class="dropdown-item" href="{{ route('customer.profile') }}">
-                                <i class="ti-user text-primary"></i> Profile
+                                <i class="ti-user text-primary"></i> My Profile
                             </a>
                             <a class="dropdown-item" href="{{ route('customer.password.form') }}">
                                 <i class="ti-key text-primary"></i> Change Password
@@ -99,9 +96,9 @@
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#"
                                 onclick="event.preventDefault(); 
-                                         if(confirm('Are you sure you want to logout?')) {
-                                             document.getElementById('logout-form-dropdown').submit();
-                                         }">
+                     if(confirm('Are you sure you want to logout?')) {
+                         document.getElementById('logout-form-dropdown').submit();
+                     }">
                                 <i class="ti-power-off text-primary"></i> Logout
                             </a>
                             <form id="logout-form-dropdown" action="{{ route('logout') }}" method="POST"
@@ -184,6 +181,8 @@
         </div>
     </div>
 
+
+
     <script src="{{ asset('Dashboard/vendors/js/vendor.bundle.base.js') }}"></script>
     <script src="{{ asset('Dashboard/vendors/datatables.net/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('Dashboard/js/dataTables.select.min.js') }}"></script>
@@ -194,6 +193,8 @@
     <script src="{{ asset('Dashboard/js/todolist.js') }}"></script>
     <script src="{{ asset('Dashboard/js/Admin.Dashboard.js') }}"></script>
     @stack('scripts')
+
+
 </body>
 
-</html>
+< /html>

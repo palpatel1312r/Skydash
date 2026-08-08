@@ -1,7 +1,6 @@
 @extends(auth()->guard('admin')->check() ? 'Components.adminheader' : 'Components.customerheader')
 
 @section('content')
-    <!-- partial -->
     <div class="main-panel">
         <div class="content-wrapper">
             <div class="row">
@@ -36,28 +35,25 @@
                                     $role = 'Admin';
                                     $updateRoute = route('admin.profile.update');
                                     $dashboardRoute = route('admin.dashboard');
-                                    $profileRoute = route('admin.profile');
                                     $isAdmin = true;
                                 } elseif (auth()->guard('customer')->check()) {
                                     $user = auth()->guard('customer')->user();
                                     $role = 'Customer';
                                     $updateRoute = route('customer.profile.update');
                                     $dashboardRoute = route('customer.dashboard');
-                                    $profileRoute = route('customer.profile');
                                     $isAdmin = false;
                                 } else {
                                     $user = null;
                                     $role = 'Guest';
                                     $updateRoute = '#';
                                     $dashboardRoute = route('login');
-                                    $profileRoute = '#';
                                     $isAdmin = false;
                                 }
 
+                                $nameField = $isAdmin ? 'name' : 'fullname';
                                 $displayName = $isAdmin ? $user->name ?? 'User' : $user->fullname ?? 'User';
                                 $initial = strtoupper(substr($displayName, 0, 1));
 
-                                // ✅ Ensure profile exists
                                 if ($user && !$user->profile) {
                                     $profile = new \App\Models\Profile();
                                     $profile->profileable_type = get_class($user);
@@ -65,9 +61,6 @@
                                     $profile->save();
                                     $user->refresh();
                                 }
-
-                                // ✅ Get profile image path (relative to storage/app/public)
-                                $profileImage = $user->profile->profile_image ?? null;
                             @endphp
 
                             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -87,28 +80,12 @@
                                             <div id="profilePreviewContainer"
                                                 style="width: 150px; height: 150px; margin: 0 auto;">
                                                 @if ($user && $user->profile && $user->profile->profile_image)
-                                                    {{-- ✅ CORRECT PATH: asset('storage/' . full_path) --}}
                                                     <img src="{{ asset('storage/' . $user->profile->profile_image) }}?v={{ time() }}"
                                                         alt="Profile Picture" class="img-fluid rounded-circle shadow-sm"
                                                         style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
                                                 @else
-                                                    {{-- Fallback Initial Avatar --}}
                                                     <div
-                                                        style="
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 70px;
-            text-transform: uppercase;
-            border: 4px solid #f0f0f0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        ">
+                                                        style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 70px; text-transform: uppercase; border: 4px solid #f0f0f0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                                         {{ $initial }}
                                                     </div>
                                                 @endif
@@ -125,7 +102,6 @@
                                         <div class="d-flex justify-content-center gap-2">
                                             <input type="file" id="profileImageInput" name="profile_image"
                                                 accept="image/*" style="display: none;">
-
                                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                                 onclick="document.getElementById('profileImageInput').click();">
                                                 <i class="mdi mdi-camera"></i> Change Photo
@@ -133,20 +109,18 @@
                                         </div>
                                     </div>
 
-                                    <!-- Profile Details Form -->
                                     <div class="col-md-8">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="name">Full Name <span
+                                                    <label for="{{ $nameField }}">Full Name <span
                                                             class="text-danger">*</span></label>
-                                                    {{-- ✅ FIXED: Use the correct input name based on the guard --}}
                                                     <input type="text"
-                                                        class="form-control @error('name') is-invalid @enderror"
-                                                        id="name" name="name"
-                                                        value="{{ old('name', $displayName) }}"
+                                                        class="form-control @error($nameField) is-invalid @enderror"
+                                                        id="{{ $nameField }}" name="{{ $nameField }}"
+                                                        value="{{ old($nameField, $displayName) }}"
                                                         placeholder="Enter your full name">
-                                                    @error('name')
+                                                    @error($nameField)
                                                         <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror
                                                 </div>
@@ -207,7 +181,6 @@
                 </div>
             </div>
         </div>
-        <!-- content-wrapper ends -->
     </div>
 
     <script>
@@ -216,11 +189,8 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    const container = document.getElementById('profilePreviewContainer');
-                    container.innerHTML = `
-                        <img src="${event.target.result}" 
-                             alt="Profile Picture" 
-                             class="img-fluid rounded-circle shadow-sm"
+                    document.getElementById('profilePreviewContainer').innerHTML = `
+                        <img src="${event.target.result}" alt="Profile Picture" class="img-fluid rounded-circle shadow-sm"
                              style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
                     `;
                 };

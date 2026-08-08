@@ -66,13 +66,20 @@
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
                             @php
                                 $user = auth()->guard('admin')->user();
-                                $bgColor = '#4e73df';
                                 $initial = strtoupper(substr($user->name ?? 'U', 0, 1));
+                                $profileImage = $user->profile->profile_image ?? null;
                             @endphp
-                            <div
-                                style="width: 35px; height: 35px; border-radius: 50%; background-color: {{ $bgColor }}; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase;">
-                                {{ $initial }}
-                            </div>
+
+                            @if ($profileImage)
+                                <img src="{{ asset('storage/' . $profileImage) }}?v={{ time() }}"
+                                    alt="Profile"
+                                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                            @else
+                                <div
+                                    style="width: 35px; height: 35px; border-radius: 50%; background-color: #4e73df; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">
+                                    {{ $initial }}
+                                </div>
+                            @endif
                         </a>
                         <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
                             aria-labelledby="profileDropdown">
@@ -83,13 +90,11 @@
                                 <i class="ti-key text-primary"></i> Change Password
                             </a>
                             <div class="dropdown-divider"></div>
-
-                            {{-- ✅ FIXED: Pop-up confirmation now works --}}
                             <a class="dropdown-item" href="#"
                                 onclick="event.preventDefault(); 
-                                         if(confirm('Are you sure you want to logout?')) {
-                                             document.getElementById('logout-form-dropdown').submit();
-                                         }">
+                     if(confirm('Are you sure you want to logout?')) {
+                         document.getElementById('logout-form-dropdown').submit();
+                     }">
                                 <i class="ti-power-off text-primary"></i> Logout
                             </a>
                             <form id="logout-form-dropdown" action="{{ route('logout') }}" method="POST"

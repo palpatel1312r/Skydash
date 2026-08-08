@@ -103,7 +103,7 @@
                         </div>
 
                         {{-- RIGHT: Search  --}}
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-5">
                             {{-- SEARCH INPUT --}}
                             <div class="input-group input-group-sm" style="max-width: 220px;">
                                 <span class="input-group-text bg-light border-end-0">
@@ -690,7 +690,7 @@
 
         /* Search input styling */
         .input-group-sm .form-control:focus {
-            border-color: #0d6efd;
+            border-color: #191a1c;
             box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
         }
 

@@ -10,8 +10,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
+// use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------
