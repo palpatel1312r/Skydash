@@ -49,12 +49,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="text-md-right mt-3 mt-md-0">
-                                <div class="hero-stat p-3 rounded-lg bg-white bg-opacity-10">
-                                    <h3 class="mb-1 text-white">Estimated Spend</h3>
-                                    <p class="mb-0 text-white-75">₹{{ number_format($totalSpent ?? 0, 2) }}</p>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -103,16 +98,16 @@
                         </div>
 
                         {{-- RIGHT: Search  --}}
-                        <div class="d-flex align-items-center gap-5">
-                            {{-- SEARCH INPUT --}}
-                            <div class="input-group input-group-sm" style="max-width: 220px;">
-                                <span class="input-group-text bg-light border-end-0">
-                                    <i class="mdi mdi-magnify text-muted"></i>
+                        <div class="d-flex align-items-center gap-2">
+                            {{-- SEARCH INPUT - BIGGER SIZE --}}
+                            <div class="input-group" style="max-width: 320px; min-width: 200px;">
+                                <span class="input-group-text bg-light border-end-0" style="padding: 12px 16px;">
+                                    <i class="mdi mdi-magnify text-muted" style="font-size: 1.3rem;"></i>
                                 </span>
                                 <input id="productSearch" class="form-control bg-light border-start-0"
-                                    placeholder="Search products..." value="{{ request('search') ?? '' }}">
+                                    placeholder="Search products..." value="{{ request('search') ?? '' }}"
+                                    style="padding: 12px 16px; font-size: 1rem; height: 48px;">
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -296,28 +291,28 @@
                     </div>
                 </div>
 
-                {{-- Total Spent --}}
+                {{-- Total Orders --}}
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 stats-card">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <p class="text-muted small mb-1 fw-medium">Total Spent</p>
-                                    <h6 class="text-muted mb-0" style="font-size: 0.8rem;">Across all invoices</h6>
+                                    <p class="text-muted small mb-1 fw-medium">Total Orders</p>
+                                    <h6 class="text-muted mb-0" style="font-size: 0.8rem;">Lifetime purchases</h6>
                                 </div>
-                                <div class="stats-icon bg-success bg-opacity-10 text-success">
-                                    <i class="mdi mdi-cash-multiple"></i>
+                                <div class="stats-icon bg-info bg-opacity-10 text-info">
+                                    <i class="mdi mdi-cart-arrow-right"></i>
                                 </div>
                             </div>
-                            <h2 class="fw-bold mb-1 text-success">₹{{ number_format($totalSpent ?? 0, 2) }}</h2>
-                            <p class="text-muted small mb-3">Lifetime payments & purchases</p>
+                            <h2 class="fw-bold mb-1">{{ $totalOrders ?? 0 }}</h2>
+                            <p class="text-muted small mb-3">Orders placed to date</p>
                             <div class="d-flex align-items-center justify-content-between">
-                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">
-                                    <i class="mdi mdi-trending-up me-1"></i> All payments
+                                <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-1">
+                                    <i class="mdi mdi-cart-check me-1"></i> Order history
                                 </span>
                                 <a href="{{ route('customer.invoices') }}"
-                                    class="btn btn-sm btn-outline-success rounded-pill px-3">
-                                    View Spending <i class="mdi mdi-arrow-right ms-1"></i>
+                                    class="btn btn-sm btn-outline-info rounded-pill px-3">
+                                    View Orders <i class="mdi mdi-arrow-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -381,25 +376,34 @@
                 </div>
             </div>
 
-            {{-- 4. Quick Actions & Account Summary --}}
+            {{-- 4. Quick Actions & Recent Activity --}}
             <div class="row">
+                {{-- Quick Actions --}}
                 <div class="col-md-6 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm rounded-lg h-100">
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <div>
-                                <h5 class="card-title mb-3">Quick Actions</h5>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ route('customer.invoices') }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="mdi mdi-file-document-outline me-1"></i> Invoices
-                                    </a>
-                                    <a href="{{ route('customer.profile') }}" class="btn btn-outline-warning btn-sm">
-                                        <i class="mdi mdi-account-edit me-1"></i> Profile
-                                    </a>
-                                </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title mb-3">
+                                <i class="mdi mdi-lightning-bolt text-warning me-2"></i> Quick Actions
+                            </h5>
+
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                <a href="{{ route('customer.invoices') }}"
+                                    class="btn btn-outline-primary btn-sm px-3 py-2">
+                                    <i class="mdi mdi-file-document-outline me-1"></i> Invoices
+                                </a>
+                                <a href="{{ route('customer.profile') }}"
+                                    class="btn btn-outline-warning btn-sm px-3 py-2">
+                                    <i class="mdi mdi-account-edit me-1"></i> Profile
+                                </a>
+                                <a href="{{ route('customer.password.form') }}"
+                                    class="btn btn-outline-secondary btn-sm px-3 py-2">
+                                    <i class="mdi mdi-key me-1"></i> Password
+                                </a>
                             </div>
-                            <div class="mt-4">
-                                <p class="text-muted mb-1">Need help?</p>
-                                <a href="{{ route('customer.profile') }}" class="btn btn-primary btn-sm">
+
+                            <div class="mt-auto pt-3 border-top">
+                                <p class="text-muted small mb-1">Need help?</p>
+                                <a href="{{ route('customer.profile') }}" class="btn btn-primary btn-sm px-4">
                                     <i class="mdi mdi-lifebuoy me-1"></i> Account Settings
                                 </a>
                             </div>
@@ -407,27 +411,76 @@
                     </div>
                 </div>
 
+                {{-- Recent Activity --}}
                 <div class="col-md-6 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm rounded-lg h-100">
                         <div class="card-body">
-                            <h5 class="card-title mb-3">Account Summary</h5>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Invoices due</span>
-                                <strong>{{ $dueInvoices ?? 0 }}</strong>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">
+                                    <i class="mdi mdi-clock-outline text-primary me-2"></i> Recent Activity
+                                </h5>
+                                <small class="text-muted">Last 5 actions</small>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Overdue amount</span>
-                                <strong>₹{{ number_format($overdueAmount ?? 0, 2) }}</strong>
+
+                            <div class="timeline-wrapper"
+                                style="max-height: 220px; overflow-y: auto; padding-right: 5px;">
+                                @php
+                                    $recentActivities = $recentActivities ?? [
+                                        (object) [
+                                            'action' => 'Purchased Product A',
+                                            'date' => '2 hours ago',
+                                            'icon' => 'mdi-cart',
+                                            'color' => 'success',
+                                        ],
+                                        (object) [
+                                            'action' => 'Invoice #INV-004 generated',
+                                            'date' => '5 hours ago',
+                                            'icon' => 'mdi-file-document',
+                                            'color' => 'info',
+                                        ],
+                                        (object) [
+                                            'action' => 'Profile updated',
+                                            'date' => '1 day ago',
+                                            'icon' => 'mdi-account-edit',
+                                            'color' => 'warning',
+                                        ],
+                                        (object) [
+                                            'action' => 'Login from new device',
+                                            'date' => '2 days ago',
+                                            'icon' => 'mdi-lock',
+                                            'color' => 'secondary',
+                                        ],
+                                    ];
+                                @endphp
+
+                                <div class="list-group list-group-flush">
+                                    @foreach ($recentActivities as $activity)
+                                        <div class="list-group-item px-0 py-3 border-bottom">
+                                            <div class="d-flex align-items-start">
+                                                <div class="stats-icon bg-{{ $activity->color }} bg-opacity-10 text-{{ $activity->color }} me-3 rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;">
+                                                    <i class="mdi {{ $activity->icon }}"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fw-medium">{{ $activity->action }}</p>
+                                                    <small class="text-muted">{{ $activity->date }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted">Open requests</span>
-                                <strong>{{ $openRequests ?? 0 }}</strong>
+
+                            <div class="mt-3 pt-3 border-top text-center">
+                                <a href="{{ route('customer.invoices') }}"
+                                    class="text-primary text-decoration-none small fw-medium">
+                                    View all activity <i class="mdi mdi-arrow-right ms-1"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -686,21 +739,6 @@
             align-items: center;
             justify-content: center;
             font-size: 1.4rem;
-        }
-
-        /* Search input styling */
-        .input-group-sm .form-control:focus {
-            border-color: #191a1c;
-            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
-        }
-
-        .input-group-sm .input-group-text {
-            background-color: #f8f9fa;
-            border-right: none;
-        }
-
-        .input-group-sm .form-control {
-            border-left: none;
         }
     </style>
 @endsection
