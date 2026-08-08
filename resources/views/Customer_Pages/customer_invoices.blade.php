@@ -123,7 +123,6 @@ if (
                 <div class="col-md-12 grid-margin stretch-card">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-0">
-                            {{-- HEADER: Title + Search --}}
                             <div
                                 class="d-flex flex-wrap align-items-center justify-content-between p-3 p-sm-4 pb-3 border-bottom">
                                 <div class="d-flex align-items-center gap-3">
@@ -136,13 +135,12 @@ if (
                                     </div>
                                 </div>
                                 <div class="input-group" style="max-width: 320px; min-width: 200px;">
-                                    <span class="input-group-text bg-light border-end-0" style="padding: 12px 16px;">
-                                        <i class="mdi mdi-magnify text-muted" style="font-size: 1.3rem;"></i>
+                                    <span class="input-group-text bg-light border-end-0 py-2 px-3">
+                                        <i class="mdi mdi-magnify text-muted"
+                                            style="font-size: 1.3rem; line-height: 1;"></i>
                                     </span>
-                                    <input id="dtSearch" class="form-control bg-light border-start-0"
-                                        placeholder="Search Invoices..." value="{{ request('search') ?? '' }}"
-                                        data-search-param="{{ request('search') ?? '' }}"
-                                        style="padding: 12px 16px; font-size: 1rem; height: 48px;">
+                                    <input id="dtSearch" class="form-control bg-light border-start-0 py-2 px-3"
+                                        placeholder="Search invoices..." style="font-size: 1rem;">
                                 </div>
                             </div>
 

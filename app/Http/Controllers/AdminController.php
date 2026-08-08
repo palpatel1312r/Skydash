@@ -22,8 +22,15 @@ class AdminController extends Controller
 
     public function updateProfile(Request $request)
     {
-        // 1. Get the authenticated admin
         $admin = Auth::guard('admin')->user();
+
+        // ✅ FIXED: Add custom messages so "validation.required" is replaced with real English text
+        $messages = [
+            'name.required' => 'The full name field is required.',
+            'email.required' => 'The email address field is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already taken.',
+        ];
 
         // 2. Validate inputs
         $request->validate([
@@ -32,7 +39,7 @@ class AdminController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ], $messages);
 
         // 3. Update Admin details
         $admin->name = $request->name;
@@ -52,23 +59,19 @@ class AdminController extends Controller
 
         // 5. Handle Image Upload
         if ($request->hasFile('profile_image')) {
-            // 5a. Delete old image if exists (Use storage_path correctly)
             if ($profile->profile_image && file_exists(storage_path('app/public/' . $profile->profile_image))) {
                 unlink(storage_path('app/public/' . $profile->profile_image));
             }
 
-            // 5b. Store the new image
-            // IMPORTANT: This stores the file in: storage/app/public/profile_images/filename.jpg
             $path = $request->file('profile_image')->store('profile_images', 'public');
-
-            // 5c. SAVE THE EXACT PATH returned by store()
-            $profile->profile_image = $path; // This will be "profile_images/filename.jpg"
+            $profile->profile_image = $path;
         }
 
         $profile->save();
 
         return redirect()->route('admin.profile')->with('success', 'Profile updated successfully!');
     }
+
     public function dashboard()
     {
         // 1. STATS CARDS DATA
@@ -76,7 +79,7 @@ class AdminController extends Controller
         $activeDealers = Customer::where('status', 'Active')->count();
         $totalOrders = Invoice::count();
 
-        // Today's Revenue
+        // Today's RevenuupdateProfilee
         $todayRevenue = Invoice::whereDate('created_at', now()->toDateString())->sum('total_amount');
 
         // Low Stock Count

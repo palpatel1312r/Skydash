@@ -113,6 +113,7 @@
                                     </div>
 
                                     <div class="col-md-8">
+                                        {{-- Row 1: Full Name & Email --}}
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -124,7 +125,7 @@
                                                         value="{{ old($nameField, $displayName) }}"
                                                         placeholder="Enter your full name">
                                                     @error($nameField)
-                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                        <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
@@ -138,12 +139,13 @@
                                                         value="{{ old('email', $user->email ?? '') }}"
                                                         placeholder="Enter your email">
                                                     @error('email')
-                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                        <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {{-- Row 2: Phone & Role --}}
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -163,18 +165,29 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label for="address">Address</label>
-                                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter your current address">{{ old('address', $user->profile->address ?? '') }}</textarea>
+                                        {{-- Row 3: Address --}}
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label for="address">Address</label>
+                                                    <textarea class="form-control" id="address" name="address" rows="2"
+                                                        placeholder="Enter your current address">{{ old('address', $user->profile->address ?? '') }}</textarea>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div class="form-group mt-4">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="mdi mdi-content-save"></i> Save Changes
-                                            </button>
-                                            <a href="{{ $dashboardRoute }}" class="btn btn-outline-secondary">
-                                                <i class="mdi mdi-arrow-left"></i> Back to Dashboard
-                                            </a>
+                                        {{-- Row 4: Buttons --}}
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group mt-4">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="mdi mdi-content-save"></i> Save Changes
+                                                    </button>
+                                                    <a href="{{ $dashboardRoute }}" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-arrow-left"></i> Back to Dashboard
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

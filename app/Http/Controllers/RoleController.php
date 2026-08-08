@@ -10,7 +10,7 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::all();
+        $roles = Role::with('creator')->orderBy('created_at', 'desc')->get();
         return view('Superadmin.roles', compact('roles'));
     }
 
